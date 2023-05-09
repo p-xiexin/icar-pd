@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.txt": "cmake",
+        "ostream": "cpp",
+        "iostream": "cpp"
+    }
+}
