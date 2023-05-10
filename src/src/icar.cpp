@@ -79,7 +79,9 @@ int main(int argc, char *argv[])
 		cout << "Camera open failed!" << std::endl;
 		return -1;
 	}
-	_cap->set(cv::CAP_PROP_FRAME_WIDTH, COLSIMAGE);
+    _cap->set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
+    _cap->set(cv::CAP_PROP_FPS, 60);
+    _cap->set(cv::CAP_PROP_FRAME_WIDTH, COLSIMAGE);
     _cap->set(cv::CAP_PROP_FRAME_HEIGHT, ROWSIMAGE);
 	double rate = _cap->get(CAP_PROP_FPS);
     double width = _cap->get(CAP_PROP_FRAME_WIDTH);
@@ -142,7 +144,8 @@ int main(int argc, char *argv[])
 		{
 			static auto preTime = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
 			auto startTime = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
-			cout << "run frame time : " << startTime - preTime << "ms" << "\t" << motionController.motorSpeed << "m/s" << endl;
+			float detFPS = (float)1000.f / (startTime - preTime);
+			cout << "run frame time : " << startTime - preTime << "ms  " << "FPS: " << (int)detFPS << endl;
 			preTime = startTime;
 		}
 

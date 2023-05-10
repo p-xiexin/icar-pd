@@ -37,15 +37,10 @@ int main(int argc, char const *argv[])
 		}
 
 		{
-			// 处理帧时长监测
-			static auto preTime = chrono::duration_cast<chrono::milliseconds>(
-									  chrono::system_clock::now().time_since_epoch())
-									  .count();
-			auto startTime = chrono::duration_cast<chrono::milliseconds>(
-								 chrono::system_clock::now().time_since_epoch())
-								 .count();
-			cout << "run frame time : " << startTime - preTime << "ms" << endl;
+			static auto preTime = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
+			auto startTime = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
 			float detFPS = (float)1000.f / (startTime - preTime);
+			cout << "run frame time : " << startTime - preTime << "ms  " << "FPS: " << (int)detFPS << endl;
 			preTime = startTime;
 		}
 
@@ -59,7 +54,7 @@ int main(int argc, char const *argv[])
 		Mat imageAi = frame.clone();
 		detection.drawBox(imageAi);
 
-		imshow(imageAi);
+		imshow("AI", imageAi);
 		waitKey(5);
 	}
 	return 0;

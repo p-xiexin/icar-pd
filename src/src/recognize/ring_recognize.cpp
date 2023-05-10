@@ -1,12 +1,23 @@
 #pragma once
 /**
- * @file ring_recognize.cpp
- * @author pxx
+ ********************************************************************************************************
+ *                                               示例代码
+ *                                             EXAMPLE  CODE
+ *
+ *                      (c) Copyright 2021; SaiShu.Lcc.; Leo; https://bjsstech.com
+ *                                   版权所属[SASU-北京赛曙科技有限公司]
+ *
+ *            The code is for internal use only, not for commercial transactions(开源学习,请勿商用).
+ *            The code ADAPTS the corresponding hardware circuit board(代码适配百度Edgeboard-FZ3B),
+ *            The specific details consult the professional(欢迎联系我们,代码持续更正，敬请关注相关开源渠道).
+ *********************************************************************************************************
+ * @file ring_recognition.cpp
+ * @author Leo ()
  * @brief 环岛识别（基于track赛道识别后）
  * @version 0.1
- * @date 2023-05-08
+ * @date 2022-02-28
  *
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2022
  *
  * @note  环岛识别步骤（ringStep）：
  *          1：环岛识别（初始化）
@@ -41,6 +52,10 @@ public:
         ring_cnt = 0;
         counterSpurroad = 0;
     }
+    void print(void)
+    {
+        cout << ringStep << endl;
+    }
 
     /**
      * @brief 环岛识别与行径规划
@@ -57,8 +72,10 @@ public:
             return false;
         }
 
-        // if (track.pointsEdgeRight.size() < ROWSIMAGE / 2 || track.pointsEdgeLeft.size() < ROWSIMAGE / 2) //环岛有效行限制
-        //     return false;
+        if (track.pointsEdgeRight.size() < ROWSIMAGE / 8 || track.pointsEdgeLeft.size() < ROWSIMAGE / 8) //环岛有效行限制
+        {
+            return ringType;
+        }
 
 
         pointBreakD = POINT(0, 0);
@@ -67,9 +84,6 @@ public:
         //[1]左右环岛判断
         if(ringType == RingType::RingNone && ringStep == RingStep::None)
         {
-            if (track.pointsEdgeRight.size() < ROWSIMAGE / 2 || track.pointsEdgeLeft.size() < ROWSIMAGE / 2) //环岛有效行限制
-                return false;
-
             uint16_t rowBreakRightDown = searchBreakRightDown(track.pointsEdgeRight, 0, ROWSIMAGE / 2);
             uint16_t rowBreakLeftDown = searchBreakLeftDown(track.pointsEdgeLeft, 0, ROWSIMAGE / 2);
 
@@ -234,7 +248,7 @@ public:
                         mid = (right.y + left.y) / 2;
                     }
                 }
-                else if(track.spurroad.size() == 0 && counterSpurroad > 3)
+                else if(track.spurroad.size() == 0 && counterSpurroad > 1)
                 {
                     counterSpurroad = 0;
                     ringStep = RingStep::Inside;
@@ -324,7 +338,7 @@ public:
                         mid = (right.y + left.y) / 2;
                     }
                 }
-                else if(track.spurroad.size() == 0 && counterSpurroad > 3)
+                else if(track.spurroad.size() == 0 && counterSpurroad > 1)
                 {
                     counterSpurroad = 0;
                     ringStep = RingStep::Inside;
@@ -621,6 +635,14 @@ private:
         {
             row_start++;
         }
+        if(row_end > pointsEdgeLeft.size())
+        {
+            row_end = pointsEdgeLeft.size();
+        }
+        if(row_start > pointsEdgeLeft.size())
+        {
+            row_start = pointsEdgeLeft.size();
+        }
         for (int i = row_start; i < row_end; i++) // 寻找左边跳变点
         {
             if(pointsEdgeLeft[i].y > 5)
@@ -661,6 +683,14 @@ private:
         if(row_start == 0)
         {
             row_start++;
+        }
+        if(row_end > pointsEdgeRight.size())
+        {
+            row_end = pointsEdgeRight.size();
+        }
+        if(row_start > pointsEdgeRight.size())
+        {
+            row_start = pointsEdgeRight.size();
         }
         for (int i = row_start; i < row_end; i++) // 寻找右边跳变点
         {
