@@ -49,6 +49,7 @@ int main(int argc, char *argv[])
 	TrackRecognition trackRecognition;              // 赛道识别
 	RingRecognition ringRecognition;                // 环岛识别
     CrossroadRecognition crossroadRecognition;      // 十字道路处理
+	BridgeDetection bridgeDetection;           		// 桥梁检测
 	uint16_t counterRunBegin = 1;              		// 智能车启动计数器：等待摄像头图像帧稳定
 	uint16_t counterOutTrackA = 0;             		// 车辆冲出赛道计数器A
 	uint16_t counterOutTrackB = 0;             		// 车辆冲出赛道计数器B
@@ -184,7 +185,7 @@ int main(int argc, char *argv[])
 						driver->buzzerSound(1);             // OK
 
 					roadType = RoadType::BridgeHandle;
-					if (motionController.params.debug)
+					if (motionController.params.Debug)
 					{
 						Mat imageBridge = Mat::zeros(Size(COLSIMAGE, ROWSIMAGE), CV_8UC3); // 初始化图像
 						bridgeDetection.drawImage(trackRecognition, imageBridge);

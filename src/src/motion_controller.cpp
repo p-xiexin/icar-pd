@@ -62,10 +62,12 @@ public:
         bool RingEnable = false;     // 环岛使能
         bool CrossEnable = true;    // 十字使能
         bool StopEnable = false;     // 冲出赛道停止使能
+        bool BridgeEnable = false;
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
             Params, speedLow, speedHigh, speedGarage, speedCorners, 
             runP1, runP2, runP3, turnP, turnD, rowCutUp, rowCutBottom, Kp, Ki, Kd,
-            Debug, CloseLoop, GarageEnable, RingEnable, CrossEnable, StopEnable); // 添加构造函数
+            Debug, CloseLoop, GarageEnable, RingEnable, CrossEnable, StopEnable,
+            BridgeEnable); // 添加构造函数
     };
 
     Params params;                   // 读取控制参数
@@ -192,7 +194,7 @@ public:
      */
     void loadParams() 
     {
-        string jsonPath = "../config/motion.json";
+        string jsonPath = "../src/config/motion.json";
         std::ifstream config_is(jsonPath);
         if (!config_is.good()) 
         {

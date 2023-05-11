@@ -49,22 +49,22 @@ link_directories(${ONNX_LIBRARY_DIRS})
 #               [ bin ] ==> [ tool ]
 #---------------------------------------------------------------------
 # Image2video
-set(IMAGE2VIDEO_PROJECT_NAME "image2video")
-set(IMAGE2VIDEO_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tool/image2video.cpp)
-add_executable(${IMAGE2VIDEO_PROJECT_NAME} ${IMAGE2VIDEO_PROJECT_SOURCES})
-target_link_libraries(${IMAGE2VIDEO_PROJECT_NAME}  pthread)
-target_link_libraries(${IMAGE2VIDEO_PROJECT_NAME}  ${OpenCV_LIBS})
+# set(IMAGE2VIDEO_PROJECT_NAME "image2video")
+# set(IMAGE2VIDEO_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tools/image2video.cpp)
+# add_executable(${IMAGE2VIDEO_PROJECT_NAME} ${IMAGE2VIDEO_PROJECT_SOURCES})
+# target_link_libraries(${IMAGE2VIDEO_PROJECT_NAME}  pthread)
+# target_link_libraries(${IMAGE2VIDEO_PROJECT_NAME}  ${OpenCV_LIBS})
 
 # CameraDisplay
 set(CAMERA_DISPLAY_PROJECT_NAME "camera_display")
-set(CAMERA_DISPLAY_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tool/camera_display.cpp)
+set(CAMERA_DISPLAY_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tools/camera_display.cpp)
 add_executable(${CAMERA_DISPLAY_PROJECT_NAME} ${CAMERA_DISPLAY_PROJECT_SOURCES})
 target_link_libraries(${CAMERA_DISPLAY_PROJECT_NAME}  pthread)
 target_link_libraries(${CAMERA_DISPLAY_PROJECT_NAME}  ${OpenCV_LIBS})
 
 # ImageCollection
-set(COLLECTION_PROJECT_NAME "image_collection")
-set(COLLECTION_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tool/image_collection.cpp)
+set(COLLECTION_PROJECT_NAME "camera_collection")
+set(COLLECTION_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tools/camera_collection.cpp)
 add_executable(${COLLECTION_PROJECT_NAME} ${COLLECTION_PROJECT_SOURCES})
 target_link_libraries(${COLLECTION_PROJECT_NAME}  pthread)
 target_link_libraries(${COLLECTION_PROJECT_NAME}  ${OpenCV_LIBS})
@@ -72,14 +72,14 @@ target_link_libraries(${COLLECTION_PROJECT_NAME}  ${SERIAL_LIBRARIES})
 
 # ImageCalibration（相机标定）
 set(CALIBRATION_PROJECT_NAME "camera_calibration")
-set(CALIBRATION_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tool/camera_calibration.cpp)
+set(CALIBRATION_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tools/camera_calibration.cpp)
 add_executable(${CALIBRATION_PROJECT_NAME} ${CALIBRATION_PROJECT_SOURCES})
 target_link_libraries(${CALIBRATION_PROJECT_NAME}  pthread)
 target_link_libraries(${CALIBRATION_PROJECT_NAME}  ${OpenCV_LIBS})
 target_link_libraries(${CALIBRATION_PROJECT_NAME}  ${SERIAL_LIBRARIES})
 
 set(ICAR_PROJECT_NAME "paddle_detection")
-set(ICAR_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tool/paddle_detection.cpp)
+set(ICAR_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tools/paddle_detection.cpp)
 add_executable(${ICAR_PROJECT_NAME} ${ICAR_PROJECT_SOURCES})
 target_link_libraries(${ICAR_PROJECT_NAME}  ${PPNC_LIBRARIES})
 target_link_libraries(${ICAR_PROJECT_NAME}  ${ONNX_LIBRARIES})

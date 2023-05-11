@@ -13,12 +13,13 @@
     "Kd": 0.0,
     "rowCutUp": 50,
     "rowCutBottom": 10,
-    "Debug": false,
+    "Debug": true,
     "CloseLoop": true,
     "GarageEnable": false,
     "RingEnable": true,
     "CrossEnable": true,
     "StopEnable": true,
+    "BridgeEnable": true,
     "record": [
         {
             "#speedLow": "智能车最低速",
@@ -40,7 +41,8 @@
             "#GarageEnable": "车库使能",
             "#RingEnable": "环岛使能",
             "#CrossEnable": "十字使能",
-            "#StopEnable": "冲出赛道停止使能"
+            "#StopEnable": "冲出赛道停止使能",
+            "#BridgeEnable": "桥梁检测使能"
         }
     ]
 }
