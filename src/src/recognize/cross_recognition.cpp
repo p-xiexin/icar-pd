@@ -1,23 +1,12 @@
 #pragma once
 /**
- ********************************************************************************************************
- *                                               示例代码
- *                                             EXAMPLE  CODE
- *
- *                      (c) Copyright 2022; SaiShu.Lcc.; Leo; https://bjsstech.com
- *                                   版权所属[SASU-北京赛曙科技有限公司]
- *
- *            The code is for internal use only, not for commercial transactions(开源学习,请勿商用).
- *            The code ADAPTS the corresponding hardware circuit board(代码适配百度Edgeboard-FZ3B),
- *            The specific details consult the professional(欢迎联系我们,代码持续更正，敬请关注相关开源渠道).
- *********************************************************************************************************
  * @file cross_recognition.cpp
- * @author Leo ()
+ * @author pxx ()
  * @brief 十字道路识别与图像处理
  * @version 0.1
- * @date 2022-03-14
+ * @date 2023-05-6
  *
- * @copyright Copyright (c) 2022
+ * @copyright Copyright (c) 2023
  *
  * @note 十字道路处理步骤：
  *                      [01] 入十字类型识别：track_recognition.cpp

@@ -14,6 +14,8 @@
 #include "controlcenter_cal.cpp"
 #include "motion_controller.cpp"
 
+#include "./detection/bridge_detection.cpp"
+
 using namespace cv;
 using namespace std;
 
@@ -52,6 +54,10 @@ int main(int argc, char *argv[])
 	uint16_t counterOutTrackB = 0;             		// 车辆冲出赛道计数器B
 
 
+	// PPNC初始化
+	PPNCDetection detection;
+	if (!detection.init("../res/model/yolov3_mobilenet_v1")) // AI推理初始化
+		return 1;
 	// USB转串口的设备名为 / dev/ttyUSB0
 	driver = std::make_shared<Driver>("/dev/ttyUSB0", BaudRate::BAUD_115200);
 	if (driver == nullptr)
@@ -148,11 +154,17 @@ int main(int argc, char *argv[])
 			cout << "run frame time : " << startTime - preTime << "ms  " << "FPS: " << (int)detFPS << endl;
 			preTime = startTime;
 		}
-
-
-		/*图像预处理*/
+		
 		Mat frame;
 		*_cap >> frame;
+
+		/*AI推理*/
+		auto feeds = detection.preprocess(frame, {320, 320});
+		detection.run(*feeds);
+		// get result
+		detection.render();
+
+		/*图像预处理*/
 		Mat imgaeCorrect = imagePreprocess.imageCorrection(frame);         // RGB
 		Mat imageBinary = imagePreprocess.imageBinaryzation(imgaeCorrect); // Gray
 
@@ -160,6 +172,30 @@ int main(int argc, char *argv[])
 		trackRecognition.trackRecognition(imageBinary); // 赛道线识别
 		Mat imageTrack = imgaeCorrect.clone();  // RGB
 		// trackRecognition.drawImage(imageTrack); // 图像显示赛道线识别结果
+
+		/*坡道（桥）检测与路径规划*/ 
+		if (motionController.params.BridgeEnable) // 赛道元素是否使能
+		{
+			if (roadType == RoadType::BridgeHandle ||	roadType == RoadType::BaseHandle)
+			{
+				if (bridgeDetection.bridgeDetection(trackRecognition, detection.results))
+				{
+					if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
+						driver->buzzerSound(1);             // OK
+
+					roadType = RoadType::BridgeHandle;
+					if (motionController.params.debug)
+					{
+						Mat imageBridge = Mat::zeros(Size(COLSIMAGE, ROWSIMAGE), CV_8UC3); // 初始化图像
+						bridgeDetection.drawImage(trackRecognition, imageBridge);
+						imshow("imageRecognition", imageBridge);
+					}
+				}
+				else
+					roadType = RoadType::BaseHandle;
+			}
+		}
+
 
 		/*环岛识别与处理*/
 		if (motionController.params.RingEnable) // 赛道元素是否使能
@@ -254,9 +290,12 @@ int main(int argc, char *argv[])
 		/*图像显示*/
 		if(motionController.params.Debug)
 		{
+			Mat imageAI = frame.clone();
+			detection.drawBox(imageAI);
 			controlCenterCal.drawImage(trackRecognition, imageTrack);// 绘制中线
 			trackRecognition.drawImage(imageTrack); // 图像显示赛道线识别结果
-			imshow("imageTrack", imageTrack);	
+			imshow("imageTrack", imageTrack);
+			imshow("imageAI", imageAI);
 		}
 
 		char key = waitKey(1);
@@ -303,11 +342,11 @@ void displayWindowInit(void)
   cv::resizeWindow(windowName, COLSIMAGE, ROWSIMAGE);     // 分辨率
   cv::moveWindow(windowName, 10, 700);        // 布局位置
 
-//   //[3] 原始图像/矫正后：RGB
-//   windowName = "imageControl";
-//   cv::namedWindow(windowName, WINDOW_NORMAL); // 图像名称
-//   cv::resizeWindow(windowName, COLSIMAGE, ROWSIMAGE);     // 分辨率
-//   cv::moveWindow(windowName, 350, 20);        // 布局位置
+  //[3] 原始图像/矫正后：RGB
+  windowName = "imageAI";
+  cv::namedWindow(windowName, WINDOW_NORMAL); // 图像名称
+  cv::resizeWindow(windowName, COLSIMAGE, ROWSIMAGE);     // 分辨率
+  cv::moveWindow(windowName, 350, 20);        // 布局位置
 }
 
 void put_text2img(Mat &imgaeCorrect, RoadType roadType)
