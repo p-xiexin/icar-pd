@@ -41,6 +41,11 @@ public:
         _driver->PID_init(Kp, Ki, Kd);
     }
 
+    float get_speed()
+    {
+        return _recvSpeed;
+    }
+
     int open()
     {
         return _open();
@@ -86,7 +91,16 @@ public:
         _thread_recv = std::make_unique<std::thread>([this]{
             while(_loop)
             {
-                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                uint8_t data_addr;
+                data_addr = _driver->receiveStartSignal();
+                if(data_addr == 0x08);
+                {
+                    _recvSpeed = _driver->speed_unpack();
+                }
+                else
+                {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+                }
             }
         });
     }

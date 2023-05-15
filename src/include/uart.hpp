@@ -308,7 +308,7 @@ public:
    * @brief 串口接收下位机比赛开始信号
    *
    */
-  bool receiveStartSignal(void)
+  uint8_t receiveStartSignal(void)
   {
     uint8_t resByte;
     int ret = 0;
@@ -364,7 +364,11 @@ public:
           // 任务开始指令
           if (0x06 == usb_Struct.receiveBuffFinished[1])
           {
-            return true;
+            return 0x06;
+          }
+          else if (usb_Struct.receiveBuffFinished[1] == 0x08)
+          {
+            return 0x08;
           }
         }
 
@@ -373,7 +377,17 @@ public:
       }
     }
 
-    return false;
+    return 0;
+  }
+
+  float speed_unpack()
+  {
+    Bint32_Union speed;
+    for(int i = 0; i < 4; i++)
+    {
+      speed[i] = usb_Struct.receiveBuffFinished[i + 3];
+    }
+    return speed.Float;
   }
 
   void close()
