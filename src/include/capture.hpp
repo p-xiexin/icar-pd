@@ -29,12 +29,12 @@ public:
 
     void Stop()
     {
+        _loop = false;
+        _thread->join();
         if(_cap->isOpened())
         {
             _cap->release();
         }
-        _loop = false;
-        _thread->join();
     }
 
     void run()
@@ -49,7 +49,7 @@ public:
         _thread = std::make_unique<std::thread>([this](){
             while(_loop)
             {
-                std::shared_ptr<cv::Mat> frame = std::make_shared()<cv::Mat>();
+                std::shared_ptr<cv::Mat> frame = std::make_shared<cv::Mat>(Size(COLSIMAGE, ROWSIMAGE), CV_8UC3);
                 *_cap >> *frame;
                 if(frame->empty())
                 {
@@ -61,7 +61,7 @@ public:
                 _frame = frame;
                 cond_.notify_all();
             }
-        })
+        });
     }
 
     cv::Mat get_frame(void)

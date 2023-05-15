@@ -18,7 +18,7 @@
     "GarageEnable": false,
     "RingEnable": true,
     "CrossEnable": true,
-    "StopEnable": true,
+    "StopEnable": false,
     "BridgeEnable": true,
     "record": [
         {

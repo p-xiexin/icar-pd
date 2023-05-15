@@ -7,7 +7,7 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "../include/detection.hpp"
+#include "../include/predictor.hpp"
 
 using namespace std;
 using namespace cv;

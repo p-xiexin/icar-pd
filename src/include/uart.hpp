@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <libserial/SerialPort.h>
 #include <string.h>

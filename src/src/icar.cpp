@@ -79,8 +79,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	captureInterface = std::make_shared("/dev/video0");
-	captureInterface.run();
+	captureInterface.Start();
 	
 	signal(SIGINT, callbackSignal);      // 程序退出信号
 
@@ -114,7 +113,8 @@ int main(int argc, char *argv[])
     while (motionController.params.Debug/*!driver->receiveStartSignal()*/)
     {
 		Mat frame;
-		*_cap >> frame;
+		// *_cap >> frame;
+		frame = captureInterface.get_frame();
 		imshow("imageTrack", frame);	
 		char key = waitKey(5);
 		if(key == 13)//回车
@@ -131,6 +131,7 @@ int main(int argc, char *argv[])
     }
     cout << "--------- System start!!! -------" << endl;
 
+	int n = 10;
 	while(1)
 	{
 		// 处理帧时长监测 速度监测
@@ -277,7 +278,8 @@ int main(int argc, char *argv[])
 			// motionController.speedController(true, 0, controlCenterCal); // 变加速控制
 
 			// 串口通信，姿态与速度控制
-			driver->carControl(motionController.motorSpeed, motionController.servoPwm);
+			// driver->carControl(motionController.motorSpeed, motionController.servoPwm);
+			driver->carControl(motionController.motorSpeed, 1300);
 		}
 		else
 		{
@@ -302,7 +304,7 @@ int main(int argc, char *argv[])
 		{
 			callbackSignal(0);
 		}
-		cout << ai_time << "\t" << track_time << "\t" << detection_time << "\t" << calculate_time << "\t" << serial_time << endl;
+		cout << camera_time << "\t" << ai_time << "\t" << track_time << "\t" << detection_time << "\t" << calculate_time << "\t" << serial_time << endl;
 	}
 
 	_cap->release();
