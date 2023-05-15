@@ -39,7 +39,6 @@ using namespace cv;
 #define LABEL_CROSSWALK "crosswalk" // AI标签：斑马线
 #define LABEL_BUMP "bump"           // AI标签：减速带
 
-bool printAiEnable = false;
 //PerspectiveMapping ipm; // 逆透视变换公共类
 
 struct POINT

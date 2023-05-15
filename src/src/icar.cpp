@@ -6,6 +6,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/opencv.hpp>
 
+#include "../include/stop_watch.hpp"
 #include "../include/uart.hpp"              //串口通信
 #include "./recognize/track_recognition.cpp"//基础巡线
 #include "./recognize/cross_recognition.cpp"//十字赛道
@@ -15,6 +16,8 @@
 #include "motion_controller.cpp"
 
 #include "./detection/bridge_detection.cpp"
+
+#include "../include/capture.hpp"
 
 using namespace cv;
 using namespace std;
@@ -39,9 +42,11 @@ void put_text2img(Mat &imgaeCorrect, RoadType roadType);
 
 shared_ptr<Driver> driver = nullptr;
 shared_ptr<VideoCapture> _cap = nullptr;
+CaptureInterface captureInterface;
 
 int main(int argc, char *argv[]) 
 {
+	StopWatch watch;								// 时间监测
 	RoadType roadType = RoadType::BaseHandle;       // 初始化赛道类型
 	ControlCenterCal controlCenterCal;        		// 控制中心计算
 	MotionController motionController;       		// 运动控制
@@ -74,27 +79,8 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	_cap = make_shared<VideoCapture>();
-	_cap->open("/dev/video0");
-	if(_cap == nullptr)
-	{
-		cout << "Camera create failed!" << std::endl;
-		return -1;
-	}
-	if(!_cap->isOpened())
-	{
-		cout << "Camera open failed!" << std::endl;
-		return -1;
-	}
-    _cap->set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
-    _cap->set(cv::CAP_PROP_FPS, 60);
-    _cap->set(cv::CAP_PROP_FRAME_WIDTH, COLSIMAGE);
-    _cap->set(cv::CAP_PROP_FRAME_HEIGHT, ROWSIMAGE);
-	double rate = _cap->get(CAP_PROP_FPS);
-    double width = _cap->get(CAP_PROP_FRAME_WIDTH);
-    double height = _cap->get(CAP_PROP_FRAME_HEIGHT);
-    std::cout << "Camera Param: frame rate = " << rate << " width = " << width
-              << " height = " << height << std::endl;
+	captureInterface = std::make_shared("/dev/video0");
+	captureInterface.run();
 	
 	signal(SIGINT, callbackSignal);      // 程序退出信号
 
@@ -156,15 +142,20 @@ int main(int argc, char *argv[])
 			preTime = startTime;
 		}
 		
+		watch.tic();
 		Mat frame;
-		*_cap >> frame;
+		frame = captureInterface.get_frame();
+		double camera_time = watch.toc();
 
+		watch.tic();
 		/*AI推理*/
 		auto feeds = detection.preprocess(frame, {320, 320});
 		detection.run(*feeds);
 		// get result
 		detection.render();
+		double ai_time = watch.toc();
 
+		watch.tic();
 		/*图像预处理*/
 		Mat imgaeCorrect = imagePreprocess.imageCorrection(frame);         // RGB
 		Mat imageBinary = imagePreprocess.imageBinaryzation(imgaeCorrect); // Gray
@@ -173,7 +164,9 @@ int main(int argc, char *argv[])
 		trackRecognition.trackRecognition(imageBinary); // 赛道线识别
 		Mat imageTrack = imgaeCorrect.clone();  // RGB
 		// trackRecognition.drawImage(imageTrack); // 图像显示赛道线识别结果
+		double track_time = watch.toc();
 
+		watch.tic();
 		/*坡道（桥）检测与路径规划*/ 
 		if (motionController.params.BridgeEnable) // 赛道元素是否使能
 		{
@@ -243,6 +236,8 @@ int main(int argc, char *argv[])
 				}
 			}
 		}
+		double detection_time = watch.toc();
+		watch.tic();
 
 		/*控制中心计算*/
 		if (trackRecognition.pointsEdgeLeft.size() < 60 &&
@@ -268,7 +263,9 @@ int main(int argc, char *argv[])
 			}
 		}
 		controlCenterCal.controlCenterCal(trackRecognition); // 根据赛道边缘信息拟合运动控制中心
+		double calculate_time = watch.toc();
 
+		watch.tic();
 		/*智能车运动控制 通讯*/
 		if(counterRunBegin > 30)
 		{
@@ -286,6 +283,7 @@ int main(int argc, char *argv[])
 		{
 			counterRunBegin++;
 		}
+		double serial_time = watch.toc();
 
 
 		/*图像显示*/
@@ -304,7 +302,7 @@ int main(int argc, char *argv[])
 		{
 			callbackSignal(0);
 		}
-
+		cout << ai_time << "\t" << track_time << "\t" << detection_time << "\t" << calculate_time << "\t" << serial_time << endl;
 	}
 
 	_cap->release();
@@ -321,6 +319,7 @@ int main(int argc, char *argv[])
 void callbackSignal(int signum)
 {
   driver->carControl(0, PWMSERVOMID); // 智能车停止运动
+  captureInterface.Stop();
   cout << "====System Exit!!!  -->  CarStopping! " << signum << endl;
   exit(signum);
 }

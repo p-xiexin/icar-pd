@@ -27,7 +27,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include "../../include/common.hpp"
-#include "../../include/detection.hpp"
+#include "../../include/predictor.hpp"
 #include "../recognize/track_recognition.cpp"
 
 using namespace cv;

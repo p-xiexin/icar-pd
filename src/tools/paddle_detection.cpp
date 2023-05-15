@@ -1,19 +1,22 @@
 
 #include "../include/common.hpp"	//公共类方法文件
-#include "../include/detection.hpp" //PPNC目标检测
+#include "../include/predictor.hpp" //PPNC目标检测
 #include <iostream>
 #include <opencv2/highgui.hpp> //OpenCV终端部署
 #include <opencv2/opencv.hpp>  //OpenCV终端部署
 #include <signal.h>
 #include <unistd.h>
+
+#include "../include/detection.hpp"
+
 using namespace std;
 using namespace cv;
 
 int main(int argc, char const *argv[])
 {
 	// PPNC初始化
-	PPNCDetection detection;
-	if (!detection.init("../res/model/yolov3_mobilenet_v1")) // AI推理初始化
+	PPNCDetection predict;
+	if (!predict.init("../res/model/yolov3_mobilenet_v1")) // AI推理初始化
 		return 1;
 
 	// 摄像头初始化
@@ -45,14 +48,14 @@ int main(int argc, char const *argv[])
 		}
 
 		//[00] AI推理
-		auto feeds = detection.preprocess(frame, {320, 320});
-		detection.run(*feeds);
+		auto feeds = predict.preprocess(frame, {320, 320});
+		predict.run(*feeds);
 		// get result
-		detection.render();
+		predict.render();
 
 
 		Mat imageAi = frame.clone();
-		detection.drawBox(imageAi);
+		predict.drawBox(imageAi);
 
 		imshow("AI", imageAi);
 		waitKey(5);

@@ -1,18 +1,22 @@
 {
     "configurations": [
         {
-            "name": "Linux",
+            "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**",
-                "/usr/local/include/opencv",
-                "/usr/local/include/opencv2"
+                "${default}",
+                "D:\\opencv\\opencv\\build\\include",
+                "D:\\opencv\\opencv\\build\\include\\opencv",
+                "D:\\opencv\\opencv\\build\\include\\opencv2"
             ],
-            "defines": [],
-            "compilerPath": "/usr/bin/gcc",
-            "cStandard": "c17",
-            "cppStandard": "gnu++17",
-            "intelliSenseMode": "linux-gcc-arm64",
-            "configurationProvider": "ms-vscode.cmake-tools"
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "D:\\MinGW\\bin\\gcc.exe",
+            "cStandard": "c11",
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "windows-gcc-x86"
         }
     ],
     "version": 4
