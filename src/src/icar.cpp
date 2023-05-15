@@ -18,6 +18,7 @@
 #include "./detection/bridge_detection.cpp"
 
 #include "../include/capture.hpp"
+#include "../include/serial.hpp"
 
 using namespace cv;
 using namespace std;
@@ -40,9 +41,8 @@ void callbackSignal(int signum);//系统退出回调函数
 void displayWindowInit(void);//显示窗口初始化
 void put_text2img(Mat &imgaeCorrect, RoadType roadType);
 
-shared_ptr<Driver> driver = nullptr;
-shared_ptr<VideoCapture> _cap = nullptr;
-CaptureInterface captureInterface;
+CaptureInterface captureInterface("/dev/video0");
+SerialInterface serialInterface("/dev/ttyUSB0", LibSerial::BaudRate::BAUD_115200);
 
 int main(int argc, char *argv[]) 
 {
@@ -64,45 +64,37 @@ int main(int argc, char *argv[])
 	PPNCDetection detection;
 	if (!detection.init("../res/model/yolov3_mobilenet_v1")) // AI推理初始化
 		return 1;
-	// USB转串口的设备名为 / dev/ttyUSB0
-	driver = std::make_shared<Driver>("/dev/ttyUSB0", BaudRate::BAUD_115200);
-	if (driver == nullptr)
-	{
-		std::cout << "Create uart-driver error!" << std::endl;
-		return -1;
-	}
-	// 串口初始化，打开串口设备及配置串口数据格式
-	int ret = driver->open();
-	if (ret != 0)
-	{
-		std::cout << "Uart open failed!" << std::endl;
-		return -1;
-	}
 
-	captureInterface.Start();
-	
-	signal(SIGINT, callbackSignal);      // 程序退出信号
-
-	imagePreprocess.imageCorrecteInit(); // 图像矫正参数初始化
 	motionController.loadParams();       // 读取配置文件
-	trackRecognition.rowCutUp = motionController.params.rowCutUp;
-	trackRecognition.rowCutBottom = motionController.params.rowCutBottom;
-	// garageRecognition.disGarageEntry = motionController.params.disGarageEntry;
-	// if (motionController.params.GarageEnable) // 出入库使能
-	// 	roadType = RoadType::GarageHandle;      // 初始赛道元素为出库
+
+	//下位机初始化通信
+	int ret = serialInterface.open();
+	if(ret != 0)
+		return 0;
 	if(motionController.params.CloseLoop)
 	{
-		driver->PID_init(motionController.params.Kp, motionController.params.Ki, motionController.params.Kd);
 		cout << "-------- 速度闭环控制 -------" << endl;
+		serialInterface.set_PID(motionController.params.Kp, motionController.params.Ki, motionController.params.Kd);
 		cout << "Kp = " << motionController.params.Kp << endl;
 		cout << "Ki = " << motionController.params.Ki << endl;
 		cout << "Kd = " << motionController.params.Kd << endl;
 	}
 	else
 	{
-		driver->PID_init(0, 0, 0);
+		serialInterface.set_PID(0, 0, 0);
 		cout << "-------- 速度开环控制 -------" << endl;
 	}
+	serialInterface.Start();
+	captureInterface.Start();
+	
+	signal(SIGINT, callbackSignal);      // 程序退出信号
+
+	imagePreprocess.imageCorrecteInit(); // 图像矫正参数初始化
+	trackRecognition.rowCutUp = motionController.params.rowCutUp;
+	trackRecognition.rowCutBottom = motionController.params.rowCutBottom;
+	// garageRecognition.disGarageEntry = motionController.params.disGarageEntry;
+	// if (motionController.params.GarageEnable) // 出入库使能
+	// 	roadType = RoadType::GarageHandle;      // 初始赛道元素为出库
 	if(motionController.params.Debug)
 	{
 		displayWindowInit();//调试模式初始化图像窗口
@@ -110,10 +102,9 @@ int main(int argc, char *argv[])
 
     cout << "等待发车!!!" << endl;
 
-    while (motionController.params.Debug/*!driver->receiveStartSignal()*/)
+    while (motionController.params.Debug)
     {
 		Mat frame;
-		// *_cap >> frame;
 		frame = captureInterface.get_frame();
 		imshow("imageTrack", frame);	
 		char key = waitKey(5);
@@ -126,12 +117,11 @@ int main(int argc, char *argv[])
 	for (int i = 3; i > 0; i--) // 3秒后发车
     {
 		cout << "------------- " << i << " -----------" << endl;
-		driver->carControl(0, PWMSERVOMID); // 智能车停止运动|建立下位机通信
+		serialInterface.set_control(0, PWMSERVOMID); // 智能车停止运动|建立下位机通信
 		waitKey(1000);
     }
     cout << "--------- System start!!! -------" << endl;
 
-	int n = 10;
 	while(1)
 	{
 		// 处理帧时长监测 速度监测
@@ -158,7 +148,8 @@ int main(int argc, char *argv[])
 
 		watch.tic();
 		/*图像预处理*/
-		Mat imgaeCorrect = imagePreprocess.imageCorrection(frame);         // RGB
+		// Mat imgaeCorrect = imagePreprocess.imageCorrection(frame);         // RGB
+		Mat imgaeCorrect = frame;         // RGB
 		Mat imageBinary = imagePreprocess.imageBinaryzation(imgaeCorrect); // Gray
 
 		/*基础赛道识别*/
@@ -176,7 +167,7 @@ int main(int argc, char *argv[])
 				if (bridgeDetection.bridgeDetection(trackRecognition, detection.results))
 				{
 					if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
-						driver->buzzerSound(1);             // OK
+						serialInterface.buzzerSound(1);             // OK
 
 					roadType = RoadType::BridgeHandle;
 					if (motionController.params.Debug)
@@ -200,7 +191,7 @@ int main(int argc, char *argv[])
 				if (ringRecognition.ringRecognition(trackRecognition, imageBinary))
 				{
 					if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
-						driver->buzzerSound(1);             // OK
+						serialInterface.buzzerSound(1);             // OK
 					roadType = RoadType::RingHandle;
 					
 					if (motionController.params.Debug)
@@ -278,8 +269,7 @@ int main(int argc, char *argv[])
 			// motionController.speedController(true, 0, controlCenterCal); // 变加速控制
 
 			// 串口通信，姿态与速度控制
-			// driver->carControl(motionController.motorSpeed, motionController.servoPwm);
-			driver->carControl(motionController.motorSpeed, 1300);
+			serialInterface.set_control(motionController.motorSpeed, motionController.servoPwm);
 		}
 		else
 		{
@@ -289,6 +279,7 @@ int main(int argc, char *argv[])
 
 
 		/*图像显示*/
+		watch.tic();
 		if(motionController.params.Debug)
 		{
 			Mat imageAI = frame.clone();
@@ -297,19 +288,24 @@ int main(int argc, char *argv[])
 			trackRecognition.drawImage(imageTrack); // 图像显示赛道线识别结果
 			imshow("imageTrack", imageTrack);
 			imshow("imageAI", imageAI);
-		}
 
-		char key = waitKey(1);
-		if(key == 13)//回车
-		{
-			callbackSignal(0);
+			char key = waitKey(1);
+			if(key == 13)//回车
+			{
+				callbackSignal(0);
+			}
 		}
-		cout << camera_time << "\t" << ai_time << "\t" << track_time << "\t" << detection_time << "\t" << calculate_time << "\t" << serial_time << endl;
+		double display_time = watch.toc();
+
+		cout << camera_time << "\t" << ai_time << "\t" << track_time << "\t" << detection_time << "\t" << calculate_time << "\t" 
+				<< serial_time << "\t" << display_time << endl;
 	}
 
-	_cap->release();
+	serialInterface.set_control(0, PWMSERVOMID); // 智能车停止运动
+	captureInterface.Stop();
+	serialInterface.Stop();
 	destroyAllWindows();
-	cout << "Camera closed" << endl;
+
     return 0;
 }
 
@@ -320,8 +316,9 @@ int main(int argc, char *argv[])
  */
 void callbackSignal(int signum)
 {
-  driver->carControl(0, PWMSERVOMID); // 智能车停止运动
+  serialInterface.set_control(0, PWMSERVOMID); // 智能车停止运动
   captureInterface.Stop();
+  serialInterface.Stop();
   cout << "====System Exit!!!  -->  CarStopping! " << signum << endl;
   exit(signum);
 }

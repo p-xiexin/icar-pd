@@ -39,7 +39,11 @@ public:
 
     void run()
     {
-        _open();
+        int ret = _open();
+        if(ret != 0)
+        {
+            exit(-1);
+        }
         _cap->set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
         _cap->set(cv::CAP_PROP_FPS, _rate);
         _cap->set(cv::CAP_PROP_FRAME_WIDTH, _col);
@@ -115,9 +119,11 @@ private:
             cout << "Camera open failed!" << std::endl;
             return -1;
         }
+        return 0;
     }
-    bool _loop = false;
+
     // BlockingQueue<cv::Mat> _queue;
+    bool _loop = false;
     std::string _camera_path;
     uint16_t _row;
     uint16_t _col;

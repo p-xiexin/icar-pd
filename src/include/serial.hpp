@@ -4,6 +4,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <thread>
+#include <chrono>
 
 #include "uart.hpp"
 #include "common.hpp"
@@ -26,15 +27,70 @@ public:
         _speed = speed;
         _servo_pwm = servo_pwm;
     }
-    void run()
+
+    void buzzerSound(unsigned char sound)
     {
-        _thread = std::make_shared<std::thread>([this]{
+        if(_sound == 0)
+        {
+            _sound = sound;
+        }
+    }
+
+    void set_PID(float Kp, float Ki, float Kd)
+    {
+        _driver->PID_init(Kp, Ki, Kd);
+    }
+
+    int open()
+    {
+        return _open();
+    }
+
+    void Start()
+    {
+        _loop = true;
+        send();
+        recv();
+    }
+
+    void Stop()
+    {
+        _loop = false;
+        _thread_send->join();
+        _thread_recv->join();
+        _driver->close();
+    }
+
+
+    void send()
+    {
+        _thread_send = std::make_unique<std::thread>([this]{
             while(_loop)
             {
+                float speed = _speed;
+                uint16_t servo_pwm = _servo_pwm;
+                _driver->carControl(speed, servo_pwm);
+                if(_sound)
+                {
+                    _driver->buzzerSound(_sound);
+                    _sound = 0;
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
             }
-        })
+        });
     }
+
+    void recv()
+    {
+        _thread_recv = std::make_unique<std::thread>([this]{
+            while(_loop)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            }
+        });
+    }
+
 private:
     int _open()
     {
@@ -51,13 +107,19 @@ private:
             std::cout << "Uart open failed!" << std::endl;
             return -1;
         }
+        return 0;
     }
     bool _loop;
     std::string _serial_path;
     LibSerial::BaudRate _bps;
     std::shared_ptr<Driver> _driver;
+    unsigned char _sound;
     float _speed;
-    uint16_t _servo_pwm
+    uint16_t _servo_pwm;
+    float _recvSpeed;
 
-    std::unique_ptr<std::thread> _thread;
+    std::mutex _mutex;
+    std::condition_variable cond_;
+    std::unique_ptr<std::thread> _thread_send;
+    std::unique_ptr<std::thread> _thread_recv;
 };

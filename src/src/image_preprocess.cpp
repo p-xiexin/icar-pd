@@ -67,7 +67,7 @@ public:
 		cameraMatrix = Mat(3, 3, CV_32FC1, Scalar::all(0)); // 摄像机内参矩阵
 		distCoeffs = Mat(1, 5, CV_32FC1, Scalar::all(0));	// 相机的畸变矩阵
 		FileStorage file;
-		if (file.open("../src/calibration/valid/calibration.xml", FileStorage::READ)) // 读取本地保存的标定文件
+		if (file.open("../res/calibration/valid/calibration.xml", FileStorage::READ)) // 读取本地保存的标定文件
 		{
 			file["cameraMatrix"] >> cameraMatrix;
 			file["distCoeffs"] >> distCoeffs;
