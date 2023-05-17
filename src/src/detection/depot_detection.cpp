@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file depot_detection.cpp
  * @author pxx
@@ -6,7 +8,6 @@
  * @date 2023-05-17
  *
  */
-#pragma once
 
 #include "../../include/common.hpp"
 #include "../../include/predictor.hpp"
@@ -29,8 +30,10 @@ public:
     struct Params 
     {
 		double DangerClose = 100.0;       // 智能车危险距离
+		uint16_t ServoRow = 120;
+		float DepotSpeed = 0.5;
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-            Params, DangerClose); // 添加构造函数
+            Params, DangerClose, ServoRow, DepotSpeed); // 添加构造函数
     };
 
 	bool carStoping = false;
@@ -115,7 +118,7 @@ public:
 
 			searchCones(predict);
 			_pointNearCone = searchNearestCone(track.pointsEdgeLeft, pointEdgeDet);		 // 搜索右下锥桶
-			if (_pointNearCone.x > ROWSIMAGE * 0.3 && _pointNearCone.y != 0) // 当车辆开始靠近右边锥桶：准备入库
+			if (_pointNearCone.x > params.ServoRow && _pointNearCone.y != 0) // 当车辆开始靠近右边锥桶：准备入库
 			{
 				counterRec++;
 				if (counterRec > 2)
