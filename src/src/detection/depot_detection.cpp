@@ -23,6 +23,16 @@ using namespace std;
 class DepotDetection
 {
 public:
+    /**
+     * @brief 控制器核心参数
+     */
+    struct Params 
+    {
+		double DangerClose = 100.0;       // 智能车危险距离
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(
+            Params, DangerClose); // 添加构造函数
+    };
+
 	bool carStoping = false;
 	enum DepotStep
 	{
@@ -105,26 +115,17 @@ public:
 
 			searchCones(predict);
 			_pointNearCone = searchNearestCone(track.pointsEdgeLeft, pointEdgeDet);		 // 搜索右下锥桶
-			if (_pointNearCone.x > ROWSIMAGE * 0.4 && _pointNearCone.y < COLSIMAGE / 10) // 当车辆开始靠近右边锥桶：准备入库
-			{
-				counterRec = 1;
-			}
-
-			if (_pointNearCone.x < ROWSIMAGE * 0.2 && counterRec == 1)
-			{
-				counterRec = 2;
-			}
-			else if (_pointNearCone.x > ROWSIMAGE * 0.3 && counterRec > 1)
+			if (_pointNearCone.x > ROWSIMAGE * 0.3 && _pointNearCone.y != 0) // 当车辆开始靠近右边锥桶：准备入库
 			{
 				counterRec++;
+				if (counterRec > 2)
+				{
+					depotStep = DepotStep::DepotEnter; // 进站使能
+					counterRec = 0;
+					counterSession = 0;
+				}
 			}
 
-			if (counterRec > 3)
-			{
-				depotStep = DepotStep::DepotEnter; // 进站使能
-				counterRec = 0;
-				counterSession = 0;
-			}
 			indexDebug = counterRec;
 			break;
 		}
@@ -132,18 +133,18 @@ public:
 		{
 			searchCones(predict);
 			_pointNearCone = searchClosestCone(pointEdgeDet);
-			if(_distance < 90)
+			if(_distance < params.DangerClose)
 			{
 				counterRec++;
 				if(counterRec > 1)
 				{
-					depotStep = DepotStep::DepotStop; // 进站使能
+					depotStep = DepotStep::DepotStop;
 					counterRec = 0;
 				}
 			}
 
 			POINT start = POINT(ROWSIMAGE - 40, COLSIMAGE - 1);
-			POINT end = POINT(ROWSIMAGE / 2 - 20, 0);
+			POINT end = POINT(ROWSIMAGE / 2 - 15, 0);
 			POINT middle = POINT((start.x + end.x) * 0.4, (start.y + end.y) * 0.6);
 			vector<POINT> input = {start, middle, end};
 			track.pointsEdgeRight = Bezier(0.05, input); // 补线
@@ -204,6 +205,33 @@ public:
 			return true;
 	}
 
+    /**
+     * @brief 加载配置参数Json
+     */
+    void loadParams() 
+    {
+        string jsonPath = "../src/config/depot.json";
+        std::ifstream config_is(jsonPath);
+        if (!config_is.good()) 
+        {
+            std::cout << "Error: Params file path:[" << jsonPath << "] not find .\n";
+            exit(-1);
+        }
+
+        nlohmann::json js_value;
+        config_is >> js_value;
+
+        try 
+        {
+            params = js_value.get<Params>();
+        }
+        catch (const nlohmann::detail::exception &e) 
+        {
+            std::cerr << "Json Params Parse failed :" << e.what() << '\n';
+            exit(-1);
+        }
+    }
+
 	/**
 	 * @brief 识别结果图像绘制
 	 *
@@ -256,7 +284,7 @@ public:
 		putText(image, to_string(_distance), Point(COLSIMAGE / 2 - 15, 40),
 				cv::FONT_HERSHEY_TRIPLEX, 0.3, cv::Scalar(0, 255, 0), 1,
 				CV_AA); // 显示锥桶距离
-		if (_pointNearCone.x > 0)
+		if (_pointNearCone.y > 0)
 			circle(image, Point(_pointNearCone.y, _pointNearCone.x), 3,
 				   Scalar(200, 200, 200), -1);
 
@@ -286,7 +314,7 @@ private:
 	}
 
 	/**
-	 * @brief 搜索距离赛道左边缘最近的锥桶坐标
+	 * @brief 搜索距离赛道左边缘锥桶坐标(右下，非常规意义上的)
 	 *
 	 * @param pointsEdgeLeft 赛道边缘点集
 	 * @param predict AI检测结果
@@ -295,7 +323,7 @@ private:
 	POINT searchNearestCone(vector<POINT> pointsEdgeLeft,
 							vector<POINT> pointsCone)
 	{
-		POINT point(0, 0);
+		POINT point(ROWSIMAGE - 10, 0);
 		double disMin = 50; // 右边缘锥桶离赛道左边缘最小距离
 
 		if (pointsCone.size() <= 0 || pointsEdgeLeft.size() < 10)
@@ -307,7 +335,7 @@ private:
 		for (int i = 0; i < pointsCone.size(); i++)
 		{
 			double dis = distanceForPoint2Line(a, b, pointsCone[i]);
-			if (dis < disMin && pointsCone[i].x > point.x)
+			if (dis < disMin && pointsCone[i].x < point.x)
 			{
 				point = pointsCone[i];
 				_distance = dis;
@@ -476,6 +504,7 @@ private:
 		double len = std::sqrt(dx * dx + dy * dy);
 		return len;
 	}
+	Params params;                   // 读取控制参数
 
 	double _distance = 0;
 	POINT _pointNearCone;
