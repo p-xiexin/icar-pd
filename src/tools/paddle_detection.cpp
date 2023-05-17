@@ -53,12 +53,10 @@ int main(int argc, char const *argv[])
 		// get result
 		predict.render();
 
-
 		Mat imageAi = frame.clone();
 		predict.drawBox(imageAi);
 
 		imshow("AI", imageAi);
-		waitKey(5);
 	}
 	return 0;
 }

@@ -61,9 +61,12 @@ public:
     void Stop()
     {
         _loop = false;
-        _thread_send->join();
-        _thread_recv->join();
-        _driver->close();
+        if (_thread_send && _thread_send->joinable())
+            _thread_send->join();
+        if (_thread_recv && _thread_recv->joinable())
+            _thread_recv->join();
+        if (_driver)
+            _driver->close();
     }
 
 
@@ -93,13 +96,13 @@ public:
             {
                 uint8_t data_addr;
                 data_addr = _driver->receiveStartSignal();
-                if(data_addr == 0x08);
+                if(data_addr == 0x08)
                 {
                     _recvSpeed = _driver->speed_unpack();
                 }
                 else
                 {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(2));
                 }
             }
         });

@@ -305,7 +305,7 @@ public:
   }
 
   /**
-   * @brief 串口接收下位机比赛开始信号
+   * @brief 串口接收下位机信号
    *
    */
   uint8_t receiveStartSignal(void)
@@ -313,12 +313,13 @@ public:
     uint8_t resByte;
     int ret = 0;
 
-    ret = recvdata(resByte, 3000);
+    ret = recvdata(resByte, 300);
     if (ret == 0)
     {
       if (resByte == UsbFrameHead && !usb_Struct.receiveStart) // 帧头检测
       {
         usb_Struct.receiveStart = true;
+        usb_Struct.receiveFinished = false;
         usb_Struct.receiveBuff[0] = resByte;
         usb_Struct.receiveBuff[2] = UsbFrameLengthMin;
         usb_Struct.receiveIndex = 1;
@@ -350,8 +351,8 @@ public:
       {
         uint8_t check = 0;
         uint8_t length = UsbFrameLengthMin;
-
         length = usb_Struct.receiveBuff[2];
+        
         for (int i = 0; i < length - 1; i++)
           check += usb_Struct.receiveBuff[i];
 
@@ -361,19 +362,11 @@ public:
                  UsbFrameLengthMax);
           usb_Struct.receiveFinished = true;
 
-          // 任务开始指令
-          if (0x06 == usb_Struct.receiveBuffFinished[1])
-          {
-            return 0x06;
-          }
-          else if (usb_Struct.receiveBuffFinished[1] == 0x08)
-          {
-            return 0x08;
-          }
         }
 
         usb_Struct.receiveIndex = 0;
         usb_Struct.receiveStart = false;
+        return usb_Struct.receiveBuffFinished[1];
       }
     }
 
@@ -383,10 +376,10 @@ public:
   float speed_unpack()
   {
     Bint32_Union speed;
-    for(int i = 0; i < 4; i++)
-    {
-      speed[i] = usb_Struct.receiveBuffFinished[i + 3];
-    }
+    speed.U8_Buff[0] = usb_Struct.receiveBuffFinished[4];
+    speed.U8_Buff[1] = usb_Struct.receiveBuffFinished[5];
+    speed.U8_Buff[2] = usb_Struct.receiveBuffFinished[6];
+    speed.U8_Buff[3] = usb_Struct.receiveBuffFinished[7];
     return speed.Float;
   }
 

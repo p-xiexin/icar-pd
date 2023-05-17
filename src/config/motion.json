@@ -8,18 +8,21 @@
     "runP3": 0.015,
     "turnP": 3.5,
     "turnD": 3.5,
-    "Kp": 5000.0,
+    "Kp": 4000.0,
     "Ki": 2.45,
     "Kd": 0.0,
     "rowCutUp": 50,
     "rowCutBottom": 10,
-    "Debug": false,
+    "Debug": true,
     "CloseLoop": true,
     "GarageEnable": false,
     "RingEnable": true,
     "CrossEnable": true,
     "StopEnable": false,
     "BridgeEnable": true,
+    "SlowzoneEnable": true,
+    "DepotEnable": true,
+    "circles": 1,
     "record": [
         {
             "#speedLow": "智能车最低速",
@@ -42,7 +45,10 @@
             "#RingEnable": "环岛使能",
             "#CrossEnable": "十字使能",
             "#StopEnable": "冲出赛道停止使能",
-            "#BridgeEnable": "桥梁检测使能"
+            "#BridgeEnable": "桥梁检测使能",
+            "#SlowzoneEnable": "慢行区检测使能",
+            "#DepotEnable": "修车厂使能",
+            "#circles": "智能车运行圈数"
         }
     ]
 }

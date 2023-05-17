@@ -63,11 +63,13 @@ public:
         bool CrossEnable = true;    // 十字使能
         bool StopEnable = false;     // 冲出赛道停止使能
         bool BridgeEnable = false;
+        bool SlowzoneEnable = false;
+        bool DepotEnable = false;
+        uint16_t circles = 2;       // 智能车运行圈数
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
             Params, speedLow, speedHigh, speedGarage, speedCorners, 
-            runP1, runP2, runP3, turnP, turnD, rowCutUp, rowCutBottom, Kp, Ki, Kd,
-            Debug, CloseLoop, GarageEnable, RingEnable, CrossEnable, StopEnable,
-            BridgeEnable); // 添加构造函数
+            runP1, runP2, runP3, turnP, turnD, rowCutUp, rowCutBottom, Kp, Ki, Kd, Debug, CloseLoop, 
+            GarageEnable, RingEnable, CrossEnable, StopEnable, BridgeEnable, SlowzoneEnable, DepotEnable, circles); // 添加构造函数
     };
 
     Params params;                   // 读取控制参数

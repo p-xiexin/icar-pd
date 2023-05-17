@@ -63,8 +63,8 @@ target_link_libraries(${CAMERA_DISPLAY_PROJECT_NAME}  pthread)
 target_link_libraries(${CAMERA_DISPLAY_PROJECT_NAME}  ${OpenCV_LIBS})
 
 # ImageCollection
-set(COLLECTION_PROJECT_NAME "camera_collection")
-set(COLLECTION_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tools/camera_collection.cpp)
+set(COLLECTION_PROJECT_NAME "image_collection")
+set(COLLECTION_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tools/image_collection.cpp)
 add_executable(${COLLECTION_PROJECT_NAME} ${COLLECTION_PROJECT_SOURCES})
 target_link_libraries(${COLLECTION_PROJECT_NAME}  pthread)
 target_link_libraries(${COLLECTION_PROJECT_NAME}  ${OpenCV_LIBS})
@@ -78,6 +78,7 @@ target_link_libraries(${CALIBRATION_PROJECT_NAME}  pthread)
 target_link_libraries(${CALIBRATION_PROJECT_NAME}  ${OpenCV_LIBS})
 target_link_libraries(${CALIBRATION_PROJECT_NAME}  ${SERIAL_LIBRARIES})
 
+# Ai测试
 set(ICAR_PROJECT_NAME "paddle_detection")
 set(ICAR_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tools/paddle_detection.cpp)
 add_executable(${ICAR_PROJECT_NAME} ${ICAR_PROJECT_SOURCES})
@@ -86,6 +87,21 @@ target_link_libraries(${ICAR_PROJECT_NAME}  ${ONNX_LIBRARIES})
 target_link_libraries(${ICAR_PROJECT_NAME}  ${OpenCV_LIBS})
 target_link_libraries(${ICAR_PROJECT_NAME}  pthread )
 
+# 多线程测试
+set(ICAR_PROJECT_NAME "test")
+set(ICAR_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tools/test.cpp)
+add_executable(${ICAR_PROJECT_NAME} ${ICAR_PROJECT_SOURCES})
+target_link_libraries(${ICAR_PROJECT_NAME}  ${PPNC_LIBRARIES})
+target_link_libraries(${ICAR_PROJECT_NAME}  ${ONNX_LIBRARIES})
+target_link_libraries(${ICAR_PROJECT_NAME}  ${OpenCV_LIBS})
+target_link_libraries(${ICAR_PROJECT_NAME}  pthread )
+
+# pid调试
+set(ICAR_PROJECT_NAME "pid_test")
+set(ICAR_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tools/pid_test.cpp)
+add_executable(${ICAR_PROJECT_NAME} ${ICAR_PROJECT_SOURCES})
+target_link_libraries(${ICAR_PROJECT_NAME}  ${SERIAL_LIBRARIES})
+target_link_libraries(${ICAR_PROJECT_NAME}  ${OpenCV_LIBS})
 
 #---------------------------------------------------------------------
 #               [ bin ] ==> [ main ]
@@ -98,6 +114,4 @@ target_link_libraries(${ICAR_PROJECT_NAME}  ${ONNX_LIBRARIES})
 target_link_libraries(${ICAR_PROJECT_NAME}  ${OpenCV_LIBS})
 target_link_libraries(${ICAR_PROJECT_NAME}  pthread )
 target_link_libraries(${ICAR_PROJECT_NAME}  ${SERIAL_LIBRARIES})
-
-
 

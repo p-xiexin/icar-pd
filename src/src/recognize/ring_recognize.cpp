@@ -54,16 +54,20 @@ public:
      */
     bool ringRecognition(TrackRecognition &track, Mat img_bin)
     {
+        if (track.pointsEdgeRight.size() < ROWSIMAGE / 8 || track.pointsEdgeLeft.size() < ROWSIMAGE / 8) //环岛有效行限制
+        {
+            return ringType;
+        }
+
         static uint16_t counterShield = 0; // 环岛检测屏蔽计数器：屏蔽车库误检测
+        if (track.garageEnable.x)
+        {
+            counterShield = 0;
+        }
         if (counterShield < 40)
         {
             counterShield++;
             return false;
-        }
-
-        if (track.pointsEdgeRight.size() < ROWSIMAGE / 8 || track.pointsEdgeLeft.size() < ROWSIMAGE / 8) //环岛有效行限制
-        {
-            return ringType;
         }
 
 
@@ -76,7 +80,7 @@ public:
             uint16_t rowBreakRightDown = searchBreakRightDown(track.pointsEdgeRight, 0, ROWSIMAGE / 2);
             uint16_t rowBreakLeftDown = searchBreakLeftDown(track.pointsEdgeLeft, 0, ROWSIMAGE / 2);
 
-            if(rowBreakLeftDown != 0 && rowBreakRightDown == 0 && track.stdevLeft > 200 && track.stdevRight < 50
+            if(rowBreakLeftDown != 0 && rowBreakRightDown == 0 && track.stdevLeft > 150 && track.stdevRight < 50
                 && abs(track.pointsEdgeRight[0].y - track.pointsEdgeRight[ROWSIMAGE / 2].y) > 5
                 && track.widthBlock[rowBreakLeftDown + 5].y > COLSIMAGE / 2)
             {
@@ -87,7 +91,7 @@ public:
                     ringType = RingType::RingLeft;
                 }
             }
-            else if(rowBreakLeftDown == 0 && rowBreakRightDown != 0 && track.stdevLeft < 50 && track.stdevRight > 200
+            else if(rowBreakLeftDown == 0 && rowBreakRightDown != 0 && track.stdevLeft < 50 && track.stdevRight > 150
                 && abs(track.pointsEdgeLeft[0].y - track.pointsEdgeLeft[ROWSIMAGE / 2].y) > 5
                 && track.widthBlock[rowBreakRightDown + 5].y > COLSIMAGE / 2)
             {
@@ -110,6 +114,12 @@ public:
         }
         else if(ringType != RingType::RingNone && ringStep == RingStep::None)
         {
+			// counterExit++;
+			// if (counterExit > 60) {
+			//   reset();
+			//   return false;
+			// }
+
             if(ringType == RingType::RingLeft)
             {
                 uint16_t rowBreakLeftD = searchBreakLeftDown(track.pointsEdgeLeft, 0, ROWSIMAGE / 2);
@@ -576,10 +586,6 @@ public:
     }
 
 private:
-    uint16_t counterSpurroad = 0; // 岔路计数器
-    uint16_t ring_cnt = 0; // 环岛检测确认计数器
-    POINT pointBreakU;
-    POINT pointBreakD;
 
     /**
      * @brief 环岛类型
@@ -765,4 +771,11 @@ private:
 
         return 0;
     }
+
+    uint16_t counterSpurroad = 0; // 岔路计数器
+    uint16_t ring_cnt = 0; // 环岛检测确认计数器
+	uint16_t counterExit = 0;	  // 异常退出计数器
+
+    POINT pointBreakU;
+    POINT pointBreakD;
 };

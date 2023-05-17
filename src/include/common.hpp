@@ -5,7 +5,7 @@
 #include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/opencv.hpp>
-// #include "../src/perspective_mapping.cpp"
+#include "../src/perspective_mapping.cpp"
 
 // using nlohmann::json;
 using namespace std;
@@ -24,8 +24,8 @@ using namespace cv;
 
 #define COLSIMAGE 320    // 图像的列数
 #define ROWSIMAGE 240    // 图像的行数
-// #define COLSIMAGEIPM 320 // IPM图像的列数
-// #define ROWSIMAGEIPM 400 // IPM图像的行数
+#define COLSIMAGEIPM 320 // IPM图像的列数
+#define ROWSIMAGEIPM 400 // IPM图像的行数
 #define PWMSERVOMAX 1850 // 舵机PWM最大值（左）1850
 #define PWMSERVOMID 1500 // 舵机PWM中值 1500
 #define PWMSERVOMIN 1150 // 舵机PWM最小值（右）1150
@@ -39,7 +39,7 @@ using namespace cv;
 #define LABEL_CROSSWALK "crosswalk" // AI标签：斑马线
 #define LABEL_BUMP "bump"           // AI标签：减速带
 
-//PerspectiveMapping ipm; // 逆透视变换公共类
+PerspectiveMapping ipm; // 逆透视变换公共类
 
 struct POINT
 {
