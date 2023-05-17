@@ -376,10 +376,10 @@ public:
   float speed_unpack()
   {
     Bint32_Union speed;
-    speed.U8_Buff[0] = usb_Struct.receiveBuffFinished[4];
-    speed.U8_Buff[1] = usb_Struct.receiveBuffFinished[5];
-    speed.U8_Buff[2] = usb_Struct.receiveBuffFinished[6];
-    speed.U8_Buff[3] = usb_Struct.receiveBuffFinished[7];
+    speed.U8_Buff[0] = usb_Struct.receiveBuffFinished[3];
+    speed.U8_Buff[1] = usb_Struct.receiveBuffFinished[4];
+    speed.U8_Buff[2] = usb_Struct.receiveBuffFinished[5];
+    speed.U8_Buff[3] = usb_Struct.receiveBuffFinished[6];
     return speed.Float;
   }
 
