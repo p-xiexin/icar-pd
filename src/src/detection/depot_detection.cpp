@@ -31,9 +31,11 @@ public:
     {
 		double DangerClose = 100.0;       // 智能车危险距离
 		uint16_t ServoRow = 120;
+		uint16_t ServoValue = 15;
 		float DepotSpeed = 0.5;
+		uint16_t ExitFrameCnt = 10;
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-            Params, DangerClose, ServoRow, DepotSpeed); // 添加构造函数
+            Params, DangerClose, ServoRow, ServoValue, DepotSpeed, ExitFrameCnt); // 添加构造函数
     };
 
 	bool carStoping = false;
@@ -147,7 +149,7 @@ public:
 			}
 
 			POINT start = POINT(ROWSIMAGE - 40, COLSIMAGE - 1);
-			POINT end = POINT(ROWSIMAGE / 2 - 15, 0);
+			POINT end = POINT(ROWSIMAGE / 2 - params.ServoValue, 0);
 			POINT middle = POINT((start.x + end.x) * 0.4, (start.y + end.y) * 0.6);
 			vector<POINT> input = {start, middle, end};
 			track.pointsEdgeRight = Bezier(0.05, input); // 补线
@@ -181,11 +183,14 @@ public:
 				depotStep = DepotStep::DepotExit; // 出站使能
 				counterRec = 0;
 			}
+			track.pointsEdgeLeft = pathsEdgeLeft[pathsEdgeLeft.size() - 1];//维持入库最后的打角
+			track.pointsEdgeRight = pathsEdgeRight[pathsEdgeRight.size() - 1];
 			break;
 		}
 
 		case DepotStep::DepotExit: //[06] 出站使能
 		{
+			counterRec++;
 			if (pathsEdgeLeft.size() < 1 || pathsEdgeRight.size() < 1)
 			{
 				depotStep = DepotStep::DepotNone; // 出厂完成
@@ -195,6 +200,10 @@ public:
 			{
 				track.pointsEdgeLeft = pathsEdgeLeft[pathsEdgeLeft.size() - 1];
 				track.pointsEdgeRight = pathsEdgeRight[pathsEdgeRight.size() - 1];
+			}
+			
+			if(counterRec > params.ExitFrameCnt)
+			{
 				pathsEdgeLeft.pop_back();
 				pathsEdgeRight.pop_back();
 			}
