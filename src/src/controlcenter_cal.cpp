@@ -190,64 +190,64 @@ public:
         double controlCenter_Calculate = 0.0;
         for (auto p : centerEdge)
         {
-            //传统分割区域，经验参数权限比重控制
-            if (p.x < ROWSIMAGE / 5)
-            {
-                controlNum += (p.x * 0.34);
-                controlCenter_Calculate += p.y * (p.x * 0.34);
-            }
-            else if(p.x < ROWSIMAGE * 2 / 5 && p.x >= ROWSIMAGE / 5)
-            {
-                controlNum += (0.64 * p.x - 9.6);
-                controlCenter_Calculate += p.y * (0.64 * p.x - 9.6);
-            }
-            else if(p.x < ROWSIMAGE * 3 / 5 && p.x >= ROWSIMAGE * 2 / 5)
-            {
-                controlNum += (0.96 * p.x - 9.6);
-                controlCenter_Calculate += p.y * (0.96 * p.x - 9.6);
-            }
-            else if(p.x < ROWSIMAGE * 4 / 5 && p.x >= ROWSIMAGE * 3 / 5)
-            {
-                controlNum += (300 - p.x);
-                controlCenter_Calculate += p.y * (300 - p.x);
-            }
-            else if(p.x < ROWSIMAGE && p.x >= ROWSIMAGE * 4 / 5)
-            {
-                controlNum += (150 - p.x * 0.625);
-                controlCenter_Calculate += p.y * (150 - p.x * 0.625);
-            }
-
-            // //经验参数曲线拟合权限控制法,加上经验比例参数->计算量比较大，而且效果一般
+            // //传统分割区域，经验参数权限比重控制
             // if (p.x < ROWSIMAGE / 5)
             // {
-            //     double temp = normal_pdf(curve_fitting_output(ROWSIMAGE - p.x), miu, singema);
-            //     controlNum += temp * 0.35;
-            //     controlCenter_Calculate += p.y * temp * 0.35;
+            //     controlNum += (p.x * 0.34);
+            //     controlCenter_Calculate += p.y * (p.x * 0.34);
             // }
             // else if(p.x < ROWSIMAGE * 2 / 5 && p.x >= ROWSIMAGE / 5)
             // {
-            //     double temp = normal_pdf(curve_fitting_output(ROWSIMAGE - p.x), miu, singema);
-            //     controlNum += temp * 0.96;
-            //     controlCenter_Calculate += p.y * temp * 0.96;
+            //     controlNum += (0.5 * p.x - 9.6);
+            //     controlCenter_Calculate += p.y * (0.5 * p.x - 9.6);
             // }
             // else if(p.x < ROWSIMAGE * 3 / 5 && p.x >= ROWSIMAGE * 2 / 5)
             // {
-            //     double temp = normal_pdf(curve_fitting_output(ROWSIMAGE - p.x), miu, singema);
-            //     controlNum += temp * 1.21;
-            //     controlCenter_Calculate += p.y * temp * 1.21;
+            //     controlNum += (0.68 * p.x - 10);
+            //     controlCenter_Calculate += p.y * (0.68 * p.x - 10);
             // }
             // else if(p.x < ROWSIMAGE * 4 / 5 && p.x >= ROWSIMAGE * 3 / 5)
             // {
-            //     double temp = normal_pdf(curve_fitting_output(ROWSIMAGE - p.x), miu, singema);
-            //     controlNum += temp * 2.08;
-            //     controlCenter_Calculate += p.y * temp * 2.08;
+            //     controlNum += (300 - p.x);
+            //     controlCenter_Calculate += p.y * (300 - p.x);
             // }
             // else if(p.x < ROWSIMAGE && p.x >= ROWSIMAGE * 4 / 5)
             // {
-            //     double temp = normal_pdf(curve_fitting_output(ROWSIMAGE - p.x), miu, singema);
-            //     controlNum += temp * 0.45;
-            //     controlCenter_Calculate += p.y * temp * 0.45;
+            //     controlNum += (150 - p.x * 0.8);
+            //     controlCenter_Calculate += p.y * (150 - p.x * 0.8);
             // }
+
+            //经验参数曲线拟合权限控制法,加上经验比例参数->计算量比较大，而且效果一般
+            if (p.x < ROWSIMAGE / 5)
+            {
+                double temp = normal_pdf(curve_fitting_output(ROWSIMAGE - p.x), miu, singema);
+                controlNum += temp * 0.35;
+                controlCenter_Calculate += p.y * temp * 0.35;
+            }
+            else if(p.x < ROWSIMAGE * 2 / 5 && p.x >= ROWSIMAGE / 5)
+            {
+                double temp = normal_pdf(curve_fitting_output(ROWSIMAGE - p.x), miu, singema);
+                controlNum += temp * 0.96;
+                controlCenter_Calculate += p.y * temp * 0.96;
+            }
+            else if(p.x < ROWSIMAGE * 3 / 5 && p.x >= ROWSIMAGE * 2 / 5)
+            {
+                double temp = normal_pdf(curve_fitting_output(ROWSIMAGE - p.x), miu, singema);
+                controlNum += temp * 1.21;
+                controlCenter_Calculate += p.y * temp * 1.21;
+            }
+            else if(p.x < ROWSIMAGE * 4 / 5 && p.x >= ROWSIMAGE * 3 / 5)
+            {
+                double temp = normal_pdf(curve_fitting_output(ROWSIMAGE - p.x), miu, singema);
+                controlNum += temp * 2.08;
+                controlCenter_Calculate += p.y * temp * 2.08;
+            }
+            else if(p.x < ROWSIMAGE && p.x >= ROWSIMAGE * 4 / 5)
+            {
+                double temp = normal_pdf(curve_fitting_output(ROWSIMAGE - p.x), miu, singema);
+                controlNum += temp * 0.45;
+                controlCenter_Calculate += p.y * temp * 0.45;
+            }
         }
         if (controlNum > 0)
         {

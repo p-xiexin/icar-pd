@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
         {
             static int counter = 0;
             counter++;
-            string img_path = "../src/calibration/temp/";
+            string img_path = "/mnt/media/";
             string name = img_path + to_string(counter) + ".jpg";
             imwrite(name, frame);
 			cout << "OK\t" << counter << endl;

@@ -288,3 +288,21 @@ void line(vector<POINT> &line, uint16_t p0, POINT p1)
 		if (e2 < dy) { erro += dx; y0 += sy; }
 	}
 }
+
+//生成随机图片名称
+std::string generateRandomFileName(std::string img_path)
+{
+	time_t now = time(0);
+	tm* localtm = localtime(&now);
+
+	char buffer[80];
+	strftime(buffer, 80, "%Y-%m-%d_%H-%M-%S", localtm);
+
+	srand(time(NULL));
+	int randNum = rand() % 10000;
+
+	string fileName = string(buffer) + "_" + to_string(randNum);
+    fileName = img_path + fileName;
+
+	return fileName;
+}

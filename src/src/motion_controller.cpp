@@ -57,6 +57,7 @@ public:
         uint16_t rowCutUp = 30;     // 图像顶部切行
         uint16_t rowCutBottom = 10; // 图像顶部切行
         bool Debug = false;
+        bool SaveImage = false;
         bool CloseLoop = true;
         bool GarageEnable = false;   // 出入库使能
         bool RingEnable = false;     // 环岛使能
@@ -68,7 +69,7 @@ public:
         uint16_t circles = 2;       // 智能车运行圈数
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
             Params, speedLow, speedHigh, speedGarage, speedCorners, 
-            runP1, runP2, runP3, turnP, turnD, rowCutUp, rowCutBottom, Kp, Ki, Kd, Debug, CloseLoop, 
+            runP1, runP2, runP3, turnP, turnD, rowCutUp, rowCutBottom, Kp, Ki, Kd, Debug, SaveImage, CloseLoop, 
             GarageEnable, RingEnable, CrossEnable, StopEnable, BridgeEnable, SlowzoneEnable, DepotEnable, circles); // 添加构造函数
     };
 
@@ -86,10 +87,10 @@ public:
         static int errorLast = 0;                    // 记录前一次的偏差
         static int T_cnt = 0;
 
-        if(abs(error - errorLast) > COLSIMAGE / 12) 
+        if(abs(error - errorLast) > COLSIMAGE / 10) 
         {
             T_cnt++;
-            error = error > errorLast ? errorLast + COLSIMAGE / 12 : errorLast - COLSIMAGE / 12;
+            error = error > errorLast ? errorLast + COLSIMAGE / 10 : errorLast - COLSIMAGE / 10;
         }
         else
         {
@@ -97,10 +98,16 @@ public:
         }
 
         params.turnP = abs(error) * params.runP2 + params.runP1;
-        if(T_cnt >= 5)
+        // if(T_cnt >= 5)
+        // {
+        //     params.turnP += params.runP3 * abs(error);
+        // }
+
+        if(T_cnt >= 3)
         {
-            params.turnP += params.runP3 * abs(error);
+            params.turnP += params.runP3* abs(error)* abs(error);
         }
+
         // turnP = max(turnP,0.2);
         //  if(turnP<0.2){
         //      turnP = 0.2;
