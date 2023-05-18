@@ -202,10 +202,11 @@ public:
                     track.pointsEdgeLeft.resize(spurroad_item);
                     track.pointsEdgeRight.resize(spurroad_item);
 
+                    const uint16_t width_thresh = track.pointsEdgeRight[spurroad_item - 1].y - track.pointsEdgeLeft[spurroad_item - 1].y;
                     uint16_t mid = (track.pointsEdgeLeft[spurroad_item - 1].y + track.pointsEdgeRight[spurroad_item - 1].y) / 2;
                     POINT left(0, 0);
                     POINT right(0, 0);
-                    for(int i = corner.x - 1; i > ROWSIMAGE / 2; i--)
+                    for(int i = corner.x - 1; i > ROWSIMAGE / 3; i--)
                     {
                         int j = mid;
                         for(j = mid; j < COLSIMAGE - 5; j++)
@@ -236,7 +237,7 @@ public:
                             left = POINT(i, 0);
                         }
                         uint16_t width = abs(right.y - left.y);
-                        if(width < COLSIMAGE / 10)
+                        if(width < COLSIMAGE / 10 || width > width_thresh)
                         {
                             break;
                         }
@@ -292,10 +293,11 @@ public:
                     track.pointsEdgeLeft.resize(spurroad_item);
                     track.pointsEdgeRight.resize(spurroad_item);
 
+                    const uint16_t width_thresh = track.pointsEdgeRight[spurroad_item - 1].y - track.pointsEdgeLeft[spurroad_item - 1].y;
                     uint16_t mid = (track.pointsEdgeLeft[spurroad_item - 1].y + track.pointsEdgeRight[spurroad_item - 1].y) / 2;
                     POINT left(0, 0);
                     POINT right(0, 0);
-                    for(int i = corner.x - 1; i > ROWSIMAGE / 2; i--)
+                    for(int i = corner.x - 1; i > ROWSIMAGE / 3; i--)
                     {
                         int j = mid;
                         for(j = mid; j < COLSIMAGE - 5; j++)
@@ -326,7 +328,7 @@ public:
                             left = POINT(i, 0);
                         }
                         uint16_t width = abs(right.y - left.y);
-                        if(width < COLSIMAGE / 10)
+                        if(width < COLSIMAGE / 10 || width > width_thresh)
                         {
                             break;
                         }
