@@ -29,16 +29,17 @@ public:
      */
     struct Params 
     {
+		uint16_t DepotCheck = 3;
 		double DangerClose = 100.0;       // 智能车危险距离
 		uint16_t ServoRow = 120;
 		uint16_t ServoValue = 15;
 		float DepotSpeed = 0.5;
+		uint16_t BrakeCnt = 5;
 		uint16_t ExitFrameCnt = 10;
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-            Params, DangerClose, ServoRow, ServoValue, DepotSpeed, ExitFrameCnt); // 添加构造函数
+            Params, DepotCheck, DangerClose, ServoRow, ServoValue, DepotSpeed, BrakeCnt, ExitFrameCnt); // 添加构造函数
     };
 
-	bool carStoping = false;
 	enum DepotStep
 	{
 		DepotNone = 0, // 未触发
@@ -48,7 +49,6 @@ public:
 		DepotStop,	   // 停车
 		DepotExit	   // 维修厂出站
 	};
-	DepotStep depotStep = DepotStep::DepotNone;
 
 	/**
 	 * @brief 维修厂检测初始化
@@ -56,7 +56,6 @@ public:
 	 */
 	void reset(void)
 	{
-		carStoping = false;
 		depotStep = DepotStep::DepotNone;
 		counterSession = 0;			// 图像场次计数器
 		counterRec = 0;				// 维修厂标志检测计数器
@@ -93,13 +92,13 @@ public:
 				if (counterRec)
 				{
 					counterSession++;
-					if (counterRec > 3 && counterSession < 8)
+					if (counterRec > params.DepotCheck && counterSession < params.DepotCheck + 3)
 					{
 						depotStep = DepotStep::DepotEnable; // 维修厂使能
 						counterRec = 0;
 						counterSession = 0;
 					}
-					else if (counterSession >= 8)
+					else if (counterSession >= params.DepotCheck + 3)
 					{
 						counterRec = 0;
 						counterSession = 0;
@@ -143,7 +142,7 @@ public:
 				counterRec++;
 				if(counterRec > 1)
 				{
-					depotStep = DepotStep::DepotStop;
+					depotStep = DepotStep::DepotCruise;
 					counterRec = 0;
 				}
 			}
@@ -162,24 +161,29 @@ public:
 			break;
 		}
 
-		case DepotStep::DepotCruise: //[04] 巡航使能
+		case DepotStep::DepotCruise: //[04] 巡航使能(Brake)
 		{
 			{
 				// 预留给以后完善
 			}
-
-			pathsEdgeLeft.push_back(track.pointsEdgeLeft); // 记录进厂轨迹
-			pathsEdgeRight.push_back(track.pointsEdgeRight);
+			counterRec++;
+			if(counterRec > params.BrakeCnt)
+			{
+				counterRec = 0;
+				depotStep = DepotStep::DepotStop;
+			}
+			track.pointsEdgeLeft = pathsEdgeLeft[pathsEdgeLeft.size() - 1];//维持入库最后的打角
+			track.pointsEdgeRight = pathsEdgeRight[pathsEdgeRight.size() - 1];
+			// pathsEdgeLeft.push_back(track.pointsEdgeLeft); // 记录进厂轨迹
+			// pathsEdgeRight.push_back(track.pointsEdgeRight);
 			break;
 		}
 
 		case DepotStep::DepotStop: //[05] 停车使能
 		{
-			carStoping = true;
 			counterRec++;
 			if (counterRec > 30) // 停车：40场 = 2s
 			{
-				carStoping = false;
 				depotStep = DepotStep::DepotExit; // 出站使能
 				counterRec = 0;
 			}
@@ -243,6 +247,44 @@ public:
             exit(-1);
         }
     }
+
+	/**
+	 * @brief 获取维修区速度规划
+	 *
+	 */
+	float get_speed()
+	{
+		float speed = 0.0f;
+		switch(depotStep)
+		{
+		case DepotStep::DepotEnable:
+		{
+			speed = params.DepotSpeed;
+			break;
+		}
+		case DepotStep::DepotEnter:
+		{
+			speed = params.DepotSpeed;
+			break;
+		}
+		case DepotStep::DepotCruise:
+		{
+			speed = -params.DepotSpeed;
+			break;
+		}
+		case DepotStep::DepotStop:
+		{
+			speed = 0.0f;
+			break;
+		}
+		case DepotStep::DepotExit:
+		{
+			speed = -params.DepotSpeed * 1.5;
+			break;
+		}
+		}
+		return speed;
+	}
 
 	/**
 	 * @brief 识别结果图像绘制
@@ -516,8 +558,10 @@ private:
 		double len = std::sqrt(dx * dx + dy * dy);
 		return len;
 	}
+	
+	DepotStep depotStep = DepotStep::DepotNone;
 	Params params;                   // 读取控制参数
-
+	
 	double _distance = 0;
 	POINT _pointNearCone;
 	vector<POINT> pointEdgeDet; // AI元素检测边缘点集
