@@ -34,10 +34,11 @@ public:
 		uint16_t ServoRow = 120;
 		uint16_t ServoValue = 15;
 		float DepotSpeed = 0.5;
+		uint16_t DelayCnt = 3;
 		uint16_t BrakeCnt = 5;
 		uint16_t ExitFrameCnt = 10;
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-            Params, DepotCheck, DangerClose, ServoRow, ServoValue, DepotSpeed, BrakeCnt, ExitFrameCnt); // 添加构造函数
+            Params, DepotCheck, DangerClose, ServoRow, ServoValue, DepotSpeed, DelayCnt, BrakeCnt, ExitFrameCnt); // 添加构造函数
     };
 
 	enum DepotStep
@@ -116,10 +117,11 @@ public:
 			//   reset();
 			//   return false;
 			// }
+			counterSession++;//刚进入维修区，延时等待知道能看到所有锥桶
 
 			searchCones(predict);
 			_pointNearCone = searchNearestCone(track.pointsEdgeLeft, pointEdgeDet);		 // 搜索右下锥桶
-			if (_pointNearCone.x > params.ServoRow && _pointNearCone.y != 0) // 当车辆开始靠近右边锥桶：准备入库
+			if (_pointNearCone.x > params.ServoRow && _pointNearCone.y != 0 && counterSession > params.DelayCnt) // 当车辆开始靠近右边锥桶：准备入库
 			{
 				counterRec++;
 				if (counterRec > 2)
@@ -378,7 +380,7 @@ private:
 							vector<POINT> pointsCone)
 	{
 		POINT point(ROWSIMAGE - 10, 0);
-		double disMin = 80; // 右边缘锥桶离赛道左边缘最小距离
+		double disMin = 100; // 右边缘锥桶离赛道左边缘最小距离
 
 		if (pointsCone.size() <= 0 || pointsEdgeLeft.size() < 10)
 			return point;
