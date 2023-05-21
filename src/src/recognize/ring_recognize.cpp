@@ -175,9 +175,16 @@ public:
                 else if(track.spurroad.size() == 1)
                 {
                     //寻找岔路行对应边线下标
-                    corner = track.spurroad[0];
-                    spurroad_item = abs(corner.x - track.pointsEdgeLeft[0].x);
-                    rowBreakLeftD = searchBreakLeftDown(track.pointsEdgeLeft, 0, spurroad_item);
+                    if(track.spurroad[0].y > 80)
+                    {
+                        corner = track.spurroad[0];
+                        spurroad_item = abs(corner.x - track.pointsEdgeLeft[0].x);
+                        rowBreakLeftD = searchBreakLeftDown(track.pointsEdgeLeft, 0, spurroad_item);
+                    }
+                    else
+                    {
+                        rowBreakLeftD = searchBreakLeftDown(track.pointsEdgeLeft, 0, track.pointsEdgeLeft.size());
+                    }
                 }
                 else
                 {
@@ -265,10 +272,17 @@ public:
                 }
                 else if(track.spurroad.size() == 1)
                 {
-                    //寻找岔路行对应边线下标
-                    corner = track.spurroad[0];
-                    spurroad_item = abs(corner.x - track.pointsEdgeRight[0].x);
-                    rowBreakRightD = searchBreakRightDown(track.pointsEdgeRight, 0, spurroad_item);
+                    if(track.spurroad[0].y < COLSIMAGE - 80)
+                    {
+                        //寻找岔路行对应边线下标
+                        corner = track.spurroad[0];
+                        spurroad_item = abs(corner.x - track.pointsEdgeRight[0].x);
+                        rowBreakRightD = searchBreakRightDown(track.pointsEdgeRight, 0, spurroad_item);
+                    }
+                    else
+                    {
+                        rowBreakRightD = searchBreakRightDown(track.pointsEdgeRight, 0, track.pointsEdgeRight.size());
+                    }
                 }
                 else
                 {
@@ -483,7 +497,7 @@ public:
                 if(rowBreakRight > ROWSIMAGE / 4)
                 {
                     pointBreakU = track.pointsEdgeLeft[rowBreakLeft];
-                    pointBreakU.y += COLSIMAGE / 10;
+                    pointBreakU.y += COLSIMAGE / 8;
                     pointBreakD = track.pointsEdgeRight[0];
                     line(track.pointsEdgeRight, 0, pointBreakU);
                     track.pointsEdgeLeft.resize(rowBreakLeft);
@@ -499,7 +513,7 @@ public:
                 if(rowBreakLeft > ROWSIMAGE)
                 {
                     pointBreakU = track.pointsEdgeRight[rowBreakRight];
-                    pointBreakU.y -= COLSIMAGE / 10;
+                    pointBreakU.y -= COLSIMAGE / 8;
                     pointBreakD = track.pointsEdgeLeft[0];
                     line(track.pointsEdgeLeft, 0, pointBreakU);
                     track.pointsEdgeLeft.resize(rowBreakRight);
