@@ -1,0 +1,12 @@
+{
+    "BridgeChack": 3,
+    "SpeedUp": 2.0,
+    "ExitFrameCnt": 30,
+    "record": [
+        {
+            "#BridgeChack": "桥梁确认帧数",
+            "#SpeedUp": "上桥加速",
+            "#ExitFrameCnt": "桥梁区域退出计数"
+        }
+    ]
+}
