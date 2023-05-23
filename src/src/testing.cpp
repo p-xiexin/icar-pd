@@ -11,9 +11,7 @@
 #include "./recognize/track_recognition.cpp" //基础巡线
 #include "./recognize/cross_recognition.cpp" //十字赛道
 #include "./recognize/ring_recognize.cpp"    //环岛赛道
-
-#include "./recognize/garage_recognition.cpp" //车库及斑马线识别类
-// #include "./recognize/garage_recognize.cpp" //车库及斑马线识别类
+#include "./recognize/garage_recognize.cpp" //车库及斑马线识别类
 
 #include "image_preprocess.cpp" //图像预处理
 #include "controlcenter_cal.cpp"
@@ -73,21 +71,12 @@ int main(int argc, char *argv[])
     uint16_t counterOutTrackA = 0;             // 车辆冲出赛道计数器A
     uint16_t counterOutTrackB = 0;             // 车辆冲出赛道计数器B
 
-    /*****************/
-    uint16_t circlesThis = 1;    // 智能车当前运行的圈数
-    uint16_t countercircles = 0; // 圈数计数器
-
     // PPNC初始化
     if (!detection.init("../res/model/yolov3_mobilenet_v1")) // AI推理初始化
         return 1;
 
     ipm.init(Size(COLSIMAGE, ROWSIMAGE),
              Size(COLSIMAGEIPM, ROWSIMAGEIPM)); // IPM逆透视变换初始化
-
-    /*******读取配置文件*******/
-    motionController.loadParams();
-    depotDetection.loadParams();
-    // garageRecognition.loadParams();
 
     // 下位机初始化通信
     int ret = serialInterface.open();
@@ -120,8 +109,8 @@ int main(int argc, char *argv[])
     /*****出入库使能******/
     if (motionController.params.GarageEnable)
     {
-        roadType = RoadType::GarageHandle; // 初始赛道元素为出库
-        // garageRecognition.garage_reset();       	// 出入库状态机，初始为出库准备
+        roadType = RoadType::GarageHandle;          // 初始赛道元素为出库
+        garageRecognition.garage_reset();       	// 出入库状态机，初始为出库准备
     }
 
     /*****调试模式初始化图像窗口*****/
@@ -201,112 +190,50 @@ int main(int argc, char *argv[])
         Mat imageTrack = imgaeCorrect.clone();          // RGB
                                                         // trackRecognition.drawImage(imageTrack); 			// 图像显示赛道线识别结果
 
-        // /*******4.出库和入库识别与路径规划*********/
-        // if (motionController.params.GarageEnable) // 出库元素是否使能开启，根据配置文件得到
-        // {
-        // 	// 道路类型在车库或者基础赛道，进行相关处理
-        // 	if (roadType == RoadType::GarageHandle || roadType == RoadType::BaseHandle)
-        // 	{
-        //         // 进行斑马线检测，检测到斑马线，清空其他状态机
-        //         if(garageRecognition.garage_contral(detection.results, trackRecognition))
-        //         {
-        // 			bridgeDetection.reset();                    // 桥梁
-        // 			depotDetection.reset();	                    // 维修
-        // 			// farmlandDetection.reset();				// 农田区域
-        // 			// granaryDetection.reset();				// 粮仓
-        // 			slowZoneDetection.reset();	                // 慢行区
-        // 			crossroadRecognition.reset();               // 十字道路
-        // 			// freezoneRecognition.reset(); 			// 泛行区
-        // 			ringRecognition.reset();                    // 环岛
+		/*******4.出库和入库识别与路径规划*********/
+		if (motionController.params.GarageEnable && AI_enable) // 出库元素是否使能开启，根据配置文件得到
+		{
+			// 道路类型在车库或者基础赛道，进行相关处理
+			if (roadType == RoadType::GarageHandle || roadType == RoadType::BaseHandle)
+			{
+				// 进行斑马线检测，检测到斑马线，清空其他状态机
+				if (garageRecognition.garage_contral(ai_results->predictor_results, trackRecognition))
+				{
+					bridgeDetection.reset(); // 桥梁
+					depotDetection.reset();	 // 维修
+					// farmlandDetection.reset();				// 农田区域
+					// granaryDetection.reset();				// 粮仓
+					slowZoneDetection.reset();	  // 慢行区
+					crossroadRecognition.reset(); // 十字道路
+					// freezoneRecognition.reset(); 			// 泛行区
+					ringRecognition.reset(); // 环岛
 
-        // 			if (roadType == RoadType::BaseHandle) 		// 初次识别-蜂鸣器提醒
-        // 				serialInterface.buzzerSound(1);			// OK
+					if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
+						serialInterface.buzzerSound(1);	  // OK
 
-        //             roadType = RoadType::GarageHandle;
-        //         }
-        //         else
-        //             roadType = RoadType::BaseHandle;
+					roadType = RoadType::GarageHandle;
+				}
+				else
+					roadType = RoadType::BaseHandle;
 
-        //         if(garageRecognition.get_now_value())
-        //         {
-        //             // 蜂鸣器提示，已经入库
-        //             serialInterface.buzzerSound(1);
-        // 			cout << ">>>>>>>   入库结束 !!!!!" << endl;
-        //             callbackSignal(0);
-        //         }
+				if (garageRecognition.get_now_value())
+				{
+					// 蜂鸣器提示，已经入库
+					serialInterface.buzzerSound(1);
+					cout << ">>>>>>>   入库结束 !!!!!" << endl;
+					callbackSignal(0);
+				}
 
-        // 		// 在调试模式下，如果有检测到斑马线，显示图像
-        // 		if(roadType == RoadType::GarageHandle && motionController.params.Debug)
-        // 		{
-        // 			Mat imageGarage = Mat::zeros(Size(COLSIMAGE, ROWSIMAGE), CV_8UC3); // 初始化图像
-        // 			garageRecognition.drawImage(trackRecognition, imageGarage);
-        // 			imshow("imageRecognition", imageGarage); // 添加需要显示的图像
-        // 			imshowRec = true;
-        // 		}
-        // 	}
-        // }
-
-        // [04] 出库和入库识别与路径规划
-        if (motionController.params.GarageEnable && AI_enable) // 赛道元素是否使能
-        {
-            if (roadType == RoadType::GarageHandle ||
-                roadType == RoadType::BaseHandle)
-            {
-                countercircles++; // 圈数计数
-                if (countercircles > 200)
-                    countercircles = 200;
-                if (garageRecognition.startingCheck(ai_results->predictor_results)) // 检测到起点
-                {
-                    bridgeDetection.reset();
-                    depotDetection.reset();
-                    // farmlandDetection.reset();
-                    // granaryDetection.reset();
-                    slowZoneDetection.reset();
-                    crossroadRecognition.reset();
-                    // freezoneRecognition.reset(); // 泛行区识别复位
-                    ringRecognition.reset(); // 环岛识别初始化
-
-                    if (countercircles > 60)
-                    {
-                        circlesThis++;
-                        countercircles = 0;
-                    }
-                }
-
-                if (circlesThis >= motionController.params.circles &&
-                    countercircles > 100) // 入库使能：跑完N圈
-                    garageRecognition.entryEnable = true;
-
-                if (garageRecognition.garageRecognition(trackRecognition, ai_results->predictor_results))
-                {
-                    if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
-                        serialInterface.buzzerSound(1);   // OK
-
-                    roadType = RoadType::GarageHandle;
-                    if (garageRecognition.garageStep ==
-                        garageRecognition.GarageEntryFinish) // 入库完成
-                    {
-                        cout << ">>>>>>>   入库结束 !!!!!" << endl;
-                        callbackSignal(0);
-                    }
-                    if (motionController.params.Debug)
-                    {
-                        Mat imageGarage =
-                            Mat::zeros(Size(COLSIMAGE, ROWSIMAGE), CV_8UC3); // 初始化图像
-                        garageRecognition.drawImage(trackRecognition, imageGarage);
-                        // icarShow.setNewWindow(2, imageGarage, "imgGarage"); // 添加需要显示的图像
-                        imshow("imageRecognition", imageGarage); // 添加需要显示的图像
-                        imshowRec = true;
-                        // savePicture(imageGarage);
-                    }
-                }
-                else
-                    roadType = RoadType::BaseHandle;
-
-                if (garageRecognition.slowDown) // 入库减速
-                    slowDownEnable();
-            }
-        }
+				// 在调试模式下，如果有检测到斑马线，显示图像
+				if (roadType == RoadType::GarageHandle && motionController.params.Debug)
+				{
+					Mat imageGarage = Mat::zeros(Size(COLSIMAGE, ROWSIMAGE), CV_8UC3); // 初始化图像
+					garageRecognition.drawImage(trackRecognition, imageGarage);
+					imshow("imageRecognition", imageGarage); // 添加需要显示的图像
+					imshowRec = true;
+				}
+			}
+		}
 
         /*维修厂检测*/
         if (motionController.params.DepotEnable && AI_enable) // 赛道元素是否使能

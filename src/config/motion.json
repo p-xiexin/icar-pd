@@ -1,14 +1,14 @@
 {
-    "speedLow": 0.8,
+    "speedLow": 0.6,
     "speedHigh": 0.8,
     "speedGarage": 1.3,
     "speedCorners":1.5,
-    "runP1": 1.55,
+    "runP1": 1.45,
     "runP2": 0.026,
     "runP3": 0.01,
     "turnP": 3.5,
     "turnD": 3.8,
-    "Kp": 6000.0,
+    "Kp": 6200.0,
     "Ki": 12.45,
     "Kd": 4.5,
     "rowCutUp": 50,
@@ -20,10 +20,10 @@
     "RingEnable": true,
     "CrossEnable": true,
     "StopEnable": false,
-    "BridgeEnable": false,
+    "BridgeEnable": true,
     "SlowzoneEnable": false,
     "DepotEnable": true,
-    "circles": 2,
+    "FarmlandEnable": true,
     "record": [
         {
             "#speedLow": "智能车最低速",
@@ -50,7 +50,7 @@
             "#BridgeEnable": "桥梁检测使能",
             "#SlowzoneEnable": "慢行区检测使能",
             "#DepotEnable": "修车厂使能",
-            "#circles": "智能车运行圈数"
+            "#FarmlandEnable": "农田区域检测"
         }
     ]
 }

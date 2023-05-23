@@ -24,6 +24,12 @@ using namespace std;
 class DepotDetection
 {
 public:
+	DepotDetection()
+	{
+		loadParams();
+	}
+public:
+
     /**
      * @brief 控制器核心参数
      */

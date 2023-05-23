@@ -97,10 +97,16 @@ target_link_libraries(${ICAR_PROJECT_NAME}  ${OpenCV_LIBS})
 target_link_libraries(${ICAR_PROJECT_NAME}  pthread )
 
 # pid调试
-set(ICAR_PROJECT_NAME "uasr_test")
+set(ICAR_PROJECT_NAME "uart_test")
 set(ICAR_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tools/uart_test.cpp)
 add_executable(${ICAR_PROJECT_NAME} ${ICAR_PROJECT_SOURCES})
 target_link_libraries(${ICAR_PROJECT_NAME}  ${SERIAL_LIBRARIES})
+target_link_libraries(${ICAR_PROJECT_NAME}  ${OpenCV_LIBS})
+
+# 断路区域调试
+set(ICAR_PROJECT_NAME "cone_blue_enrode")
+set(ICAR_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tools/cone_blue_enrode.cpp)
+add_executable(${ICAR_PROJECT_NAME} ${ICAR_PROJECT_SOURCES})
 target_link_libraries(${ICAR_PROJECT_NAME}  ${OpenCV_LIBS})
 
 #---------------------------------------------------------------------

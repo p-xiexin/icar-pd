@@ -6,9 +6,10 @@
  * @date 2023-05-21
  * @copyright Copyright (c) 2023
  * @note 车库识别步骤:
- *                  [01] 车库标志识别：1）斑马线
- *                  [02] 赛道左边缘优化,入库点搜索
- *                  [03] 入库路径优化
+ *                  [01] 车库标志识别：斑马线
+ *                  [02] 入库点搜索：拐点搜索确定
+ *                  [03] 入库路径规划
+ *                  [04] 入库完成判定
  */
 
 
@@ -30,6 +31,11 @@ using namespace std;
 
 class GarageRecognition
 {
+public:
+    GarageRecognition()
+    {
+        loadParams();
+    }
 private:
     /**
      * @brief 控制器核心参数
@@ -42,9 +48,11 @@ private:
         uint16_t    disGarageEntry = 0;     // 入库开始补线的行数
         uint16_t    stop_line = 0;          // 入库停车行数
         int         brakePicNum = 0;        // 刹车帧数
-        float       speed = 0;              // 库速度
+        float       speed_nor = 0;          // 刚检测到库，不减速
+        float       speed_in = 0;           // 减速入库
+        float       speed_out = 0;          // 出库速度
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-            Params, garage_run, corner_lines, slowdown_condition, disGarageEntry, stop_line, brakePicNum, speed); // 添加构造函数
+            Params, garage_run, corner_lines, slowdown_condition, disGarageEntry, stop_line, brakePicNum, speed_nor, speed_in, speed_out); // 添加构造函数
     };
 
 
@@ -475,6 +483,8 @@ public:
     int     garage_num      = 0;                    // 记录当前第几次到达车库
     float   speed_ku        = 0;                    // 速度控制，默认0.8m
     int     picNum_brake    = 0;                    // 刹车帧数
+    bool    Garage_screen   = false;                // 车库屏蔽标志位
+    int     garage_scre_num = 20;                   // 屏蔽计数器标志位
 
 
     /**
@@ -582,7 +592,7 @@ public:
                     flag_garage = flag_garage_e::GARAGE_OUT_RIGHT;
                 }
                 count_to_CarNotInGarage = 0;
-                speed_ku = params.speed;
+                speed_ku = params.speed_out;
                 if_garage = true;
             }
             // 返回假，说明可能没有检测到8帧图像达到判断条件；或者车初始位置不在车库中
@@ -677,6 +687,20 @@ public:
             }
         }
 
+        // 如果车库处于屏蔽状态，在一定时间内，再次识别到斑马线也不进入车库状态机
+        if(Garage_screen)
+        {
+            flag_garage = flag_garage_e::GARAGE_NONE;
+            if_garage = false;
+
+            // 等待屏蔽计数器完成，重新幅值并清除标志位
+            if((--garage_scre_num) <= 0)
+            {
+                Garage_screen = false;
+                garage_scre_num = 20;
+            }
+        }
+
         // 返回是否检测到斑马线
         return if_garage;
     }
@@ -696,37 +720,31 @@ public:
             case GARAGE_OUT_LEFT:
                 garageExitRecognition(track, predict);
                 break;
-
         /* ********************************************************* */
             // 出库，右库
             case GARAGE_OUT_RIGHT:
                 garageExitRecognition(track, predict);
                 break;
-
         /* ********************************************************* */
             // 入库，左库
             case GARAGE_IN_LEFT:
                 garageEntryRec(track, predict);
                 break;
-
         /* ********************************************************* */
             // 入库，右库
             case GARAGE_IN_RIGHT:
                 garageEntryRec(track, predict);
                 break;
-
         /* ********************************************************* */
             // 左库，不入库
             case GARAGE_PASS_LEFT:
                 no_processing(predict);
                 break;
-
         /* ********************************************************* */
             // 右库，不入库
             case GARAGE_PASS_RIGHT:
                 no_processing(predict);
                 break;
-
         /* ********************************************************* */
             // 半入库
             case GARAGE_HALF_STOP:
@@ -740,21 +758,19 @@ public:
                 if((track.pointsEdgeLeft.size() <= params.stop_line && track.pointsEdgeRight.size() <= params.stop_line) && (track.pointsEdgeLeft[0].x >= 120 || track.pointsEdgeRight[0].x >= 120))
                 {
                     flag_garage = GARAGE_BRAKE;
-                    speed_ku = -params.speed;
+                    speed_ku = -params.speed_nor;
                 }
                 break;
-
         /* ********************************************************* */
             // 刹车
             case GARAGE_BRAKE:
-                speed_ku = -params.speed;
+                speed_ku = -params.speed_nor;
                 picNum_brake++;
                 if(picNum_brake >= params.brakePicNum)
                 {
                     flag_garage = GARAGE_STOP;
                 }
                 break;
-
         /* ********************************************************* */
             default:
                 break;
@@ -774,10 +790,11 @@ public:
         // 调用ai来检测斑马线，来判定是否出库，连续5帧图片都达到判定条件，则完成出库
         if (!searchCrosswalk_if_recognize(predict)) 
         {
-            // 计数器计数，如果有5帧图片，则出库完成，进入空闲状态机
+            // 计数器计数，如果有5帧图片，则出库完成，进入空闲状态机，并且开启屏蔽
             counterExit++;
             if (counterExit >= 5)
             {
+                Garage_screen = true;
                 flag_garage = flag_garage_e::GARAGE_NONE;
             }
         }
@@ -1009,7 +1026,7 @@ public:
         // 如果ai识别的斑马线框的中心点在图像上方的1/4，开始减速，准备入库
         if (crosswalk.x > params.slowdown_condition)
         {
-            speed_ku = params.speed - 0.3;
+            speed_ku = params.speed_in;
         }
 
         // 如果到大一定的行数，开始入库，进行入库补线

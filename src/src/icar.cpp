@@ -11,9 +11,7 @@
 #include "./recognize/track_recognition.cpp" //基础巡线
 #include "./recognize/cross_recognition.cpp" //十字赛道
 #include "./recognize/ring_recognize.cpp"	 //环岛赛道
-
-// #include "./recognize/garage_recognition.cpp" //车库及斑马线识别类
-#include "./recognize/garage_recognize.cpp" //车库及斑马线识别类
+#include "./recognize/garage_recognize.cpp"  //车库及斑马线识别类
 
 #include "image_preprocess.cpp" //图像预处理
 #include "controlcenter_cal.cpp"
@@ -47,10 +45,7 @@ enum RoadType
 void callbackSignal(int signum); // 系统退出回调函数
 void displayWindowInit(void);	 // 显示窗口初始化
 void put_text2img(Mat &imgaeCorrect, RoadType roadType);
-void slowDownEnable(void);
 
-bool slowDown = false;		  // 特殊区域减速标志
-uint16_t counterSlowDown = 0; // 减速计数器
 
 CaptureInterface captureInterface("/dev/video0");
 SerialInterface serialInterface("/dev/ttyUSB0", LibSerial::BaudRate::BAUD_115200);
@@ -74,9 +69,6 @@ int main(int argc, char *argv[])
 	uint16_t counterOutTrackA = 0;			   // 车辆冲出赛道计数器A
 	uint16_t counterOutTrackB = 0;			   // 车辆冲出赛道计数器B
 
-	/*****************/
-	// uint16_t circlesThis = 1;                  // 智能车当前运行的圈数
-	// uint16_t countercircles = 0;               // 圈数计数器
 
 	// PPNC初始化
 	PPNCDetection detection;
@@ -86,10 +78,6 @@ int main(int argc, char *argv[])
 	ipm.init(Size(COLSIMAGE, ROWSIMAGE),
 			 Size(COLSIMAGEIPM, ROWSIMAGEIPM)); // IPM逆透视变换初始化
 
-	/*******读取配置文件*******/
-	motionController.loadParams();
-	depotDetection.loadParams();
-	garageRecognition.loadParams();
 
 	// 下位机初始化通信
 	int ret = serialInterface.open();
@@ -383,13 +371,9 @@ int main(int argc, char *argv[])
 		double detection_time = watch.toc();
 		watch.tic();
 
-		/*控制中心计算*/
-		if (trackRecognition.pointsEdgeLeft.size() < 60 &&
-			trackRecognition.pointsEdgeRight.size() < 60 &&
-			motionController.params.StopEnable &&
-			roadType != RoadType::BridgeHandle &&
-			roadType != RoadType::GranaryHandle &&
-			roadType != RoadType::DepotHandle &&
+		/*****控制中心计算*******/
+		if (trackRecognition.pointsEdgeLeft.size() < 60 && trackRecognition.pointsEdgeRight.size() < 60 && motionController.params.StopEnable &&
+			roadType != RoadType::BridgeHandle && roadType != RoadType::GranaryHandle && roadType != RoadType::DepotHandle &&
 			roadType != RoadType::FarmlandHandle) // 防止车辆冲出赛道
 		{
 			counterOutTrackA++;
@@ -417,29 +401,29 @@ int main(int argc, char *argv[])
 			motionController.pdController(controlCenterCal.controlCenter); // PD控制器姿态控制
 
 			// 智能车速度控制
-			// motionController.speedController(true, 0, controlCenterCal); // 变加速控制
 			switch (roadType)
 			{
-			case RoadType::DepotHandle:
-			{
-				motionController.motorSpeed = depotDetection.get_speed();
-				break;
-			}
-			case RoadType::BridgeHandle:
-			{
-				motionController.motorSpeed = bridgeDetection.get_speed();
-				break;
-			}
-			case RoadType::GarageHandle:
-			{
-				motionController.motorSpeed = garageRecognition.get_speed();
-				break;
-			}
-			default:
-			{
-				motionController.motorSpeed = motionController.params.speedLow;
-				break;
-			}
+				case RoadType::DepotHandle:
+				{
+					motionController.motorSpeed = depotDetection.get_speed();
+					break;
+				}
+				case RoadType::BridgeHandle:
+				{
+					motionController.motorSpeed = bridgeDetection.get_speed();
+					break;
+				}
+				case RoadType::GarageHandle:
+				{
+					motionController.motorSpeed = garageRecognition.get_speed();
+					break;
+				}
+				default:
+				{
+					// 智能车变速度控制
+					motionController.speedController(true, controlCenterCal);
+					break;
+				}
 			}
 
 			// 串口通信，姿态与速度控制
@@ -592,13 +576,4 @@ void put_text2img(Mat &imgaeCorrect, RoadType roadType)
 				CV_AA); // 显示赛道识别类型
 		break;
 	}
-}
-
-/**
- * @brief 车辆减速使能
- */
-void slowDownEnable(void)
-{
-	slowDown = true;
-	counterSlowDown = 0;
 }

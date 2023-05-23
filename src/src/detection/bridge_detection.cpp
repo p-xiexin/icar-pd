@@ -36,16 +36,20 @@ using namespace std;
 class BridgeDetection
 {
 public:
+    BridgeDetection()
+    {
+        loadParams();
+    }
     /**
      * @brief 桥梁区域核心参数
      */
     struct Params 
     {
-        uint16_t BridgeChack = 3;
+        uint16_t BridgeCheck = 3;
         float SpeedUp = 1.0;
         uint16_t ExitFrameCnt = 30;
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-            Params, BridgeChack, SpeedUp, ExitFrameCnt); // 添加构造函数
+            Params, BridgeCheck, SpeedUp, ExitFrameCnt); // 添加构造函数
     };
 
     /**
@@ -92,14 +96,14 @@ public:
             if (counterRec)
             {
                 counterSession++;
-                if (counterRec >= params.BridgeChack && counterSession < params.BridgeChack + 3)
+                if (counterRec >= params.BridgeCheck && counterSession < params.BridgeCheck + 3)
                 {
                     counterRec = 0;
                     counterSession = 0;
                     bridgeEnable = true; // 检测到桥标志
                     return true;
                 }
-                else if (counterSession >= params.BridgeChack + 3)
+                else if (counterSession >= params.BridgeCheck + 3)
                 {
                     counterRec = 0;
                     counterSession = 0;
@@ -145,7 +149,7 @@ public:
      */
     void loadParams() 
     {
-        string jsonPath = "../src/config/motion.json";
+        string jsonPath = "../src/config/bridge.json";
         std::ifstream config_is(jsonPath);
         if (!config_is.good()) 
         {
