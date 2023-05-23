@@ -1,0 +1,20 @@
+{
+    "FarmlandChack": 4,
+    "Speed": 0.5,
+    "CloseWidth" : 3,
+    "CloseHeigth" : 3,
+    "EnrodeWidth" : 120,
+    "EnrodeHeigth" : 60,
+    "EnterLine": 50,
+    "record": [
+        {
+            "#BridgeChack": "农田区域确认帧数",
+            "#Speed": "断路区减速加速",
+            "#CloseWidth": "闭运算滤波核宽度",
+            "#CloseHeigth": "闭运算滤波核高度",
+            "#EnrodeWidth": "腐蚀运算滤波核宽度",
+            "#EnrodeHeigth": "腐蚀算滤波核高度",
+            "#EnterLine": "判断进入断路区阈值，越小判断进入时间越迟"
+        }
+    ]
+}
