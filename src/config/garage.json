@@ -1,8 +1,20 @@
 {
     "garage_run": 0,
+    "corner_lines": 195,
+    "slowdown_condition": 45,
+    "disGarageEntry": 150,
+    "stop_line": 40,
+    "brakePicNum": 20,
+    "speed": 0.8,
     "record": [
         {
-            "#garage_run": "出库的方式:0左库,1右库,2左库循环,3右库循环"
+            "#garage_run": "出库的方式:0左库,1右库,2左库循环,3右库循环",
+            "#corner_lines": "出库时，防止提前打角，开始打角的行数",
+            "#slowdown_condition": "入库减速的判断条件，图像的多少行开始减速",
+            "#disGarageEntry": "入库开始补线的行数",
+            "#stop_line": "入库停车，路线少于行数",
+            "#brakePicNum": "入库停车，刹车帧数",
+            "#speed": "入库速度"
         }
     ]
 }
