@@ -372,9 +372,10 @@ int main(int argc, char *argv[])
 		watch.tic();
 
 		/*****控制中心计算*******/
-		if (trackRecognition.pointsEdgeLeft.size() < 60 && trackRecognition.pointsEdgeRight.size() < 60 && motionController.params.StopEnable &&
-			roadType != RoadType::BridgeHandle && roadType != RoadType::GranaryHandle && roadType != RoadType::DepotHandle &&
-			roadType != RoadType::FarmlandHandle) // 防止车辆冲出赛道
+		if (( (trackRecognition.pointsEdgeLeft.size() < 60 && trackRecognition.pointsEdgeRight.size() < 60) || 
+			(trackRecognition.pointsEdgeLeft[0].x < ROWSIMAGE / 2 && trackRecognition.pointsEdgeRight[0].x < ROWSIMAGE / 2) )&&
+			motionController.params.StopEnable && roadType != RoadType::BridgeHandle && roadType != RoadType::GranaryHandle && 
+			roadType != RoadType::DepotHandle && roadType != RoadType::FarmlandHandle && roadType != RoadType::SlowzoneHandle) // 防止车辆冲出赛道
 		{
 			counterOutTrackA++;
 			counterOutTrackB = 0;
@@ -434,7 +435,7 @@ int main(int argc, char *argv[])
 					motionController.speedController(true, controlCenterCal);
 					if(detection.results.size() > 0)
 					{
-						motionController.motorSpeed = 0.7;
+						motionController.motorSpeed = motionController.params.speedAI;
 					}
 					break;
 				}
@@ -482,6 +483,10 @@ int main(int argc, char *argv[])
 			string name = img_path + to_string(counter) + ".jpg";
 			trackRecognition.drawImage(imageTrack); // 图像显示赛道线识别结果
 			detection.drawBox(imageTrack);
+			if(roadType == RoadType::RingHandle)
+			{
+				ringRecognition.drawImage(trackRecognition, imageTrack);
+			}
 			imwrite(name, imageTrack);
 		}
 		double display_time = watch.toc();

@@ -88,7 +88,7 @@ public:
                         counterLinear = 0;
                         counterRec = 0;
                     }
-                    if (counterRec > 5)
+                    if (counterRec > 4)
                     {
                         crossroadType = CrossroadType::CrossroadLeft; // 左入十字
                         _index = 2;
@@ -219,7 +219,7 @@ public:
                         counterLinear = 0;
                         counterRec = 0;
                     }
-                    if (counterRec > 5)
+                    if (counterRec > 4)
                     {
                         crossroadType = CrossroadType::CrossroadRight; // 右入十字
                         _index = 2;

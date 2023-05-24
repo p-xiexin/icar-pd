@@ -117,7 +117,11 @@ public:
             }
 
             searchCones(predict);
-            _imageBinary = ConeEnrode(frame);
+            pointsSortForX(pointEdgeDet);
+
+            _imageGray = ConeEnrode(frame);
+            threshold(_imageGray, _imageBinary, 0, 255, THRESH_OTSU);
+
             track.reset();
             track.trackRecognition(_imageBinary);
             movingAverageFilter(track.pointsEdgeLeft, 10);
@@ -191,7 +195,7 @@ public:
         cv::split(image, channels);
         cv::Mat blueChannel = channels[0];
 
-		cv::Mat imageBinary, imageGray;
+		cv::Mat imageGray;
 
         // cv::Mat kernel_close = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));//创建结构元
 		// cv::Mat kernel_enrode = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(120, 60));
@@ -206,10 +210,7 @@ public:
         //     }
         // }
 		cv::morphologyEx(blueChannel, imageGray, cv::MORPH_ERODE, kernel_enrode, cv::Point(-1, -1));//腐蚀运算
-		cv::threshold(imageGray, imageBinary, 0, 255, cv::THRESH_OTSU);
-
-        _imageGray = imageGray;
-        return imageBinary;
+        return imageGray;
     }
 
     /**
@@ -266,8 +267,13 @@ public:
      * @brief 识别结果图像绘制
      *
      */
-    void drawImage(TrackRecognition track, Mat &image)
+    void drawImage(TrackRecognition track, cv::Mat &image)
     {
+        if(farmlandStep == FarmlandStep::Cruise)
+        {
+            cv::cvtColor(_imageGray, image, cv::COLOR_GRAY2BGR);
+        }
+
         // 绘制4象限分割线
         line(image, Point(0, image.rows / 2), Point(image.cols, image.rows / 2), Scalar(255, 255, 255), 1);
         line(image, Point(image.cols / 2, 0), Point(image.cols / 2, image.rows - 1), Scalar(255, 255, 255), 1);
@@ -275,7 +281,8 @@ public:
         // 绘制锥桶坐标
         for (int i = 0; i < pointEdgeDet.size(); i++)
         {
-            circle(image, Point(pointEdgeDet[i].y, pointEdgeDet[i].x), 4, Scalar(92, 92, 205), -1); // 锥桶坐标：红色
+            // circle(image, Point(pointEdgeDet[i].y, pointEdgeDet[i].x), 4, Scalar(92, 92, 205), -1); // 锥桶坐标：红色
+            putText(image, to_string(i+1), Point(pointEdgeDet[i].y, pointEdgeDet[i].x), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 255), 1, CV_AA);
         }
 
         circle(image, Point(pointCorn.y, pointCorn.x), 3, Scalar(8, 112, 247), -1); // 玉米坐标绘制：橙色
@@ -359,6 +366,34 @@ private:
         }
     }
 
+    /**
+     * @brief 按照坐标点的x 降序排列
+     *
+     * @param points
+     * @return vector<int>
+     */
+    void pointsSortForX(vector<POINT> &points)
+     {
+        int n = points.size();
+        bool flag = true;
+
+        for (int i = 0; i < n - 1 && flag; i++)
+        {
+            flag = false;
+            for (int j = 0; j < n - i - 1; j++) 
+            {
+                if (points[j].x < points[j + 1].x) 
+                {
+                    POINT temp = points[j];
+                    points[j] = points[j + 1];
+                    points[j + 1] = temp;
+                    flag = true;
+                }
+            }
+        }
+    }
+
+
     //画延长线
     void line_extend(std::vector<POINT> &points)
     {
@@ -385,8 +420,8 @@ private:
 
     cv::Mat kernel_close;//闭运算滤波结构元
 	cv::Mat kernel_enrode;//腐蚀运算滤波结构元
-    cv::Mat _imageBinary;
-    cv::Mat _imageGray;
+    cv::Mat _imageBinary = cv::Mat::zeros(Size(COLSIMAGE, ROWSIMAGE), CV_8UC1);
+    cv::Mat _imageGray = cv::Mat::zeros(Size(COLSIMAGE, ROWSIMAGE), CV_8UC1);
     vector<POINT> pointEdgeDet;        // AI元素检测边缘点集
     POINT pointCorn = POINT(0, 0);     // 玉米检测坐标
     POINT pointAverage = POINT(0, 0);  // 玉米检测坐标

@@ -1,14 +1,14 @@
 {
-    "garage_run": 1,
-    "corner_lines": 210,
+    "garage_run": 0,
+    "corner_lines": 220,
     "slowdown_condition": 55,
-    "disGarageEntry": 140,
+    "disGarageEntry": 130,
     "stop_line": 40,
-    "brakePicNum": 23,
+    "brakePicNum": 12,
     "speed_nor": 1.0,
-    "speed_in": 0.7,
+    "speed_in": 0.6,
     "speed_out": 0.6,
-    "shield_counter": 300,
+    "shield_counter": 40,
     "record": [
         {
             "#garage_run": "出库的方式:0左库,1右库,2左库循环,3右库循环",

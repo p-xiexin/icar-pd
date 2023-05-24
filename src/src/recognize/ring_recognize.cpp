@@ -30,6 +30,14 @@ using namespace std;
 class RingRecognition
 {
 public:
+    RingRecognition()
+    {
+        ;
+    }
+    ~RingRecognition()
+    {
+        ;
+    }
     /**
      * @brief 环岛识别初始化|复位
      *
@@ -43,7 +51,7 @@ public:
     }
     void print(void)
     {
-        cout << ringStep << endl;
+        cout << "RingStep: " << ringStep << endl;
     }
 
     /**
@@ -64,7 +72,7 @@ public:
         {
             counterShield = 0;
         }
-        if (counterShield < 20)
+        if (counterShield < 15)
         {
             counterShield++;
             return false;
@@ -86,18 +94,18 @@ public:
             {
                 ring_cnt++;
                 pointBreakD = track.pointsEdgeLeft[rowBreakLeftDown];
-                if(ring_cnt > 2)
+                if(ring_cnt > 1)
                 {
                     ringType = RingType::RingLeft;
                 }
             }
-            else if(rowBreakLeftDown == 0 && rowBreakRightDown != 0 && track.stdevLeft < 60 && track.stdevRight > 120
+            else if(rowBreakLeftDown == 0 && rowBreakRightDown != 10 && track.stdevLeft < 60 && track.stdevRight > 120
                 && abs(track.pointsEdgeLeft[0].y - track.pointsEdgeLeft[ROWSIMAGE / 2].y) > 5
                 && track.widthBlock[rowBreakRightDown + 5].y > COLSIMAGE / 2)
             {
                 ring_cnt++;
                 pointBreakD = track.pointsEdgeRight[rowBreakLeftDown];
-                if(ring_cnt > 2)
+                if(ring_cnt > 1)
                 {
                     ringType = RingType::RingRight;
                 }
@@ -255,7 +263,7 @@ public:
                         mid = (right.y + left.y) / 2;
                     }
                 }
-                else if(track.spurroad.size() == 0 && counterSpurroad > 1)
+                else if(track.spurroad.size() == 0 && counterSpurroad > 2)
                 {
                     counterSpurroad = 0;
                     ringStep = RingStep::Inside;
@@ -353,7 +361,7 @@ public:
                         mid = (right.y + left.y) / 2;
                     }
                 }
-                else if(track.spurroad.size() == 0 && counterSpurroad > 1)
+                else if(track.spurroad.size() == 0 && counterSpurroad > 2)
                 {
                     counterSpurroad = 0;
                     ringStep = RingStep::Inside;
@@ -394,7 +402,7 @@ public:
                     track.pointsEdgeLeft.resize(rowBreakLeft);
                     track.pointsEdgeRight.resize(rowBreakLeft);
                 }
-                else if(!rowBreakRight && counterSpurroad > 1)
+                else if(!rowBreakRight && counterSpurroad > 2)
                 {
                     pointBreakD = track.pointsEdgeRight[0];
                     pointBreakU = track.pointsEdgeLeft[rowBreakLeft];
@@ -438,7 +446,7 @@ public:
                     track.pointsEdgeLeft.resize(rowBreakRight);
                     track.pointsEdgeRight.resize(rowBreakRight);
                 }
-                else if(!rowBreakLeft && counterSpurroad > 1)
+                else if(!rowBreakLeft && counterSpurroad > 2)
                 {
                     pointBreakU = track.pointsEdgeRight[rowBreakRight];
                     pointBreakD = track.pointsEdgeLeft[0];

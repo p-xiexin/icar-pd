@@ -163,14 +163,6 @@ int main(int argc, char *argv[])
         Mat frame;
         frame = captureInterface.get_frame();
         detection.setFrame(frame);
-        if (motionController.params.SaveImage)
-        {
-            static int counter = 0;
-            counter++;
-            string img_path = "../res/train/";
-            string name = img_path + to_string(counter) + ".jpg";
-            imwrite(name, frame);
-        }
 
         /*1.AI推理*/
         bool AI_enable = detection.AI_Enable();
@@ -349,6 +341,7 @@ int main(int argc, char *argv[])
                         ringRecognition.drawImage(trackRecognition, imageRing);
                         imshow("imageRecognition", imageRing);
                     }
+                    ringRecognition.print();
                 }
                 else
                     roadType = RoadType::BaseHandle;
@@ -442,7 +435,7 @@ int main(int argc, char *argv[])
 					motionController.speedController(true, controlCenterCal);
 					if(AI_enable)
 					{
-						motionController.motorSpeed = 0.7;
+						motionController.motorSpeed = motionController.params.speedAI;
 					}
 					break;
 				}
@@ -482,6 +475,20 @@ int main(int argc, char *argv[])
                 }
             }
         }
+		// 存图使能
+		if (motionController.params.SaveImage)
+		{
+			static int counter = 0;
+			counter++;
+			string img_path = "../res/train/";
+			string name = img_path + to_string(counter) + ".jpg";
+			trackRecognition.drawImage(imageTrack); // 图像显示赛道线识别结果
+            if(AI_enable)
+            {
+                detection.drawbox(imageTrack, ai_results->predictor_results);
+            }
+			imwrite(name, imageTrack);
+		}
     }
 
     serialInterface.set_control(0, PWMSERVOMID); // 智能车停止运动

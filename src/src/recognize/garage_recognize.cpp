@@ -432,6 +432,43 @@ private:
 
 
     /**
+     * @brief 搜索赛道突变行（右上）
+     * @param pointsEdgeRight 右边缘线
+     * @return uint16_t
+     */
+    uint16_t sBreakRightUp(vector<POINT> pointsEdgeRight)
+    {
+        bool start = false;
+        uint16_t rowBreakRight = pointsEdgeRight.size() - 1;
+        uint16_t counter = 0;
+
+        if(pointsEdgeRight.size() == 0)
+        {
+            return 0;
+        }
+
+        // 寻找右边跳变点
+        for (int i = pointsEdgeRight.size() - 1; i > 0; i--) 
+        {
+            if (pointsEdgeRight[i].y >= pointsEdgeRight[rowBreakRight].y && (pointsEdgeRight[i].y - pointsEdgeRight[rowBreakRight].y < 10))
+            {
+                rowBreakRight = i;
+                counter = 0;
+            }
+            // 突变点计数
+            else
+            {
+                counter++;
+                if (counter > 5)
+                    return rowBreakRight;
+            }
+        }
+        // 没有搜寻到，直接返回
+        return rowBreakRight;
+    }
+
+
+    /**
      * @brief 搜索出库|赛道边缘突变（左上）
      * @param pointsEdgeLeft
      * @return uint16_t
@@ -623,7 +660,7 @@ public:
                 // 图片帧数计数
                 ensure_picNum++;
                 // 当在5帧图像中，有大于等于3帧图片检测到斑马线，则进入下一个状态
-                if (ensure_picNum >= 3)
+                if (ensure_picNum >= 2)
                 {
                     flag_garage = GARAGE_DETECTION;
                     // 返回真，检测到斑马线，用于清空跑完一圈其他
@@ -635,7 +672,7 @@ public:
                 }
 
                 // 在第一次检测到斑马线之后，5真图片后，清空计数器
-                if (ensure_picNum > 5)
+                if (ensure_picNum > 6)
                 {
                     ensure_picNum = 0;
                     chack_picNum = 0;
@@ -790,7 +827,8 @@ public:
     {
         // 定义静态变量，用于计数，完全经过车库
         static uint16_t counterExit = 0;
-
+        // 第一圈正常速度
+        speed_ku = params.speed_nor;
         // 调用ai来检测斑马线，来判定是否出库，连续5帧图片都达到判定条件，则完成出库
         if (!searchCrosswalk_if_recognize(predict)) 
         {
@@ -1099,13 +1137,31 @@ public:
                 // 通过拐点判断是否已经大半进入车库
                 if(track.spurroad.size() >= 1)
                 {
-                    // 拐点的搜寻
+                    POINT startPoint;  // 入库补线起点:固定左下角
+                    POINT endPoint;    // 入库补线终点
+                    POINT midPoint;    // 入库补线中点       
+
+                    // 拐点的搜寻        
                     uint16_t rowBreakRight = searchBreakRight(track.pointsEdgeRight);                               // 右上拐点搜索
+                    uint16_t rowBreakRightUp = sBreakRightUp(track.pointsEdgeRight);                                // 右上拐点搜索
+
+                    // if(crosswalk.x > 0)
+                    // {
 
                     // 入库补线
-                    POINT startPoint = POINT(ROWSIMAGE - 10, 5);                                                    // 入库补线起点:固定左下角
-                    POINT endPoint = searchBestSpurroad_High(track.spurroad);                                       // 入库补线终点
-                    POINT midPoint = POINT((startPoint.x + endPoint.x) * 0.4, (startPoint.y + endPoint.y) * 0.5);   // 入库补线中点
+                    startPoint = POINT(ROWSIMAGE - 10, 5);                                                    // 入库补线起点:固定左下角
+                    endPoint = track.pointsEdgeRight[rowBreakRightUp];                                        // 入库补线终点
+                    midPoint = POINT((startPoint.x + endPoint.x) * 0.4, (startPoint.y + endPoint.y) * 0.5);   // 入库补线中点      
+                                    
+                    // }
+                    // else
+                    // {
+                    //     // 入库补线
+                    //     startPoint = POINT(ROWSIMAGE - 10, 5);                                                    // 入库补线起点:固定左下角
+                    //     endPoint = searchBestSpurroad_High(track.spurroad);                                       // 入库补线终点
+                    //     midPoint = POINT((startPoint.x + endPoint.x) * 0.4, (startPoint.y + endPoint.y) * 0.5);   // 入库补线中点
+                    // }
+
                     // 三阶贝塞尔曲线拟合
                     vector<POINT> repairPoints = {startPoint, midPoint, endPoint};
                     vector<POINT> modifyEdge = Bezier(0.02, repairPoints); 

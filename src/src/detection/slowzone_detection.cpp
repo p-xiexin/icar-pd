@@ -92,8 +92,8 @@ public:
 
             if (track.pointsEdgeLeft.size() > ROWSIMAGE / 2 && track.pointsEdgeRight.size() > ROWSIMAGE / 2) // 切行，防止错误前瞻引发转向
             {
-                track.pointsEdgeLeft.resize(track.pointsEdgeLeft.size() / 2);
-                track.pointsEdgeRight.resize(track.pointsEdgeRight.size() / 2);
+                track.pointsEdgeLeft.resize(track.pointsEdgeLeft.size() * 0.7);
+                track.pointsEdgeRight.resize(track.pointsEdgeRight.size() * 0.7);
             }
 
             return true;

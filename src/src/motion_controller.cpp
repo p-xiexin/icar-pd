@@ -40,7 +40,7 @@ public:
     {
         float speedLow = 1.0;       // 智能车最低速
         float speedHigh = 1.0;      // 智能车最高速
-        float speedGarage = 1.0;    // 出入车库速度
+        float speedAI = 1.0;    // 出入车库速度
         float speedCorners = 1.0;   // 贴弯速度
         float runP1 = 0.9;          // 一阶比例系数：直线控制量
         float runP2 = 0.018;        // 二阶比例系数：弯道控制量
@@ -64,7 +64,7 @@ public:
         bool DepotEnable = false;
         bool FarmlandEnable = false;
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-            Params, speedLow, speedHigh, speedGarage, speedCorners, 
+            Params, speedLow, speedHigh, speedAI, speedCorners, 
             runP1, runP2, runP3, turnP, turnD, rowCutUp, rowCutBottom, Kp, Ki, Kd, Debug, SaveImage, CloseLoop, 
             GarageEnable, RingEnable, CrossEnable, StopEnable, BridgeEnable, SlowzoneEnable, DepotEnable, FarmlandEnable); // 添加构造函数
     };
