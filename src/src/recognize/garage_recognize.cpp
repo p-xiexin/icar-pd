@@ -51,8 +51,9 @@ private:
         float       speed_nor = 0;          // 刚检测到库，不减速
         float       speed_in = 0;           // 减速入库
         float       speed_out = 0;          // 出库速度
+        int         shield_counter = 0;     // 屏蔽计数器
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-            Params, garage_run, corner_lines, slowdown_condition, disGarageEntry, stop_line, brakePicNum, speed_nor, speed_in, speed_out); // 添加构造函数
+            Params, garage_run, corner_lines, slowdown_condition, disGarageEntry, stop_line, brakePicNum, speed_nor, speed_in, speed_out, shield_counter); // 添加构造函数
     };
 
 
@@ -78,17 +79,25 @@ private:
 
     // 定义入库状态机枚举变量,初始值为none
     flag_garage_e flag_garage = GARAGE_NONE;
-
     // 定义用于绘图的点，描述布线的三个点，和ai识别框的中点
     POINT _pointRU;
     POINT _pointLU;
     POINT _pointRD;
     POINT _crosswalk;
-
     // 读取控制参数
     Params params;
 
 
+public:
+    // 变量相关定义
+    int     garage_num      = 0;                        // 记录当前第几次到达车库
+    float   speed_ku        = 0;                        // 速度控制，默认0.8m
+    int     picNum_brake    = 0;                        // 刹车帧数
+    bool    Garage_screen   = false;                    // 车库屏蔽标志位
+    int     garage_scre_num = params.shield_counter;    // 屏蔽计数器标志位
+
+
+private:
     /**
      * @brief 起点检测，只用于发车时判断是否在车库
      * @param predict
@@ -479,14 +488,6 @@ private:
 
 
 public:
-    // 变量相关定义
-    int     garage_num      = 0;                    // 记录当前第几次到达车库
-    float   speed_ku        = 0;                    // 速度控制，默认0.8m
-    int     picNum_brake    = 0;                    // 刹车帧数
-    bool    Garage_screen   = false;                // 车库屏蔽标志位
-    int     garage_scre_num = 20;                   // 屏蔽计数器标志位
-
-
     /**
      * @brief 车库初始化函数
      * @param void
@@ -644,6 +645,22 @@ public:
 
         /*******************************************************************/
 
+        // 如果车库处于屏蔽状态，在一定时间内，再次识别到斑马线也不进入车库状态机
+        if(Garage_screen)
+        {
+            flag_garage = flag_garage_e::GARAGE_NONE;
+            if_garage = false;
+
+            // 等待屏蔽计数器完成，重新幅值并清除标志位
+            if((--garage_scre_num) <= 0)
+            {
+                Garage_screen = false;
+                garage_scre_num = params.shield_counter;
+            }
+        }
+
+        /*******************************************************************/
+
         // 当由空闲状态检测到斑马线时，是否入库判断
         if (flag_garage == flag_garage_e::GARAGE_DETECTION) 
         {
@@ -684,20 +701,6 @@ public:
             else if (params.garage_run == 3) 
             {  
                 flag_garage = GARAGE_PASS_RIGHT;
-            }
-        }
-
-        // 如果车库处于屏蔽状态，在一定时间内，再次识别到斑马线也不进入车库状态机
-        if(Garage_screen)
-        {
-            flag_garage = flag_garage_e::GARAGE_NONE;
-            if_garage = false;
-
-            // 等待屏蔽计数器完成，重新幅值并清除标志位
-            if((--garage_scre_num) <= 0)
-            {
-                Garage_screen = false;
-                garage_scre_num = 20;
             }
         }
 
@@ -749,13 +752,14 @@ public:
             // 半入库
             case GARAGE_HALF_STOP:
                 // 屏蔽图像前半部分的信息
-                if(track.pointsEdgeLeft[0].x <= 90 || track.pointsEdgeRight[0].x <= 90)
+                if(track.pointsEdgeLeft[0].x <= 130 || track.pointsEdgeRight[0].x <= 130)
                 {
                     track.pointsEdgeLeft.resize(0);
                     track.pointsEdgeRight.resize(0);
                 }
                 // 使用基础巡线即可，达到条件，停车
-                if((track.pointsEdgeLeft.size() <= params.stop_line && track.pointsEdgeRight.size() <= params.stop_line) && (track.pointsEdgeLeft[0].x >= 120 || track.pointsEdgeRight[0].x >= 120))
+                if((track.pointsEdgeLeft.size() <= params.stop_line && track.pointsEdgeRight.size() <= params.stop_line) &&
+                   (track.pointsEdgeLeft[0].x >= 130 || track.pointsEdgeRight[0].x >= 130 || track.pointsEdgeRight.size() == 0 || track.pointsEdgeLeft.size() == 0))
                 {
                     flag_garage = GARAGE_BRAKE;
                     speed_ku = -params.speed_nor;
@@ -795,10 +799,15 @@ public:
             if (counterExit >= 5)
             {
                 Garage_screen = true;
+                garage_scre_num = params.shield_counter;
                 flag_garage = flag_garage_e::GARAGE_NONE;
             }
         }
-
+        // 检测到斑马线，计数器清零
+        else
+        {
+            counterExit = 0;
+        }
     }
 
 

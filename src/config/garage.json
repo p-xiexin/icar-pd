@@ -1,13 +1,14 @@
 {
-    "garage_run": 0,
-    "corner_lines": 215,
+    "garage_run": 1,
+    "corner_lines": 210,
     "slowdown_condition": 55,
-    "disGarageEntry": 165,
+    "disGarageEntry": 140,
     "stop_line": 40,
     "brakePicNum": 23,
     "speed_nor": 1.0,
     "speed_in": 0.7,
     "speed_out": 0.6,
+    "shield_counter": 300,
     "record": [
         {
             "#garage_run": "出库的方式:0左库,1右库,2左库循环,3右库循环",
@@ -18,7 +19,8 @@
             "#brakePicNum": "入库停车，刹车帧数",
             "#speed_nor": "正常库速度",
             "#speed_in": "入库速度",
-            "#speed_out": "出库速度"
+            "#speed_out": "出库速度",
+            "#shield_counter": "屏蔽计数器"
         }
     ]
 }

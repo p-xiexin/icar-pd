@@ -1,15 +1,17 @@
 {
-    "FarmlandChack": 4,
-    "Speed": 0.5,
+    "FarmlandCheck": 3,
+    "Speed": 0.8,
+    "SpeedScale": 0.6,
     "CloseWidth" : 3,
     "CloseHeigth" : 3,
-    "EnrodeWidth" : 120,
-    "EnrodeHeigth" : 60,
-    "EnterLine": 50,
+    "EnrodeWidth" : 140,
+    "EnrodeHeigth" : 54,
+    "EnterLine": 140,
     "record": [
         {
-            "#BridgeChack": "农田区域确认帧数",
+            "#FarmlandCheck": "农田区域确认帧数",
             "#Speed": "断路区减速加速",
+            "#SpeedScale": "巡航速度比例",
             "#CloseWidth": "闭运算滤波核宽度",
             "#CloseHeigth": "闭运算滤波核高度",
             "#EnrodeWidth": "腐蚀运算滤波核宽度",

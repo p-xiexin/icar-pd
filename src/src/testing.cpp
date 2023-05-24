@@ -11,7 +11,8 @@
 #include "./recognize/track_recognition.cpp" //基础巡线
 #include "./recognize/cross_recognition.cpp" //十字赛道
 #include "./recognize/ring_recognize.cpp"    //环岛赛道
-#include "./recognize/garage_recognize.cpp" //车库及斑马线识别类
+#include "./recognize/garage_recognize.cpp"  //车库及斑马线识别类
+#include "./detection/farmland_avoidance.cpp"//农田区
 
 #include "image_preprocess.cpp" //图像预处理
 #include "controlcenter_cal.cpp"
@@ -67,6 +68,7 @@ int main(int argc, char *argv[])
     GarageRecognition garageRecognition;       // 车库检测
     SlowZoneDetection slowZoneDetection;       // 慢行区检测
     DepotDetection depotDetection;             // 车辆维修区检测
+    FarmlandAvoidance farmlandAvoidance;       // 农田断路区检测
     uint16_t counterRunBegin = 1;              // 智能车启动计数器：等待摄像头图像帧稳定
     uint16_t counterOutTrackA = 0;             // 车辆冲出赛道计数器A
     uint16_t counterOutTrackB = 0;             // 车辆冲出赛道计数器B
@@ -188,7 +190,6 @@ int main(int argc, char *argv[])
         /*3.基础赛道识别*/
         trackRecognition.trackRecognition(imageBinary); // 赛道线识别
         Mat imageTrack = imgaeCorrect.clone();          // RGB
-                                                        // trackRecognition.drawImage(imageTrack); 			// 图像显示赛道线识别结果
 
 		/*******4.出库和入库识别与路径规划*********/
 		if (motionController.params.GarageEnable && AI_enable) // 出库元素是否使能开启，根据配置文件得到
@@ -234,6 +235,31 @@ int main(int argc, char *argv[])
 				}
 			}
 		}
+
+		/*农田区域检测*/
+		if (motionController.params.FarmlandEnable && AI_enable) // 赛道元素是否使能
+		{
+			if (roadType == RoadType::FarmlandHandle || roadType == RoadType::BaseHandle)
+			{
+				if (farmlandAvoidance.farmlandAvoid(trackRecognition, ai_results->predictor_results, imgaeCorrect))
+				{
+					if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
+						serialInterface.buzzerSound(1);	  // OK
+
+					roadType = RoadType::FarmlandHandle;
+					if (motionController.params.Debug)
+					{
+						Mat imageFarmland = Mat::zeros(Size(COLSIMAGE, ROWSIMAGE), CV_8UC3); // 初始化图像
+						farmlandAvoidance.drawImage(trackRecognition, imageFarmland);
+						imshow("imageRecognition", imageFarmland); // 添加需要显示的图像
+						imshowRec = true;
+					}
+				}
+				else
+					roadType = RoadType::BaseHandle;
+			}
+		}
+
 
         /*维修厂检测*/
         if (motionController.params.DepotEnable && AI_enable) // 赛道元素是否使能
@@ -382,21 +408,45 @@ int main(int argc, char *argv[])
             // 智能车方向控制
             motionController.pdController(controlCenterCal.controlCenter); // PD控制器姿态控制
 
-            // 智能车速度控制
-            // motionController.speedController(true, 0, controlCenterCal); // 变加速控制
-            switch (roadType)
-            {
-            case RoadType::DepotHandle:
-            {
-                motionController.motorSpeed = depotDetection.get_speed();
-                break;
-            }
-            default:
-            {
-                motionController.motorSpeed = motionController.params.speedLow;
-                break;
-            }
-            }
+			// 智能车速度控制
+			switch (roadType)
+			{
+				case RoadType::DepotHandle:
+				{
+					motionController.motorSpeed = depotDetection.get_speed();
+					break;
+				}
+				case RoadType::BridgeHandle:
+				{
+					motionController.motorSpeed = bridgeDetection.get_speed();
+					break;
+				}
+				case RoadType::GarageHandle:
+				{
+					motionController.motorSpeed = garageRecognition.get_speed();
+					break;
+				}
+				case RoadType::FarmlandHandle:
+				{
+					motionController.motorSpeed = farmlandAvoidance.get_speed();
+					break;
+				}
+				case RoadType::RingHandle:
+				{
+					motionController.motorSpeed = motionController.params.speedLow;
+					break;
+				}
+				default:
+				{
+					// 智能车变速度控制
+					motionController.speedController(true, controlCenterCal);
+					if(AI_enable)
+					{
+						motionController.motorSpeed = 0.7;
+					}
+					break;
+				}
+			}
 
             // 串口通信，姿态与速度控制
             serialInterface.set_control(motionController.motorSpeed, motionController.servoPwm);

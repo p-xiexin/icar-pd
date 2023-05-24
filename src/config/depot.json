@@ -1,7 +1,7 @@
 {
-    "DepotCheck": 4,
-    "DangerClose": 150,
-    "ServoRow": 50,
+    "DepotCheck": 2,
+    "DangerClose": 120,
+    "ServoRow": 20,
     "ServoValue": 12,
     "DepotSpeed": 0.7,
     "DelayCnt": 10,

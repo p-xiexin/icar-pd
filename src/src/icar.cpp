@@ -20,7 +20,7 @@
 #include "./detection/bridge_detection.cpp"
 #include "./detection/slowzone_detection.cpp"
 #include "./detection/depot_detection.cpp"
-#include "./detection/farmland_detection.cpp"
+#include "./detection/farmland_avoidance.cpp"
 
 #include "../include/capture.hpp"
 #include "../include/serial.hpp"
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 	GarageRecognition garageRecognition;	   // 车库检测
 	SlowZoneDetection slowZoneDetection;	   // 慢行区检测
 	DepotDetection depotDetection;			   // 车辆维修区检测
-	FarmlandDetection farmlandDetection;       // 农田区域检测
+	FarmlandAvoidance farmlandAvoidance;       // 农田区域检测
 	uint16_t counterRunBegin = 1;			   // 智能车启动计数器：等待摄像头图像帧稳定
 	uint16_t counterOutTrackA = 0;			   // 车辆冲出赛道计数器A
 	uint16_t counterOutTrackB = 0;			   // 车辆冲出赛道计数器B
@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
 		{
 			if (roadType == RoadType::FarmlandHandle || roadType == RoadType::BaseHandle)
 			{
-				if (farmlandDetection.farmlandDetection(trackRecognition, detection.results))
+				if (farmlandAvoidance.farmlandAvoid(trackRecognition, detection.results, imgaeCorrect))
 				{
 					if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
 						serialInterface.buzzerSound(1);	  // OK
@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
 					if (motionController.params.Debug)
 					{
 						Mat imageFarmland = Mat::zeros(Size(COLSIMAGE, ROWSIMAGE), CV_8UC3); // 初始化图像
-						farmlandDetection.drawImage(trackRecognition, imageFarmland);
+						farmlandAvoidance.drawImage(trackRecognition, imageFarmland);
 						imshow("imageRecognition", imageFarmland); // 添加需要显示的图像
 						imshowRec = true;
 					}
@@ -418,10 +418,24 @@ int main(int argc, char *argv[])
 					motionController.motorSpeed = garageRecognition.get_speed();
 					break;
 				}
+				case RoadType::FarmlandHandle:
+				{
+					motionController.motorSpeed = farmlandAvoidance.get_speed();
+					break;
+				}
+				case RoadType::RingHandle:
+				{
+					motionController.motorSpeed = motionController.params.speedLow;
+					break;
+				}
 				default:
 				{
 					// 智能车变速度控制
 					motionController.speedController(true, controlCenterCal);
+					if(detection.results.size() > 0)
+					{
+						motionController.motorSpeed = 0.7;
+					}
 					break;
 				}
 			}
@@ -472,8 +486,11 @@ int main(int argc, char *argv[])
 		}
 		double display_time = watch.toc();
 
-		cout << camera_time << "\t" << ai_time << "\t" << track_time << "\t" << detection_time << "\t" << calculate_time << "\t"
-			 << serial_time << "\t" << display_time << endl;
+		if(motionController.params.Debug)
+		{
+			cout << camera_time << "\t" << ai_time << "\t" << track_time << "\t" << detection_time << "\t" << calculate_time << "\t"
+				<< serial_time << "\t" << display_time << endl;
+		}
 	}
 
 	serialInterface.set_control(0, PWMSERVOMID); // 智能车停止运动
