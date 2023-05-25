@@ -85,6 +85,35 @@ public:
         //[1]左右环岛判断
         if(ringType == RingType::RingNone && ringStep == RingStep::None)
         {
+            // uint16_t rowBreakRightDown = searchBreakRightDown(track.pointsEdgeRight, 0, ROWSIMAGE / 2);
+            // uint16_t rowBreakLeftDown = searchBreakLeftDown(track.pointsEdgeLeft, 0, ROWSIMAGE / 2);
+
+            // if(rowBreakLeftDown != 0 && rowBreakRightDown == 0 && track.stdevLeft > 120 && track.stdevRight < 60
+            //     && abs(track.pointsEdgeRight[0].y - track.pointsEdgeRight[ROWSIMAGE / 2].y) > 5
+            //     && track.widthBlock[rowBreakLeftDown + 5].y > COLSIMAGE / 2)
+            // {
+            //     ring_cnt++;
+            //     pointBreakD = track.pointsEdgeLeft[rowBreakLeftDown];
+            //     if(ring_cnt > 1)
+            //     {
+            //         ringType = RingType::RingLeft;
+            //     }
+            // }
+            // else if(rowBreakLeftDown == 0 && rowBreakRightDown != 10 && track.stdevLeft < 60 && track.stdevRight > 120
+            //     && abs(track.pointsEdgeLeft[0].y - track.pointsEdgeLeft[ROWSIMAGE / 2].y) > 5
+            //     && track.widthBlock[rowBreakRightDown + 5].y > COLSIMAGE / 2)
+            // {
+            //     ring_cnt++;
+            //     pointBreakD = track.pointsEdgeRight[rowBreakLeftDown];
+            //     if(ring_cnt > 1)
+            //     {
+            //         ringType = RingType::RingRight;
+            //     }
+            // }
+            // else
+            // {
+            //     ring_cnt = 0;
+            // }
             uint16_t rowBreakRightDown = searchBreakRightDown(track.pointsEdgeRight, 0, ROWSIMAGE / 2);
             uint16_t rowBreakLeftDown = searchBreakLeftDown(track.pointsEdgeLeft, 0, ROWSIMAGE / 2);
 
@@ -114,11 +143,6 @@ public:
             {
                 ring_cnt = 0;
             }
-
-            {
-                //暂时感觉不需要处理
-            }
-
         }
         else if(ringType != RingType::RingNone && ringStep == RingStep::None)
         {

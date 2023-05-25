@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <opencv2/highgui.hpp>
 #include <opencv2/opencv.hpp>
+#include <cstdlib>  // 包含system函数的头文件
 
 #include "../include/stop_watch.hpp"
 #include "../include/uart.hpp"               //串口通信
@@ -45,7 +46,8 @@ enum RoadType
 
 void callbackSignal(int signum); // 系统退出回调函数
 void displayWindowInit(void);    // 显示窗口初始化
-void put_text2img(Mat &imgaeCorrect, RoadType roadType);
+void savePicture(Mat &image, RoadType roadType);
+void ClearFolder(const std::string& folderPath);
 void slowDownEnable(void);
 
 bool slowDown = false;        // 特殊区域减速标志
@@ -72,6 +74,12 @@ int main(int argc, char *argv[])
     uint16_t counterRunBegin = 1;              // 智能车启动计数器：等待摄像头图像帧稳定
     uint16_t counterOutTrackA = 0;             // 车辆冲出赛道计数器A
     uint16_t counterOutTrackB = 0;             // 车辆冲出赛道计数器B
+
+    if(motionController.params.SaveImage)
+    {
+        std::string folderPath = "../res/train/";  // 替换为你要清空的文件夹路径
+        ClearFolder(folderPath);
+    }
 
     // PPNC初始化
     if (!detection.init("../res/model/yolov3_mobilenet_v1")) // AI推理初始化
@@ -478,16 +486,38 @@ int main(int argc, char *argv[])
 		// 存图使能
 		if (motionController.params.SaveImage)
 		{
-			static int counter = 0;
-			counter++;
-			string img_path = "../res/train/";
-			string name = img_path + to_string(counter) + ".jpg";
-			trackRecognition.drawImage(imageTrack); // 图像显示赛道线识别结果
-            if(AI_enable)
+            switch(roadType)
             {
-                detection.drawbox(imageTrack, ai_results->predictor_results);
+            case RoadType::BaseHandle:
+                trackRecognition.drawImage(imageTrack); // 图像显示赛道线识别结果
+                if(AI_enable)
+                {
+                    detection.drawbox(imageTrack, ai_results->predictor_results);
+                }
+                break;
+            case RoadType::RingHandle:
+                ringRecognition.drawImage(trackRecognition, imageTrack);
+                break;
+            case RoadType::CrossHandle:
+                crossroadRecognition.drawImage(trackRecognition, imageTrack);
+                break;
+            case RoadType::BridgeHandle:
+                bridgeDetection.drawImage(trackRecognition, imageTrack);
+                break;
+            case RoadType::DepotHandle:
+                depotDetection.drawImage(trackRecognition, imageTrack);
+                break;
+            case RoadType::FarmlandHandle:
+                farmlandAvoidance.drawImage(trackRecognition, imageTrack);
+                break;
+            case RoadType::GarageHandle:
+                garageRecognition.drawImage(trackRecognition, imageTrack);
+                break;
+            case RoadType::SlowzoneHandle:
+                slowZoneDetection.drawImage(trackRecognition, imageTrack);
+                break;
             }
-			imwrite(name, imageTrack);
+            savePicture(imageTrack, roadType);
 		}
     }
 
@@ -536,6 +566,33 @@ void displayWindowInit(void)
     cv::namedWindow(windowName, WINDOW_NORMAL);         // 图像名称
     cv::resizeWindow(windowName, COLSIMAGE, ROWSIMAGE); // 分辨率
     cv::moveWindow(windowName, 1000, 360);              // 布局位置
+}
+
+/**
+ * @brief 存储图像至本地
+ *
+ * @param image 需要存储的图像
+ */
+void savePicture(Mat &image, RoadType roadType)
+{
+    // 存图
+    string name = ".jpg";
+    static int counter = 0;
+    counter++;
+    string img_path = "../res/train/";
+    name = img_path + to_string(counter) + "-" + to_string(roadType) + ".jpg";
+    imwrite(name, image);
+}
+
+
+void ClearFolder(const std::string& folderPath) {
+    std::string command = "rm -rf " + folderPath + "/*";
+    int result = std::system(command.c_str());
+    if (result == 0) {
+        std::cout << "文件夹已成功清空。\n";
+    } else {
+        std::cerr << "清空文件夹时发生错误。\n";
+    }
 }
 
 /**

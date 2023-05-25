@@ -271,7 +271,9 @@ public:
     {
         if(farmlandStep == FarmlandStep::Cruise)
         {
-            cv::cvtColor(_imageGray, image, cv::COLOR_GRAY2BGR);
+            cv::Mat colorImage;
+            cv::cvtColor(_imageGray, colorImage, cv::COLOR_GRAY2BGR);
+            image = colorImage;
         }
 
         // 绘制4象限分割线
