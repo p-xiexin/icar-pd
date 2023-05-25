@@ -3,3 +3,4 @@ res/samples/train/*
 res/calibration/corners/*
 res/calibration/correct/*
 res/calibration/temp/*
+res/train/*
