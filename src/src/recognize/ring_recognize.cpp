@@ -211,7 +211,7 @@ public:
             if(ringType == RingType::RingLeft)
             {
                 uint16_t rowBreakLeftD = searchBreakLeftDown(track.pointsEdgeLeft, 0, ROWSIMAGE / 2);
-                uint16_t rowBreakLeftU = searchBreakLeftDown(track.pointsEdgeLeft, rowBreakLeftD + 15, track.pointsEdgeLeft.size());
+                uint16_t rowBreakLeftU = searchBreakLeftDown(track.pointsEdgeLeft, rowBreakLeftD + 30, track.pointsEdgeLeft.size());
                 
                 pointBreakD = track.pointsEdgeLeft[rowBreakLeftD];
                 if(rowBreakLeftD && rowBreakLeftU)///////////////////////////////
@@ -230,7 +230,7 @@ public:
             else if(ringType == RingType::RingRight)
             {
                 uint16_t rowBreakRightD = searchBreakRightDown(track.pointsEdgeRight, 0, ROWSIMAGE / 2);
-                uint16_t rowBreakRightU = searchBreakRightDown(track.pointsEdgeRight, rowBreakRightD + 15, track.pointsEdgeRight.size());
+                uint16_t rowBreakRightU = searchBreakRightDown(track.pointsEdgeRight, rowBreakRightD + 30, track.pointsEdgeRight.size());
 
                 if(rowBreakRightD && rowBreakRightU)//////////////////////
                 {
@@ -267,7 +267,7 @@ public:
                 else if(track.spurroad.size() == 1)
                 {
                     //寻找岔路行对应边线下标
-                    if(track.spurroad[0].y > 60)
+                    if(track.spurroad[0].y > 70)
                     {
                         _corner = track.spurroad[0];
                         spurroad_item = abs(_corner.x - track.pointsEdgeLeft[0].x);
@@ -352,6 +352,20 @@ public:
 
                         mid = (right.y + left.y) / 2;
                     }
+
+                    // {
+                    //     POINT startPoint = track.pointsEdgeRight[rowBreakLeftD];
+                    //     POINT endPoint = track.pointsEdgeRight[track.pointsEdgeRight.size() - 1];
+                    //     POINT midPoint = _corner;
+                    //     vector<POINT> repairPoints = {startPoint, midPoint, endPoint};
+                    //     vector<POINT> modifyEdge = Bezier(0.02, repairPoints); 
+                    //     // 清空基础赛道识别的路径，重新规划路径
+                    //     track.pointsEdgeRight.resize(rowBreakLeftD);
+                    //     for(int i = 0; i < modifyEdge.size(); i++)
+                    //     {
+                    //         track.pointsEdgeRight.push_back(modifyEdge[i]);
+                    //     }
+                    // }
                 }
                 else if(_corner.x == 0 && counterSpurroad > 10)
                 {
@@ -374,7 +388,7 @@ public:
                 }
                 else if(track.spurroad.size() == 1)
                 {
-                    if(track.spurroad[0].y < COLSIMAGE - 60)
+                    if(track.spurroad[0].y < COLSIMAGE - 70)
                     {
                         //寻找岔路行对应边线下标
                         _corner = track.spurroad[0];
@@ -459,6 +473,20 @@ public:
 
                         mid = (right.y + left.y) / 2;
                     }
+
+                    // {
+                    //     POINT startPoint = track.pointsEdgeLeft[rowBreakRightD];
+                    //     POINT endPoint = track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1];
+                    //     POINT midPoint = _corner;
+                    //     vector<POINT> repairPoints = {startPoint, midPoint, endPoint};
+                    //     vector<POINT> modifyEdge = Bezier(0.02, repairPoints); 
+                    //     // 清空基础赛道识别的路径，重新规划路径
+                    //     track.pointsEdgeLeft.resize(rowBreakRightD);
+                    //     for(int i = 0; i < modifyEdge.size(); i++)
+                    //     {
+                    //         track.pointsEdgeLeft.push_back(modifyEdge[i]);
+                    //     }
+                    // }
                 }
                 else if(_corner.x == 0 && counterSpurroad > 10)
                 {
@@ -707,6 +735,11 @@ public:
         {
             putText(Image, "Ring R", Point(COLSIMAGE / 2 - 5, 20), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 255, 0), 1, CV_AA); // 显示赛道识别类型
         }
+        putText(Image, to_string(track.validRowsRight) + " " + to_string(track.stdevRight), Point(COLSIMAGE - 100, ROWSIMAGE - 50),
+                FONT_HERSHEY_TRIPLEX, 0.3, Scalar(0, 0, 255), 1);
+        putText(Image, to_string(track.validRowsLeft) + " " + to_string(track.stdevLeft), Point(20, ROWSIMAGE - 50),
+                FONT_HERSHEY_TRIPLEX, 0.3, Scalar(0, 0, 255), 1);
+
     }
 
 private:

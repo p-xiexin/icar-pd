@@ -127,7 +127,8 @@ public:
 
 			searchCones(predict);
 			_pointNearCone = searchNearestCone(track.pointsEdgeLeft, pointEdgeDet);		 // 搜索右下锥桶
-			if (_pointNearCone.x > params.ServoRow && _pointNearCone.y != 0 && counterSession > params.DelayCnt) // 当车辆开始靠近右边锥桶：准备入库
+			if (_pointNearCone.x > params.ServoRow && _pointNearCone.x < params.ServoRow + ROWSIMAGE / 3
+				&&_pointNearCone.y != 0 && counterSession > params.DelayCnt) // 当车辆开始靠近右边锥桶：准备入库
 			{
 				counterRec++;
 				if (counterRec > 2)
@@ -347,7 +348,7 @@ public:
 				cv::FONT_HERSHEY_TRIPLEX, 0.3, cv::Scalar(0, 255, 0), 1,
 				CV_AA); // 显示锥桶距离
 		if (_pointNearCone.y > 0)
-			circle(image, Point(_pointNearCone.y, _pointNearCone.x), 3,
+			circle(image, Point(_pointNearCone.y, _pointNearCone.x), 5,
 				   Scalar(200, 200, 200), -1);
 
 		putText(image, to_string(indexDebug),
@@ -386,7 +387,7 @@ private:
 							vector<POINT> pointsCone)
 	{
 		POINT point(ROWSIMAGE - 10, 0);
-		double disMin = 100; // 右边缘锥桶离赛道左边缘最小距离
+		double disMin = 80; // 右边缘锥桶离赛道左边缘最小距离
 
 		if (pointsCone.size() <= 0 || pointsEdgeLeft.size() < 10)
 			return point;

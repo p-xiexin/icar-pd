@@ -44,6 +44,8 @@ public:
     void reset(void)
     {
         farmlandStep = FarmlandStep::None;
+        counterRec = 0;
+        counterSession = 0;
     }
 
     /**

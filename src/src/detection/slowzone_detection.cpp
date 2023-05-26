@@ -45,11 +45,18 @@ public:
         counterDisable = 0;     // 标志失效计数
         counterSession = 0;     // 图像场次计数器
         counterRec = 0;         // 加油站标志检测计数器
+        counterFild = 0;
         slowZoneEnable = false; // 慢行区使能标志
     }
 
     bool slowZoneDetection(TrackRecognition &track, vector<PredictResult> predict)
     {
+        if(counterFild < 30)
+        {
+            counterFild++;//屏蔽计数器
+            return false;
+        }
+
         // 检测标志
         for (int i = 0; i < predict.size(); i++)
         {
@@ -82,10 +89,11 @@ public:
         if (slowZoneEnable)
         {
             counterDisable++;
-            if (counterDisable > 15) // 上桥40场图像后失效
+            if (counterDisable > 25)
             {
                 counterRec = 0;
                 counterDisable = 0;
+                counterFild = 0;
                 slowZoneEnable = false;
                 return false;
             }
@@ -127,6 +135,7 @@ public:
 private:
     uint16_t counterDisable = 0; // 标志失效计数
     uint16_t counterSession = 0; // 图像场次计数器
-    uint16_t counterRec = 0;     // 加油站标志检测计数器
+    uint16_t counterRec = 0;     // 检测计数器
+    uint16_t counterFild = 0;    // 屏蔽计数器
     bool slowZoneEnable = false; // 慢行区使能标志
 };

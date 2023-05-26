@@ -96,7 +96,7 @@ public:
             if (counterRec)
             {
                 counterSession++;
-                if (counterRec >= params.BridgeCheck && counterSession < params.BridgeCheck + 3)
+                if (counterRec > params.BridgeCheck && counterSession < params.BridgeCheck + 3)
                 {
                     counterRec = 0;
                     counterSession = 0;

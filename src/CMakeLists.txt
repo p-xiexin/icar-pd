@@ -121,12 +121,3 @@ target_link_libraries(${ICAR_PROJECT_NAME}  ${OpenCV_LIBS})
 target_link_libraries(${ICAR_PROJECT_NAME}  pthread )
 target_link_libraries(${ICAR_PROJECT_NAME}  ${SERIAL_LIBRARIES})
 
-set(ICAR_PROJECT_NAME "testing")
-set(ICAR_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/src/testing.cpp)
-add_executable(${ICAR_PROJECT_NAME} ${ICAR_PROJECT_SOURCES})
-target_link_libraries(${ICAR_PROJECT_NAME}  ${PPNC_LIBRARIES})
-target_link_libraries(${ICAR_PROJECT_NAME}  ${ONNX_LIBRARIES})
-target_link_libraries(${ICAR_PROJECT_NAME}  ${OpenCV_LIBS})
-target_link_libraries(${ICAR_PROJECT_NAME}  pthread )
-target_link_libraries(${ICAR_PROJECT_NAME}  ${SERIAL_LIBRARIES})
-

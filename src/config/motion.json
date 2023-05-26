@@ -20,10 +20,10 @@
     "RingEnable": true,
     "CrossEnable": true,
     "StopEnable": false,
-    "BridgeEnable": false,
-    "SlowzoneEnable": false,
-    "DepotEnable": false,
-    "FarmlandEnable": false,
+    "BridgeEnable": true,
+    "SlowzoneEnable": true,
+    "DepotEnable": true,
+    "FarmlandEnable": true,
     "record": [
         {
             "#speedLow": "智能车最低速",

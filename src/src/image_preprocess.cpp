@@ -47,7 +47,7 @@ public:
 	Mat imageBinaryzation(Mat &frame)
 	{
 		Mat imageGray, imageBinary;
-		Mat kernel = getStructuringElement(MORPH_RECT, Size(2, 2));//创建结构元
+		Mat kernel = getStructuringElement(MORPH_RECT, Size(4, 4));//创建结构元
 
 		cvtColor(frame, imageGray, COLOR_BGR2GRAY); // RGB转灰度图
 		morphologyEx(imageGray, imageGray, MORPH_CLOSE, kernel, Point(-1, -1));//闭运算

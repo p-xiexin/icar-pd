@@ -52,49 +52,41 @@ int main(int argc, char *argv[])
         split(frame, channels);
         cv::Mat blueChannel = channels[0];
 
-		Mat imageGray, imageBinary;
+		Mat imageGray, imageBinary, imageEnrode;
 
         Mat kernel_close = getStructuringElement(MORPH_RECT, Size(3, 3));//创建结构元
-		Mat kernel_enrode = getStructuringElement(MORPH_ELLIPSE, Size(140, 54));
+		Mat kernel_enrode = getStructuringElement(MORPH_ELLIPSE, Size(120, 60));
+		Mat kernel_open = getStructuringElement(MORPH_ELLIPSE, Size(50, 50));
 		morphologyEx(blueChannel, blueChannel, MORPH_CLOSE, kernel_close, Point(-1, -1));//闭运算
-
-        // for (int i = 170; i < 172; i++)
-        // {
-        //     int j = 0;
-        //     for (j = 0; j < 5; j++)
-        //     {
-        //         blueChannel.at<uchar>(i, j) = 60;
-        //         blueChannel.at<uchar>(i, 319 - j) = 60;
-        //     }
-        // }
-
-		morphologyEx(blueChannel, imageGray, MORPH_ERODE, kernel_enrode, Point(-1, -1));//腐蚀运算
+		morphologyEx(blueChannel, imageEnrode, MORPH_ERODE, kernel_enrode, Point(-1, -1));//腐蚀运算
+		morphologyEx(imageEnrode, imageGray, MORPH_OPEN, kernel_open, Point(-1, -1));//开运算
 		threshold(imageGray, imageBinary, 0, 255, THRESH_OTSU);
 
         trackRecognition.trackRecognition(imageBinary);
         movingAverageFilter(trackRecognition.pointsEdgeLeft, 10);
         movingAverageFilter(trackRecognition.pointsEdgeRight, 10);
-        line_extend(trackRecognition.pointsEdgeLeft);
-        line_extend(trackRecognition.pointsEdgeRight);
-        uint16_t size = MIN(trackRecognition.pointsEdgeLeft.size(), trackRecognition.pointsEdgeRight.size());
-        for(int i = 0; i < size; i++)
-        {
-            uint16_t width = trackRecognition.pointsEdgeRight[i].y - trackRecognition.pointsEdgeLeft[i].y;
-            if(width > COLSIMAGE / 10)
-                trackRecognition.widthBlock.push_back(POINT(i, width));
-            else
-            {
-                trackRecognition.pointsEdgeRight.resize(i);
-                trackRecognition.pointsEdgeLeft.resize(i);
-                break;
-            }
-        }
+        // line_extend(trackRecognition.pointsEdgeLeft);
+        // line_extend(trackRecognition.pointsEdgeRight);
+        // uint16_t size = MIN(trackRecognition.pointsEdgeLeft.size(), trackRecognition.pointsEdgeRight.size());
+        // for(int i = 0; i < size; i++)
+        // {
+        //     uint16_t width = trackRecognition.pointsEdgeRight[i].y - trackRecognition.pointsEdgeLeft[i].y;
+        //     if(width > COLSIMAGE / 10)
+        //         trackRecognition.widthBlock.push_back(POINT(i, width));
+        //     else
+        //     {
+        //         trackRecognition.pointsEdgeRight.resize(i);
+        //         trackRecognition.pointsEdgeLeft.resize(i);
+        //         break;
+        //     }
+        // }
 
         trackRecognition.drawImage(frame);
         
         imshow("frame", frame);
         imshow("blueChannel", blueChannel);
-        imshow("enrode", imageGray);
+        imshow("enrode", imageEnrode);
+        imshow("open", imageGray);
         imshow("enrode_binary", imageBinary);
         waitKey(5);
     }

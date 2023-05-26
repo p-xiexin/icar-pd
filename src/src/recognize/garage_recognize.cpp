@@ -86,6 +86,10 @@ private:
     POINT _crosswalk;
     // 读取控制参数
     Params params;
+    // 定义一个计数器，当连续几张图片中都检测到斑马线，才确认检测到
+    uint16_t chack_picNum = 0;
+    // 定义一个计数器，当第一张张检测到斑马线，开始计之后的图像数量
+    uint16_t ensure_picNum = 0;
 
 
 public:
@@ -536,6 +540,20 @@ public:
         flag_garage = flag_garage_e::GARAGE_OUT_READY;
     }
 
+
+    /**
+     * @brief 计数器清零函数
+     * @param void
+     * @return void
+     */
+    void counter_reset(void)
+    {
+        // 清零
+        uint16_t chack_picNum = 0;
+        uint16_t ensure_picNum = 0;
+    }
+
+
     /**
      * @brief 得到目前控制速度
      * @param void
@@ -609,10 +627,6 @@ public:
         static uint16_t count_to_CarNotInGarage = 0;
         // 定义一个局部变量，用于记录目前也没有检测到斑马线，返回出去
         bool if_garage = false;
-        // 定义一个计数器，当连续几张图片中都检测到斑马线，才确认检测到
-        static uint16_t chack_picNum = 0;
-        // 定义一个计数器，当第一张张检测到斑马线，开始计之后的图像数量
-        static uint16_t ensure_picNum = 0;
         // 准备出库状态机，当检测到起点斑马线时，进入出库状态机，清零计数器
         if (flag_garage == flag_garage_e::GARAGE_OUT_READY) 
         {
@@ -660,7 +674,7 @@ public:
                 // 图片帧数计数
                 ensure_picNum++;
                 // 当在5帧图像中，有大于等于3帧图片检测到斑马线，则进入下一个状态
-                if (ensure_picNum >= 2)
+                if (chack_picNum >= 2)
                 {
                     flag_garage = GARAGE_DETECTION;
                     // 返回真，检测到斑马线，用于清空跑完一圈其他
@@ -672,7 +686,7 @@ public:
                 }
 
                 // 在第一次检测到斑马线之后，5真图片后，清空计数器
-                if (ensure_picNum > 6)
+                if (ensure_picNum > 4)
                 {
                     ensure_picNum = 0;
                     chack_picNum = 0;

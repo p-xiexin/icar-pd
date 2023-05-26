@@ -1,10 +1,10 @@
 {
-    "DepotCheck": 2,
+    "DepotCheck": 1,
     "DangerClose": 140,
     "ServoRow": 10,
     "ServoValue": 10,
     "DepotSpeed": 0.6,
-    "DelayCnt": 10,
+    "DelayCnt": 1,
     "BrakeCnt": 12,
     "ExitFrameCnt": 10,
     "record": [
