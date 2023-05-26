@@ -85,55 +85,48 @@ public:
         //[1]左右环岛判断
         if(ringType == RingType::RingNone && ringStep == RingStep::None)
         {
-            // uint16_t rowBreakRightDown = searchBreakRightDown(track.pointsEdgeRight, 0, ROWSIMAGE / 2);
-            // uint16_t rowBreakLeftDown = searchBreakLeftDown(track.pointsEdgeLeft, 0, ROWSIMAGE / 2);
-
-            // if(rowBreakLeftDown != 0 && rowBreakRightDown == 0 && track.stdevLeft > 120 && track.stdevRight < 60
-            //     && abs(track.pointsEdgeRight[0].y - track.pointsEdgeRight[ROWSIMAGE / 2].y) > 5
-            //     && track.widthBlock[rowBreakLeftDown + 5].y > COLSIMAGE / 2)
-            // {
-            //     ring_cnt++;
-            //     pointBreakD = track.pointsEdgeLeft[rowBreakLeftDown];
-            //     if(ring_cnt > 1)
-            //     {
-            //         ringType = RingType::RingLeft;
-            //     }
-            // }
-            // else if(rowBreakLeftDown == 0 && rowBreakRightDown != 10 && track.stdevLeft < 60 && track.stdevRight > 120
-            //     && abs(track.pointsEdgeLeft[0].y - track.pointsEdgeLeft[ROWSIMAGE / 2].y) > 5
-            //     && track.widthBlock[rowBreakRightDown + 5].y > COLSIMAGE / 2)
-            // {
-            //     ring_cnt++;
-            //     pointBreakD = track.pointsEdgeRight[rowBreakLeftDown];
-            //     if(ring_cnt > 1)
-            //     {
-            //         ringType = RingType::RingRight;
-            //     }
-            // }
-            // else
-            // {
-            //     ring_cnt = 0;
-            // }
             uint16_t rowBreakRightDown = searchBreakRightDown(track.pointsEdgeRight, 0, ROWSIMAGE / 2);
             uint16_t rowBreakLeftDown = searchBreakLeftDown(track.pointsEdgeLeft, 0, ROWSIMAGE / 2);
 
             if(rowBreakLeftDown != 0 && rowBreakRightDown == 0 && track.stdevLeft > 120 && track.stdevRight < 60
                 && abs(track.pointsEdgeRight[0].y - track.pointsEdgeRight[ROWSIMAGE / 2].y) > 5
-                && track.widthBlock[rowBreakLeftDown + 5].y > COLSIMAGE / 2)
+                && track.widthBlock[rowBreakLeftDown + 5].y > COLSIMAGE / 2 
+                && track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].y > COLSIMAGE / 2)
             {
+                // for(int i = rowBreakLeftDown; i < rowBreakLeftDown + 50; i++)
+                // {
+                //     uint16_t counter = 0;
+                //     if(track.pointsEdgeLeft[i].y < 5)
+                //         counter++;
+                //     if(counter> 30)
+                //     {
+                //         ring_cnt++;
+                //         break;
+                //     }
+                // }
                 ring_cnt++;
-                pointBreakD = track.pointsEdgeLeft[rowBreakLeftDown];
                 if(ring_cnt > 1)
                 {
                     ringType = RingType::RingLeft;
                 }
             }
-            else if(rowBreakLeftDown == 0 && rowBreakRightDown != 10 && track.stdevLeft < 60 && track.stdevRight > 120
+            else if(rowBreakLeftDown == 0 && rowBreakRightDown != 0 && track.stdevLeft < 60 && track.stdevRight > 120
                 && abs(track.pointsEdgeLeft[0].y - track.pointsEdgeLeft[ROWSIMAGE / 2].y) > 5
-                && track.widthBlock[rowBreakRightDown + 5].y > COLSIMAGE / 2)
+                && track.widthBlock[rowBreakRightDown + 5].y > COLSIMAGE / 2
+                && track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].y < COLSIMAGE / 2)
             {
+                // for(int i = rowBreakRightDown; i < rowBreakRightDown + 50; i++)
+                // {
+                //     uint16_t counter = 0;
+                //     if(track.pointsEdgeRight[i].y > COLSIMAGE - 5)
+                //         counter++;
+                //     if(counter> 30)
+                //     {
+                //         ring_cnt++;
+                //         break;
+                //     }
+                // }
                 ring_cnt++;
-                pointBreakD = track.pointsEdgeRight[rowBreakLeftDown];
                 if(ring_cnt > 1)
                 {
                     ringType = RingType::RingRight;
@@ -143,6 +136,69 @@ public:
             {
                 ring_cnt = 0;
             }
+
+            // /*环岛识别方法2*/
+            // if(track.stdevLeft > 120 && track.stdevRight < 60 && abs(track.pointsEdgeRight[0].y - track.pointsEdgeRight[ROWSIMAGE / 2].y) > 5)
+            // {
+            //     uint16_t rowBreakLeftDown = searchBreakLeftDown(track.pointsEdgeLeft, 0, ROWSIMAGE / 2);
+            //     for(int i = rowBreakLeftDown; i < track.pointsEdgeLeft.size(); i++)
+            //     {
+            //         uint16_t counter = 0, step = 0;
+            //         if(track.pointsEdgeLeft[i].y < 5)
+            //         {
+            //             if(step % 2 == 0)
+            //                 counter++;
+            //             else if(step % 2 == 1)
+            //                 counter = 0;
+            //         }
+            //         else
+            //         {
+            //             if(step % 2 == 0)
+            //                 counter = 0;
+            //             else if(step % 2 == 1)
+            //                 counter++;
+            //         }
+            //         if(counter > 5)
+            //         {
+            //             step += 1;
+            //             counter = 0;
+            //             if(step == 3 && rowBreakLeftDown != 0)
+            //             {
+            //                 ringType = RingType::RingLeft;
+            //             }
+            //         }
+            //     }
+            // }
+            // else if(track.stdevLeft < 60 && track.stdevRight > 120 && abs(track.pointsEdgeLeft[0].y - track.pointsEdgeLeft[ROWSIMAGE / 2].y) > 5)
+            // {
+            //     uint16_t rowBreakRightDown = searchBreakRightDown(track.pointsEdgeRight, 0, ROWSIMAGE / 2);
+            //     for(int i = rowBreakRightDown; i < track.pointsEdgeRight.size(); i++)
+            //     {
+            //         uint16_t counter = 0, step = 0;
+            //         if(track.pointsEdgeRight[i].y > COLSIMAGE - 5)
+            //         {
+            //             if(step % 2 == 0)
+            //                 counter++;
+            //             else if(step % 2 == 1)
+            //                 counter = 0;
+            //         }
+            //         else
+            //         {
+            //             if(step % 2 == 0)
+            //                 counter = 0;
+            //             else if(step % 2 == 1)
+            //                 counter++;
+            //         }
+            //         if(counter > 5)
+            //         {
+            //             step += 1;
+            //             counter = 0;
+            //             if(step == 3 && rowBreakRightDown != 0)
+            //             {
+            //                 ringType = RingType::RingRight;
+            //             }
+            //         }
+            // }
         }
         else if(ringType != RingType::RingNone && ringStep == RingStep::None)
         {
@@ -158,7 +214,7 @@ public:
                 uint16_t rowBreakLeftU = searchBreakLeftDown(track.pointsEdgeLeft, rowBreakLeftD + 15, track.pointsEdgeLeft.size());
                 
                 pointBreakD = track.pointsEdgeLeft[rowBreakLeftD];
-                if(rowBreakLeftD && rowBreakLeftU)
+                if(rowBreakLeftD && rowBreakLeftU)///////////////////////////////
                 {
                     counterSpurroad++;
                     pointBreakD = track.pointsEdgeLeft[rowBreakLeftD];
@@ -169,16 +225,14 @@ public:
                 {
                     counterSpurroad = 0;
                     ringStep = RingStep::Entering;
-                }
-                
+                }                
             }
             else if(ringType == RingType::RingRight)
             {
                 uint16_t rowBreakRightD = searchBreakRightDown(track.pointsEdgeRight, 0, ROWSIMAGE / 2);
                 uint16_t rowBreakRightU = searchBreakRightDown(track.pointsEdgeRight, rowBreakRightD + 15, track.pointsEdgeRight.size());
-                
 
-                if(rowBreakRightD && rowBreakRightU)
+                if(rowBreakRightD && rowBreakRightU)//////////////////////
                 {
                     counterSpurroad++;
                     pointBreakD = track.pointsEdgeRight[rowBreakRightD];
@@ -195,38 +249,50 @@ public:
         }
         else if(ringStep == RingStep::Entering)
         {
+            _corner = POINT(0, 0);
             if(ringType == RingType::RingLeft)
             {
-                POINT corner(0, 0);
                 uint16_t rowBreakLeftD = 0;
                 uint16_t spurroad_item = 0;
                 if(track.spurroad.size() == 0)
                 {
                     rowBreakLeftD = searchBreakLeftDown(track.pointsEdgeLeft, 0, track.pointsEdgeLeft.size());
+                    uint16_t rowBreakLeftU = searchBreakLeftUp(track.pointsEdgeLeft);
+                    if(rowBreakLeftU > ROWSIMAGE / 2)
+                    {
+                        spurroad_item = rowBreakLeftU;
+                        _corner = track.pointsEdgeLeft[rowBreakLeftU];
+                    }
                 }
                 else if(track.spurroad.size() == 1)
                 {
                     //寻找岔路行对应边线下标
-                    if(track.spurroad[0].y > 80)
+                    if(track.spurroad[0].y > 60)
                     {
-                        corner = track.spurroad[0];
-                        spurroad_item = abs(corner.x - track.pointsEdgeLeft[0].x);
+                        _corner = track.spurroad[0];
+                        spurroad_item = abs(_corner.x - track.pointsEdgeLeft[0].x);
                         rowBreakLeftD = searchBreakLeftDown(track.pointsEdgeLeft, 0, spurroad_item);
                     }
                     else
                     {
                         rowBreakLeftD = searchBreakLeftDown(track.pointsEdgeLeft, 0, track.pointsEdgeLeft.size());
+                        uint16_t rowBreakLeftU = searchBreakLeftUp(track.pointsEdgeLeft);
+                        if(rowBreakLeftU > ROWSIMAGE / 2 && rowBreakLeftU > rowBreakLeftD)
+                        {
+                            spurroad_item = rowBreakLeftU;
+                            _corner = track.pointsEdgeLeft[rowBreakLeftU];
+                        }
                     }
                 }
                 else
                 {
                     for(int i = 0; i < track.spurroad.size(); i++)
                     {
-                        if(track.spurroad[i].x > corner.x)
+                        if(track.spurroad[i].x > _corner.x)
                         {
-                            corner = track.spurroad[i];
+                            _corner = track.spurroad[i];
                         }
-                        spurroad_item = abs(corner.x - track.pointsEdgeLeft[0].x);
+                        spurroad_item = abs(_corner.x - track.pointsEdgeLeft[0].x);
                         rowBreakLeftD = searchBreakLeftDown(track.pointsEdgeLeft, 0, spurroad_item);
                     }
                 }
@@ -234,10 +300,10 @@ public:
                 pointBreakD = track.pointsEdgeLeft[0];
                 pointBreakU = track.pointsEdgeLeft[rowBreakLeftD];
                 line(track.pointsEdgeLeft, 0, rowBreakLeftD);
-                if(corner.x)
+                if(_corner.x)
                 {
                     counterSpurroad++;
-                    line(track.pointsEdgeRight, rowBreakLeftD, corner);
+                    line(track.pointsEdgeRight, rowBreakLeftD, _corner);
                     track.pointsEdgeLeft.resize(spurroad_item);
                     track.pointsEdgeRight.resize(spurroad_item);
 
@@ -245,7 +311,7 @@ public:
                     uint16_t mid = (track.pointsEdgeLeft[spurroad_item - 1].y + track.pointsEdgeRight[spurroad_item - 1].y) / 2;
                     POINT left(0, 0);
                     POINT right(0, 0);
-                    for(int i = corner.x - 1; i > ROWSIMAGE / 3; i--)
+                    for(int i = _corner.x - 1; i > ROWSIMAGE / 3; i--)
                     {
                         int j = mid;
                         for(j = mid; j < COLSIMAGE - 5; j++)
@@ -287,7 +353,7 @@ public:
                         mid = (right.y + left.y) / 2;
                     }
                 }
-                else if(track.spurroad.size() == 0 && counterSpurroad > 2)
+                else if(_corner.x == 0 && counterSpurroad > 10)
                 {
                     counterSpurroad = 0;
                     ringStep = RingStep::Inside;
@@ -295,36 +361,45 @@ public:
             }
             else if(ringType == RingType::RingRight)
             {
-                POINT corner(0, 0);
                 uint16_t spurroad_item = 0;
                 uint16_t rowBreakRightD = 0;
                 if(track.spurroad.size() == 0)
                 {
                     rowBreakRightD = searchBreakRightDown(track.pointsEdgeRight, 0, track.pointsEdgeRight.size());
+                    uint16_t rowBreakRightU = searchBreakRightUp(track.pointsEdgeRight);
+                    if(rowBreakRightU > ROWSIMAGE / 2)
+                    {
+                        _corner = track.pointsEdgeRight[rowBreakRightU];
+                    }
                 }
                 else if(track.spurroad.size() == 1)
                 {
-                    if(track.spurroad[0].y < COLSIMAGE - 80)
+                    if(track.spurroad[0].y < COLSIMAGE - 60)
                     {
                         //寻找岔路行对应边线下标
-                        corner = track.spurroad[0];
-                        spurroad_item = abs(corner.x - track.pointsEdgeRight[0].x);
+                        _corner = track.spurroad[0];
+                        spurroad_item = abs(_corner.x - track.pointsEdgeRight[0].x);
                         rowBreakRightD = searchBreakRightDown(track.pointsEdgeRight, 0, spurroad_item);
                     }
                     else
                     {
                         rowBreakRightD = searchBreakRightDown(track.pointsEdgeRight, 0, track.pointsEdgeRight.size());
+                        uint16_t rowBreakRightU = searchBreakRightUp(track.pointsEdgeRight);
+                        if(rowBreakRightU > ROWSIMAGE / 2 && rowBreakRightU > rowBreakRightD)
+                        {
+                            _corner = track.pointsEdgeRight[rowBreakRightU];
+                        }
                     }
                 }
                 else
                 {
                     for(int i = 0; i < track.spurroad.size(); i++)
                     {
-                        if(track.spurroad[i].x > corner.x)
+                        if(track.spurroad[i].x > _corner.x)
                         {
-                            corner = track.spurroad[i];
+                            _corner = track.spurroad[i];
                         }
-                        spurroad_item = abs(corner.x - track.pointsEdgeRight[0].x);
+                        spurroad_item = abs(_corner.x - track.pointsEdgeRight[0].x);
                         rowBreakRightD = searchBreakRightDown(track.pointsEdgeRight, 0, spurroad_item);
                     }
                 }
@@ -332,10 +407,10 @@ public:
                 pointBreakD = track.pointsEdgeRight[0];
                 pointBreakU = track.pointsEdgeRight[rowBreakRightD];
                 line(track.pointsEdgeRight, 0, rowBreakRightD);
-                if(corner.x)
+                if(_corner.x)
                 {
                     counterSpurroad++;
-                    line(track.pointsEdgeLeft, rowBreakRightD, corner);
+                    line(track.pointsEdgeLeft, rowBreakRightD, _corner);
                     track.pointsEdgeLeft.resize(spurroad_item);
                     track.pointsEdgeRight.resize(spurroad_item);
 
@@ -343,7 +418,7 @@ public:
                     uint16_t mid = (track.pointsEdgeLeft[spurroad_item - 1].y + track.pointsEdgeRight[spurroad_item - 1].y) / 2;
                     POINT left(0, 0);
                     POINT right(0, 0);
-                    for(int i = corner.x - 1; i > ROWSIMAGE / 3; i--)
+                    for(int i = _corner.x - 1; i > ROWSIMAGE / 3; i--)
                     {
                         int j = mid;
                         for(j = mid; j < COLSIMAGE - 5; j++)
@@ -385,7 +460,7 @@ public:
                         mid = (right.y + left.y) / 2;
                     }
                 }
-                else if(track.spurroad.size() == 0 && counterSpurroad > 2)
+                else if(_corner.x == 0 && counterSpurroad > 10)
                 {
                     counterSpurroad = 0;
                     ringStep = RingStep::Inside;
@@ -614,8 +689,9 @@ public:
         // 绘制岔路点
         for (int i = 0; i < track.spurroad.size(); i++)
         {
-            circle(Image, Point(track.spurroad[i].y, track.spurroad[i].x), 6, Scalar(0, 0, 255), -1); // 红色点
+            circle(Image, Point(track.spurroad[i].y, track.spurroad[i].x), 3, Scalar(0, 0, 255), -1); // 红色点
         }
+        circle(Image, Point(_corner.y, _corner.x), 6, Scalar(0, 0, 255), -1); // 红色点
 
         // 绘制补线点
         {
@@ -688,7 +764,7 @@ private:
         }
         for (int i = row_start; i < row_end; i++) // 寻找左边跳变点
         {
-            if(pointsEdgeLeft[i].y > 5)
+            if(pointsEdgeLeft[i].y > pointsEdgeLeft[i - 1].y && start == false)
             {
                 start = true;
             }
@@ -702,7 +778,7 @@ private:
                 else if (pointsEdgeLeft[i].y <= pointsEdgeLeft[rowBreakLeft].y) // 突变点计数
                 {
                     counter++;
-                    if (counter > 5)
+                    if (counter > 8)
                         return rowBreakLeft;
                 }
             }
@@ -737,7 +813,7 @@ private:
         }
         for (int i = row_start; i < row_end; i++) // 寻找右边跳变点
         {
-            if(pointsEdgeRight[i].y < COLSIMAGE - 5)
+            if(pointsEdgeRight[i].y < pointsEdgeRight[i - 1].y && start == false)
             {
                 start = true;
             }
@@ -751,7 +827,7 @@ private:
                 else if (pointsEdgeRight[i].y > pointsEdgeRight[rowBreakRight].y) // 突变点计数
                 {
                     counter++;
-                    if (counter > 5)
+                    if (counter > 8)
                         return rowBreakRight;
                 }
             }
@@ -819,7 +895,7 @@ private:
 
         return 0;
     }
-
+    POINT _corner;
     uint16_t counterSpurroad = 0; // 岔路计数器
     uint16_t ring_cnt = 0; // 环岛检测确认计数器
 	uint16_t counterExit = 0;	  // 异常退出计数器

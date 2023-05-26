@@ -877,7 +877,7 @@ public:
             {
                 // 计数器计数，如果有5帧图片，则出库完成，进入空闲状态机
                 counterExitOut++;
-                if (counterExitOut >= 5)
+                if (counterExitOut >= 6)
                 {
                     flag_garage = flag_garage_e::GARAGE_NONE;
                 }
@@ -888,9 +888,9 @@ public:
                 counterExitOut = 0;
             }
 
-            // 图像异常，退出该函数
-            if (track.pointsEdgeLeft.size() <= 2 || track.pointsEdgeRight.size() <= 2) 
-                return;
+            // // 图像异常，退出该函数
+            // if (track.pointsEdgeLeft.size() <= 2 || track.pointsEdgeRight.size() <= 2) 
+            //     return;
 
             // 拐点的搜寻
             uint16_t rowBreakLeft = searchBreakLeft(track.pointsEdgeLeft);                      // 左上拐点搜索
@@ -919,7 +919,7 @@ public:
             _pointRD = track.pointsEdgeLeft[rowBreakLeft];                      // dubug图中显示，补线的终点
 
             // 依赖岔路补线
-            if (track.spurroad.size() > 2)
+            if (track.spurroad.size() >= 2)
             {
                 // 出库补线终点
                 endPoint = searchBestSpurroad(track.spurroad);
@@ -1134,62 +1134,69 @@ public:
             //到达一定距离，开始入库，重新规划路线
             if (if_inStorage)
             {
+                // 定义一个计数器，用来使拐点消失后5帧继续补线
+                static int num = 0;
+                num++;
+
+                // 拐点的搜寻        
+                uint16_t rowBreakRight = searchBreakRight(track.pointsEdgeRight);                               // 右上拐点搜索
+                uint16_t rowBreakRightUp = sBreakRightUp(track.pointsEdgeRight);                                // 右上拐点搜索
+
+                // if(crosswalk.x > 0)
+                // {
+
+                // 入库补线
+                POINT startPoint = POINT(ROWSIMAGE - 10, 5);                                                    // 入库补线起点:固定左下角
+                POINT endPoint = track.pointsEdgeRight[rowBreakRightUp];                                        // 入库补线终点
+                POINT midPoint = POINT((startPoint.x + endPoint.x) * 0.4, (startPoint.y + endPoint.y) * 0.5);   // 入库补线中点      
+                                
+                // }
+                // else
+                // {
+                //     // 入库补线
+                //     startPoint = POINT(ROWSIMAGE - 10, 5);                                                    // 入库补线起点:固定左下角
+                //     endPoint = searchBestSpurroad_High(track.spurroad);                                       // 入库补线终点
+                //     midPoint = POINT((startPoint.x + endPoint.x) * 0.4, (startPoint.y + endPoint.y) * 0.5);   // 入库补线中点
+                // }
+
+                // 三阶贝塞尔曲线拟合
+                vector<POINT> repairPoints = {startPoint, midPoint, endPoint};
+                vector<POINT> modifyEdge = Bezier(0.02, repairPoints); 
+                // 清空基础赛道识别的路径，重新规划路径
+                track.pointsEdgeLeft.clear();
+                track.pointsEdgeLeft = modifyEdge;
+
+                // 二次补线，左边完整补线
+                startPoint = endPoint;
+                endPoint = track.pointsEdgeRight[rowBreakRight];
+                midPoint = POINT((startPoint.x + endPoint.x) * 0.5, (startPoint.y + endPoint.y) * 0.5);         // 入库补线中点
+                // 三阶贝塞尔曲线拟合
+                repairPoints = {startPoint, midPoint, endPoint};
+                modifyEdge.resize(0);
+                modifyEdge = Bezier(0.04, repairPoints);
+                // 将拟合曲线加进去
+                for (int i = 0; i < modifyEdge.size(); i++)
+                {
+                    track.pointsEdgeLeft.push_back(modifyEdge[i]);
+                }
+
+                // 清空基础赛道识别的路径
+                track.pointsEdgeRight.clear();
+
                 // 通过拐点判断是否已经大半进入车库
                 if(track.spurroad.size() >= 1)
                 {
-                    POINT startPoint;  // 入库补线起点:固定左下角
-                    POINT endPoint;    // 入库补线终点
-                    POINT midPoint;    // 入库补线中点       
-
-                    // 拐点的搜寻        
-                    uint16_t rowBreakRight = searchBreakRight(track.pointsEdgeRight);                               // 右上拐点搜索
-                    uint16_t rowBreakRightUp = sBreakRightUp(track.pointsEdgeRight);                                // 右上拐点搜索
-
-                    // if(crosswalk.x > 0)
-                    // {
-
-                    // 入库补线
-                    startPoint = POINT(ROWSIMAGE - 10, 5);                                                    // 入库补线起点:固定左下角
-                    endPoint = track.pointsEdgeRight[rowBreakRightUp];                                        // 入库补线终点
-                    midPoint = POINT((startPoint.x + endPoint.x) * 0.4, (startPoint.y + endPoint.y) * 0.5);   // 入库补线中点      
-                                    
-                    // }
-                    // else
-                    // {
-                    //     // 入库补线
-                    //     startPoint = POINT(ROWSIMAGE - 10, 5);                                                    // 入库补线起点:固定左下角
-                    //     endPoint = searchBestSpurroad_High(track.spurroad);                                       // 入库补线终点
-                    //     midPoint = POINT((startPoint.x + endPoint.x) * 0.4, (startPoint.y + endPoint.y) * 0.5);   // 入库补线中点
-                    // }
-
-                    // 三阶贝塞尔曲线拟合
-                    vector<POINT> repairPoints = {startPoint, midPoint, endPoint};
-                    vector<POINT> modifyEdge = Bezier(0.02, repairPoints); 
-                    // 清空基础赛道识别的路径，重新规划路径
-                    track.pointsEdgeLeft.clear();
-                    track.pointsEdgeLeft = modifyEdge;
-
-                    // 二次补线，左边完整补线
-                    startPoint = endPoint;
-                    endPoint = track.pointsEdgeRight[rowBreakRight];
-                    midPoint = POINT((startPoint.x + endPoint.x) * 0.5, (startPoint.y + endPoint.y) * 0.5);         // 入库补线中点
-                    // 三阶贝塞尔曲线拟合
-                    repairPoints = {startPoint, midPoint, endPoint};
-                    modifyEdge.resize(0);
-                    modifyEdge = Bezier(0.04, repairPoints);
-                    // 将拟合曲线加进去
-                    for (int i = 0; i < modifyEdge.size(); i++)
-                    {
-                        track.pointsEdgeLeft.push_back(modifyEdge[i]);
-                    }
-
-                    // 清空基础赛道识别的路径
-                    track.pointsEdgeRight.clear();
+                    // 计数器清零
+                    num = 0;
                 }
                 // 判断已经大半进库，不用补线
                 else
                 {
-                    flag_garage = GARAGE_HALF_STOP;
+                    if(num >= 5)
+                    {
+                        flag_garage = GARAGE_HALF_STOP;
+                        num = 0;
+                    }
                 }
             }
         }

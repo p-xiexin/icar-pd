@@ -79,6 +79,7 @@ public:
                 counterRec++;
                 if (counterRec > 2)
                 {
+                    counterSession = 0;
                     counterRec = 0;
                     farmlandStep = FarmlandStep::Cruise;
                 }
@@ -106,11 +107,12 @@ public:
         {
             searchCorn(predict);
             if ((track.pointsEdgeLeft.size() > 80 || track.pointsEdgeRight.size() > 80) && pointCorn.x == 0 &&
-                (track.pointsEdgeLeft[10].x > COLSIMAGE / 2 || track.pointsEdgeRight[10].x > COLSIMAGE / 2))
+                counterSession && (track.pointsEdgeLeft[10].x > COLSIMAGE / 2 || track.pointsEdgeRight[10].x > COLSIMAGE / 2))
             {
                 counterRec++;
                 if(counterRec > 5)
                 {
+                    counterSession = 0;
                     counterRec = 0;
                     farmlandStep = FarmlandStep::None; // 出农田
                 }
@@ -118,6 +120,10 @@ public:
 
             searchCones(predict);
             pointsSortForX(pointEdgeDet);
+            if(pointEdgeDet[0].x > COLSIMAGE /2)
+            {
+                counterSession++;
+            }
 
             _imageGray = ConeEnrode(frame);
             threshold(_imageGray, _imageBinary, 0, 255, THRESH_OTSU);

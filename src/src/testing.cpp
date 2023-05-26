@@ -54,7 +54,7 @@ bool slowDown = false;        // 特殊区域减速标志
 uint16_t counterSlowDown = 0; // 减速计数器
 
 CaptureInterface captureInterface("/dev/video0");
-SerialInterface serialInterface("/dev/ttyUSB0", LibSerial::BaudRate::BAUD_115200);
+SerialInterface serialInterface("/dev/ttyUSB0", LibSerial::BaudRate::BAUD_460800);
 Detection detection;
 
 int main(int argc, char *argv[])
@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
         bool imshowRec = false;
 
         // 处理帧时长监测 速度监测
-        {
+        // {
             static auto preTime = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
             auto startTime = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
             float detFPS = (float)1000.f / (startTime - preTime);
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
                  << "FPS: " << (int)detFPS << "\t";
             cout << speed << "m/s  " << roadType << endl;
             preTime = startTime;
-        }
+        // }
 
         Mat frame;
         frame = captureInterface.get_frame();
@@ -443,8 +443,18 @@ int main(int argc, char *argv[])
 					motionController.speedController(true, controlCenterCal);
 					if(AI_enable)
 					{
-						motionController.motorSpeed = motionController.params.speedAI;
+                        static float speed = 0.0f;
+                        speed += 0.1;
+                        if(speed > motionController.params.speedAI)
+                        {
+                            speed = motionController.params.speedAI;
+                        }
+                        motionController.motorSpeed = speed;
 					}
+                    else
+                    {
+                        speed = 0.0f;
+                    }
 					break;
 				}
 			}
@@ -517,6 +527,10 @@ int main(int argc, char *argv[])
                 slowZoneDetection.drawImage(trackRecognition, imageTrack);
                 break;
             }
+            putText(imageTrack,
+                    "FPS: " + formatDoble2String(detFPS, 2),
+                    Point(20, 20), FONT_HERSHEY_PLAIN, 1,
+                    Scalar(0, 0, 255), 1); // 车速
             savePicture(imageTrack, roadType);
 		}
     }

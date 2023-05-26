@@ -144,8 +144,9 @@ public:
 		case DepotStep::DepotEnter: //[03] 进站使能
 		{
 			searchCones(predict);
+			_distance = 0;
 			_pointNearCone = searchClosestCone(pointEdgeDet);
-			if(_distance < params.DangerClose)
+			if(_distance < params.DangerClose && _distance > 0)
 			{
 				counterRec++;
 				if(counterRec > 1)
@@ -303,8 +304,7 @@ public:
 		// 绘制锥桶坐标
 		for (int i = 0; i < pointEdgeDet.size(); i++)
 		{
-			circle(image, Point(pointEdgeDet[i].y, pointEdgeDet[i].x), 2,
-				   Scalar(92, 92, 205), -1); // 锥桶坐标：红色
+            putText(image, to_string(i+1), Point(pointEdgeDet[i].y, pointEdgeDet[i].x), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 255), 1, CV_AA);
 		}
 
 		// 赛道边缘
