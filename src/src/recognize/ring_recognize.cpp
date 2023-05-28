@@ -88,7 +88,8 @@ public:
             uint16_t rowBreakRightDown = searchBreakRightDown(track.pointsEdgeRight, 0, ROWSIMAGE / 2);
             uint16_t rowBreakLeftDown = searchBreakLeftDown(track.pointsEdgeLeft, 0, ROWSIMAGE / 2);
 
-            if(rowBreakLeftDown != 0 && rowBreakRightDown == 0 && track.stdevLeft > 120 && track.stdevRight < 60
+            if(rowBreakLeftDown != 0 && rowBreakRightDown == 0
+                && ((track.stdevLeft > 120 && track.stdevRight < 60) || (track.stdevLeft > 200 && track.stdevRight < 80))
                 && abs(track.pointsEdgeRight[0].y - track.pointsEdgeRight[ROWSIMAGE / 2].y) > 5
                 && track.widthBlock[rowBreakLeftDown + 5].y > COLSIMAGE / 2 
                 && track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].y > COLSIMAGE / 2)
@@ -110,7 +111,8 @@ public:
                     ringType = RingType::RingLeft;
                 }
             }
-            else if(rowBreakLeftDown == 0 && rowBreakRightDown != 0 && track.stdevLeft < 60 && track.stdevRight > 120
+            else if(rowBreakLeftDown == 0 && rowBreakRightDown != 0 
+                && ((track.stdevLeft < 60 && track.stdevRight > 120) || (track.stdevLeft < 80 && track.stdevRight > 200))
                 && abs(track.pointsEdgeLeft[0].y - track.pointsEdgeLeft[ROWSIMAGE / 2].y) > 5
                 && track.widthBlock[rowBreakRightDown + 5].y > COLSIMAGE / 2
                 && track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].y < COLSIMAGE / 2)
@@ -302,8 +304,18 @@ public:
                 line(track.pointsEdgeLeft, 0, rowBreakLeftD);
                 if(_corner.x)
                 {
-                    counterSpurroad++;
-                    line(track.pointsEdgeRight, rowBreakLeftD, _corner);
+                    if(_corner.x > ROWSIMAGE / 2)
+                        counterSpurroad++;
+                    // line(track.pointsEdgeRight, rowBreakLeftD, _corner);
+                    {
+                        POINT startPoint = track.pointsEdgeRight[rowBreakLeftD];
+                        POINT endPoint = _corner;
+                        POINT midPoint = POINT((0.3*startPoint.x + 0.7*endPoint.x), (0.3*startPoint.y + 0.7*endPoint.y));
+                        midPoint.y += abs(startPoint.y - endPoint.y) / 4;
+                        uint16_t rowBreakMid = abs(midPoint.x - startPoint.x) + rowBreakLeftD - 1;
+                        line(track.pointsEdgeRight, rowBreakLeftD, midPoint);
+                        line(track.pointsEdgeRight, rowBreakMid, endPoint);
+                    }
                     track.pointsEdgeLeft.resize(spurroad_item);
                     track.pointsEdgeRight.resize(spurroad_item);
 
@@ -352,22 +364,8 @@ public:
 
                         mid = (right.y + left.y) / 2;
                     }
-
-                    // {
-                    //     POINT startPoint = track.pointsEdgeRight[rowBreakLeftD];
-                    //     POINT endPoint = track.pointsEdgeRight[track.pointsEdgeRight.size() - 1];
-                    //     POINT midPoint = _corner;
-                    //     vector<POINT> repairPoints = {startPoint, midPoint, endPoint};
-                    //     vector<POINT> modifyEdge = Bezier(0.02, repairPoints); 
-                    //     // 清空基础赛道识别的路径，重新规划路径
-                    //     track.pointsEdgeRight.resize(rowBreakLeftD);
-                    //     for(int i = 0; i < modifyEdge.size(); i++)
-                    //     {
-                    //         track.pointsEdgeRight.push_back(modifyEdge[i]);
-                    //     }
-                    // }
                 }
-                else if(_corner.x == 0 && counterSpurroad > 10)
+                else if(_corner.x == 0 && counterSpurroad > 3)
                 {
                     counterSpurroad = 0;
                     ringStep = RingStep::Inside;
@@ -423,8 +421,18 @@ public:
                 line(track.pointsEdgeRight, 0, rowBreakRightD);
                 if(_corner.x)
                 {
-                    counterSpurroad++;
-                    line(track.pointsEdgeLeft, rowBreakRightD, _corner);
+                    if(_corner.x > ROWSIMAGE / 2)
+                        counterSpurroad++;
+                    // line(track.pointsEdgeLeft, rowBreakRightD, _corner);
+                    {
+                        POINT startPoint = track.pointsEdgeLeft[rowBreakRightD];
+                        POINT endPoint = _corner;
+                        POINT midPoint = POINT((0.3*startPoint.x + 0.7*endPoint.x), (0.3*startPoint.y + 0.7*endPoint.y));
+                        midPoint.y -= abs(startPoint.y - endPoint.y) / 4;
+                        uint16_t rowBreakMid = abs(midPoint.x - startPoint.x) + rowBreakRightD - 1;
+                        line(track.pointsEdgeLeft, rowBreakRightD, midPoint);
+                        line(track.pointsEdgeLeft, rowBreakMid, endPoint);
+                    }
                     track.pointsEdgeLeft.resize(spurroad_item);
                     track.pointsEdgeRight.resize(spurroad_item);
 
@@ -473,22 +481,8 @@ public:
 
                         mid = (right.y + left.y) / 2;
                     }
-
-                    // {
-                    //     POINT startPoint = track.pointsEdgeLeft[rowBreakRightD];
-                    //     POINT endPoint = track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1];
-                    //     POINT midPoint = _corner;
-                    //     vector<POINT> repairPoints = {startPoint, midPoint, endPoint};
-                    //     vector<POINT> modifyEdge = Bezier(0.02, repairPoints); 
-                    //     // 清空基础赛道识别的路径，重新规划路径
-                    //     track.pointsEdgeLeft.resize(rowBreakRightD);
-                    //     for(int i = 0; i < modifyEdge.size(); i++)
-                    //     {
-                    //         track.pointsEdgeLeft.push_back(modifyEdge[i]);
-                    //     }
-                    // }
                 }
-                else if(_corner.x == 0 && counterSpurroad > 10)
+                else if(_corner.x == 0 && counterSpurroad > 3)
                 {
                     counterSpurroad = 0;
                     ringStep = RingStep::Inside;
@@ -533,6 +527,7 @@ public:
                 {
                     pointBreakD = track.pointsEdgeRight[0];
                     pointBreakU = track.pointsEdgeLeft[rowBreakLeft];
+                    pointBreakU.y += COLSIMAGE / 8;
                     line(track.pointsEdgeRight, rowBreakRight, pointBreakU);
                     track.pointsEdgeLeft.resize(rowBreakLeft);
                     track.pointsEdgeRight.resize(rowBreakLeft);
@@ -569,6 +564,7 @@ public:
 
                     pointBreakU = track.pointsEdgeRight[rowBreakRight];
                     pointBreakD = track.pointsEdgeLeft[rowBreakLeft];
+                    pointBreakU.y -= COLSIMAGE / 8;
                     line(track.pointsEdgeLeft, rowBreakLeft, pointBreakU);
                     track.pointsEdgeLeft.resize(rowBreakRight);
                     track.pointsEdgeRight.resize(rowBreakRight);

@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 		Mat imageGray, imageBinary, imageEnrode;
 
         Mat kernel_close = getStructuringElement(MORPH_RECT, Size(3, 3));//创建结构元
-		Mat kernel_enrode = getStructuringElement(MORPH_ELLIPSE, Size(120, 60));
+		Mat kernel_enrode = getStructuringElement(MORPH_ELLIPSE, Size(60, 60));
 		Mat kernel_open = getStructuringElement(MORPH_ELLIPSE, Size(50, 50));
 		morphologyEx(blueChannel, blueChannel, MORPH_CLOSE, kernel_close, Point(-1, -1));//闭运算
 		morphologyEx(blueChannel, imageEnrode, MORPH_ERODE, kernel_enrode, Point(-1, -1));//腐蚀运算

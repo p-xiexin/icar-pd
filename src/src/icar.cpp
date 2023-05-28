@@ -434,7 +434,7 @@ int main(int argc, char *argv[])
 				}
 				case RoadType::RingHandle:
 				{
-					motionController.motorSpeed = motionController.params.speedCorners;
+					motionController.motorSpeed = 1.2;
 					break;
 				}
 				case RoadType::SlowzoneHandle:
@@ -448,15 +448,15 @@ int main(int argc, char *argv[])
                     static bool AI_Last = false;
                     static float speed = 0.0f;
                     if(!AI_Last && AI_enable)
-                        speed = -0.8f;
+                        speed = 0.0f;
                     else if(AI_Last && !AI_enable)
-                        speed = motionController.params.speedAI;
+                        speed = motionController.params.speedAI / 2;
 
 					motionController.speedController(true, controlCenterCal);
                     float speed_ctrl = motionController.motorSpeed;
 					if(AI_enable)
 					{
-                        speed += 0.1f;
+                        speed += 0.02f;
                         if(speed > motionController.params.speedAI)
                             speed = motionController.params.speedAI;
 					}
@@ -540,6 +540,11 @@ int main(int argc, char *argv[])
             case RoadType::SlowzoneHandle:
                 slowZoneDetection.drawImage(trackRecognition, imageTrack);
                 break;
+            }
+            // 绘制中心点集
+            for (int i = 0; i < controlCenterCal.centerEdge.size(); i++)
+            {
+                circle(imageTrack, Point(controlCenterCal.centerEdge[i].y, controlCenterCal.centerEdge[i].x), 1, Scalar(0, 0, 255), -1);
             }
             putText(imageTrack,
                     "FPS: " + formatDoble2String(detFPS, 2),

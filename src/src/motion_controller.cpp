@@ -84,10 +84,10 @@ public:
         static int errorLast = 0;                    // 记录前一次的偏差
         static int T_cnt = 0;
 
-        if(abs(error - errorLast) > COLSIMAGE / 10) 
+        if(abs(error - errorLast) > COLSIMAGE / 16) 
         {
             T_cnt++;
-            error = error > errorLast ? errorLast + COLSIMAGE / 10 : errorLast - COLSIMAGE / 10;
+            error = error > errorLast ? errorLast + COLSIMAGE / 16 : errorLast - COLSIMAGE / 16;
         }
         else
         {

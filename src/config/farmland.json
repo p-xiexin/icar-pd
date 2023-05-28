@@ -2,10 +2,11 @@
     "FarmlandCheck": 2,
     "Speed": 0.8,
     "SpeedScale": 0.6,
-    "CloseWidth" : 3,
-    "CloseHeigth" : 3,
-    "EnrodeWidth" : 140,
-    "EnrodeHeigth" : 54,
+    "CloseWidth" : 4,
+    "CloseHeigth" : 4,
+    "EnrodeWidth" : 100,
+    "EnrodeHeigth" : 50,
+    "OpenSize": 50,
     "EnterLine": 130,
     "record": [
         {

@@ -28,6 +28,7 @@ public:
         loadParams();
         kernel_close = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(params.CloseWidth, params.CloseHeigth));//创建结构元
 		kernel_enrode = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(params.EnrodeWidth, params.EnrodeHeigth));
+		kernel_open = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(params.OpenSize, params.OpenSize));
     }
     /**
      * @brief 初始化
@@ -207,16 +208,8 @@ public:
         // cv::Mat kernel_close = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));//创建结构元
 		// cv::Mat kernel_enrode = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(120, 60));
 		cv::morphologyEx(blueChannel, blueChannel, cv::MORPH_CLOSE, kernel_close, cv::Point(-1, -1));//闭运算
-        // for (int i = 150; i < 180; i++)
-        // {
-        //     int j = 0;
-        //     for (j = 0; j < 10; j++)
-        //     {
-        //         blueChannel.at<uchar>(i, j) = 60;
-        //         // blueChannel.at<uchar>(i, 319 - j) = 60;
-        //     }
-        // }
 		cv::morphologyEx(blueChannel, imageGray, cv::MORPH_ERODE, kernel_enrode, cv::Point(-1, -1));//腐蚀运算
+		cv::morphologyEx(imageGray, imageGray, cv::MORPH_OPEN, kernel_open, cv::Point(-1, -1));//开运算
         return imageGray;
     }
 
@@ -429,6 +422,7 @@ private:
 
     cv::Mat kernel_close;//闭运算滤波结构元
 	cv::Mat kernel_enrode;//腐蚀运算滤波结构元
+    cv::Mat kernel_open;//开运算滤波结构元
     cv::Mat _imageBinary = cv::Mat::zeros(Size(COLSIMAGE, ROWSIMAGE), CV_8UC1);
     cv::Mat _imageGray = cv::Mat::zeros(Size(COLSIMAGE, ROWSIMAGE), CV_8UC1);
     vector<POINT> pointEdgeDet;        // AI元素检测边缘点集
@@ -458,9 +452,10 @@ private:
         uint16_t CloseHeigth = 3;
         uint16_t EnrodeWidth = 80;
         uint16_t EnrodeHeigth = 40;
+        uint16_t OpenSize = 30;
         uint16_t EnterLine = 50;
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-            Params, FarmlandCheck, Speed, SpeedScale, CloseWidth, CloseHeigth, EnrodeWidth, EnrodeHeigth, EnterLine); // 添加构造函数
+            Params, FarmlandCheck, Speed, SpeedScale, CloseWidth, CloseHeigth, EnrodeWidth, EnrodeHeigth, OpenSize, EnterLine); // 添加构造函数
     };
     Params params;
 };

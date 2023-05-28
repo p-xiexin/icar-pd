@@ -1,21 +1,10 @@
 #pragma once
 /**
- ********************************************************************************************************
- *                                               示例代码
- *                                             EXAMPLE  CODE
- *
- *                      (c) Copyright 2021; SaiShu.Lcc.; Leo; https://bjsstech.com
- *                                   版权所属[SASU-北京赛曙科技有限公司]
- *
- *            The code is for internal use only, not for commercial transactions(开源学习,请勿商用).
- *            The code ADAPTS the corresponding hardware circuit board(代码适配百度Edgeboard-FZ3B),
- *            The specific details consult the professional(欢迎联系我们,代码持续更正，敬请关注相关开源渠道).
- *********************************************************************************************************
  * @file slowzone_detection.cpp
- * @author Leo ()
- * @brief 慢行区（动物出没）行驶速度
+ * @author PXX
+ * @brief 慢行区
  * @version 0.1
- * @date 2022-12-06
+ * @date 2022-05-16
  *
  * @copyright Copyright (c) 2022
  *
@@ -51,11 +40,11 @@ public:
 
     bool slowZoneDetection(TrackRecognition &track, vector<PredictResult> predict)
     {
-        if(counterFild < 30)
-        {
-            counterFild++;//屏蔽计数器
-            return false;
-        }
+        // if(counterFild < 30)
+        // {
+        //     counterFild++;//屏蔽计数器
+        //     return false;
+        // }
 
         // 检测标志
         for (int i = 0; i < predict.size(); i++)
@@ -100,8 +89,8 @@ public:
 
             if (track.pointsEdgeLeft.size() > ROWSIMAGE / 2 && track.pointsEdgeRight.size() > ROWSIMAGE / 2) // 切行，防止错误前瞻引发转向
             {
-                track.pointsEdgeLeft.resize(track.pointsEdgeLeft.size() * 0.7);
-                track.pointsEdgeRight.resize(track.pointsEdgeRight.size() * 0.7);
+                track.pointsEdgeLeft.resize(track.pointsEdgeLeft.size() * 0.8);
+                track.pointsEdgeRight.resize(track.pointsEdgeRight.size() * 0.8);
             }
 
             return true;
