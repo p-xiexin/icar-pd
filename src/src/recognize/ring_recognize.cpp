@@ -48,6 +48,7 @@ public:
         ringStep = RingStep::None;     // 环岛处理阶段
         ring_cnt = 0;
         counterSpurroad = 0;
+        counterShield = 0;
     }
     void print(void)
     {
@@ -67,12 +68,11 @@ public:
             return ringType;
         }
 
-        static uint16_t counterShield = 0; // 环岛检测屏蔽计数器：屏蔽车库误检测
         if (track.garageEnable.x)
         {
             counterShield = 0;
         }
-        if (counterShield < 15)
+        if (counterShield < 30)
         {
             counterShield++;
             return false;
@@ -936,6 +936,7 @@ private:
     uint16_t counterSpurroad = 0; // 岔路计数器
     uint16_t ring_cnt = 0; // 环岛检测确认计数器
 	uint16_t counterExit = 0;	  // 异常退出计数器
+    uint16_t counterShield = 0; // 环岛检测屏蔽计数器
 
     POINT pointBreakU;
     POINT pointBreakD;

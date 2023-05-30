@@ -48,10 +48,7 @@ void callbackSignal(int signum); // 系统退出回调函数
 void displayWindowInit(void);    // 显示窗口初始化
 void savePicture(Mat &image, RoadType roadType, bool flag);
 void ClearFolder(const std::string& folderPath);
-void slowDownEnable(void);
 
-bool slowDown = false;        // 特殊区域减速标志
-uint16_t counterSlowDown = 0; // 减速计数器
 
 CaptureInterface captureInterface("/dev/video0");
 SerialInterface serialInterface("/dev/ttyUSB0", LibSerial::BaudRate::BAUD_460800);
@@ -181,6 +178,11 @@ int main(int argc, char *argv[])
             ai_results = detection.getLastFrame();
             frame = ai_results->rgb_frame;
         }
+        else
+        {
+            ai_results = std::make_shared<DetectionResult>();
+        }
+
 
         /*2.图像预处理*/
         // Mat imgaeCorrect = imagePreprocess.imageCorrection(frame);         // RGB
@@ -192,7 +194,7 @@ int main(int argc, char *argv[])
         Mat imageTrack = imgaeCorrect.clone();          // RGB
 
 		/*******4.出库和入库识别与路径规划*********/
-		if (motionController.params.GarageEnable && AI_enable) // 出库元素是否使能开启，根据配置文件得到
+		if (motionController.params.GarageEnable) // 出库元素是否使能开启，根据配置文件得到
 		{
 			// 道路类型在车库或者基础赛道，进行相关处理
 			if (roadType == RoadType::GarageHandle || roadType == RoadType::BaseHandle)
@@ -237,7 +239,7 @@ int main(int argc, char *argv[])
 		}
 
 		/*农田区域检测*/
-		if (motionController.params.FarmlandEnable && AI_enable) // 赛道元素是否使能
+		if (motionController.params.FarmlandEnable) // 赛道元素是否使能
 		{
 			if (roadType == RoadType::FarmlandHandle || roadType == RoadType::BaseHandle)
 			{
@@ -262,7 +264,7 @@ int main(int argc, char *argv[])
 
 
         /*维修厂检测*/
-        if (motionController.params.DepotEnable && AI_enable) // 赛道元素是否使能
+        if (motionController.params.DepotEnable) // 赛道元素是否使能
         {
             if (roadType == RoadType::DepotHandle || roadType == RoadType::BaseHandle)
             {
@@ -286,7 +288,7 @@ int main(int argc, char *argv[])
         }
 
         /*坡道（桥）检测与路径规划*/
-        if (motionController.params.BridgeEnable && AI_enable) // 赛道元素是否使能
+        if (motionController.params.BridgeEnable) // 赛道元素是否使能
         {
             if (roadType == RoadType::BridgeHandle || roadType == RoadType::BaseHandle)
             {
@@ -309,7 +311,7 @@ int main(int argc, char *argv[])
         }
 
         /*动物出没，慢行区检测*/
-        if (motionController.params.SlowzoneEnable && AI_enable) // 赛道元素是否使能
+        if (motionController.params.SlowzoneEnable) // 赛道元素是否使能
         {
             if (roadType == RoadType::SlowzoneHandle || roadType == RoadType::BaseHandle)
             {
@@ -403,7 +405,7 @@ int main(int argc, char *argv[])
         }
         controlCenterCal.controlCenterCal(trackRecognition); // 根据赛道边缘信息拟合运动控制中心
 
-        /*智能车运动控制 通讯*/
+        /**************智能车运动控制,通讯******************/
         if (counterRunBegin > 30)
         {
             // 智能车方向控制
@@ -434,12 +436,12 @@ int main(int argc, char *argv[])
 				}
 				case RoadType::RingHandle:
 				{
-					motionController.motorSpeed = 1.2f;
+					motionController.motorSpeed = motionController.params.speedCorners;
 					break;
 				}
 				case RoadType::SlowzoneHandle:
 				{
-					motionController.motorSpeed = 0.8f;
+					motionController.motorSpeed = 1.0f;
 					break;
 				}
 				default:
@@ -480,7 +482,7 @@ int main(int argc, char *argv[])
             counterRunBegin++;
         }
 
-        /*图像显示*/
+        /**********图像显示************/
         if (motionController.params.Debug)
         {
             Mat imageAI = frame.clone();
@@ -628,11 +630,3 @@ void ClearFolder(const std::string& folderPath) {
     }
 }
 
-/**
- * @brief 车辆减速使能
- */
-void slowDownEnable(void)
-{
-    slowDown = true;
-    counterSlowDown = 0;
-}

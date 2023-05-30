@@ -98,6 +98,12 @@ public:
 		pointEdgeDet.clear();
 		indexDebug = 0;
 
+		if(counterImmunity < 30)
+		{
+			counterImmunity++;
+			return false;
+		}
+
 		switch (depotStep)
 		{
 		case DepotStep::DepotNone: //[01] 维修厂标志检测

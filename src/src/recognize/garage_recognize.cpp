@@ -52,8 +52,10 @@ private:
         float       speed_in = 0;           // 减速入库
         float       speed_out = 0;          // 出库速度
         int         shield_counter = 0;     // 屏蔽计数器
+        float       speed_readyend = 0;     // 准备入库的速度
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-            Params, garage_run, corner_lines, slowdown_condition, disGarageEntry, stop_line, brakePicNum, speed_nor, speed_in, speed_out, shield_counter); // 添加构造函数
+            Params, garage_run, corner_lines, slowdown_condition, disGarageEntry, stop_line, 
+            brakePicNum, speed_nor, speed_in, speed_out, shield_counter, speed_readyend); // 添加构造函数
     };
 
 
@@ -1079,15 +1081,29 @@ public:
 		_crosswalk = POINT(0, 0);
         // 定义是否准备入库的标志位
         static bool if_inStorage = false;
+        // 第二圈准备入库的速度
+        speed_ku = params.speed_readyend;
 
         // ai识别，是否识别到斑马线，返回ai识别的框的中点
 		POINT crosswalk = searchCrosswalkSign(predict);
 		_crosswalk = crosswalk;
 
+        // 定义标志位
+        static bool if_speed_control = false;
         // 如果ai识别的斑马线框的中心点在图像上方的1/4，开始减速，准备入库
         if (crosswalk.x > params.slowdown_condition)
         {
-            speed_ku = params.speed_in;
+            if_speed_control = true;
+            speed_ku = -0.4;
+        }
+        if(if_speed_control)
+        {
+            speed_ku += 0.2;
+            if(speed_ku >= params.speed_in)
+            {
+                if_speed_control = false;
+                speed_ku = params.speed_in;
+            }
         }
 
         // 如果到大一定的行数，开始入库，进行入库补线

@@ -40,11 +40,11 @@ public:
 
     bool slowZoneDetection(TrackRecognition &track, vector<PredictResult> predict)
     {
-        // if(counterFild < 30)
-        // {
-        //     counterFild++;//屏蔽计数器
-        //     return false;
-        // }
+        if(counterFild < 30)
+        {
+            counterFild++;//屏蔽计数器
+            return false;
+        }
 
         // 检测标志
         for (int i = 0; i < predict.size(); i++)

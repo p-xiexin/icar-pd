@@ -249,14 +249,16 @@ public:
         {
         case FarmlandStep::Enable:
         {
-            _speed += 0.08f;
+            _speed += 0.04f;
             if(_speed > params.Speed)
                 _speed = params.Speed; 
             break;
         }
         case FarmlandStep::Cruise:
         {
-            _speed = params.Speed * params.SpeedScale; 
+            _speed += 0.08f;
+            if(_speed > params.Speed * params.SpeedScale)
+                _speed = params.Speed * params.SpeedScale; 
             break;
         }
         }
