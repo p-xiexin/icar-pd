@@ -8,7 +8,7 @@
     "speed_nor": 1.4,
     "speed_in": 0.6,
     "speed_out": 0.55,
-    "shield_counter": 70,
+    "shield_counter": 40,
     "record": [
         {
             "#garage_run": "出库的方式:0左库,1右库,2左库循环,3右库循环",

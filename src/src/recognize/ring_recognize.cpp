@@ -535,6 +535,10 @@ public:
                     ringStep = RingStep::Exiting;
                     counterSpurroad = 0;
                 }
+                else
+                {
+                    track.pointsEdgeLeft.resize(0);
+                }
             }
             else if(ringType == RingType::RingRight)
             {
@@ -579,6 +583,10 @@ public:
 
                     ringStep = RingStep::Exiting;
                     counterSpurroad = 0;
+                }
+                else
+                {
+                    track.pointsEdgeRight.resize(0);
                 }
             }
         }
@@ -873,18 +881,18 @@ private:
      */
     uint16_t searchBreakLeftUp(vector<POINT> pointsEdgeLeft)
     {
-        uint16_t rowBreakLeftUp = 0;
+        uint16_t rowBreakLeftUp = pointsEdgeLeft.size() - 1;
         uint16_t counter = 0;
         uint16_t counterFilter = 0;
         for (int i = pointsEdgeLeft.size() - 5; i > 0; i--)
         {
-            if (pointsEdgeLeft[i].y > 5 & abs(pointsEdgeLeft[i].y - pointsEdgeLeft[i + 1].y) < 5)
+            if (pointsEdgeLeft[i].y > 5 && abs(pointsEdgeLeft[i].y - pointsEdgeLeft[i + 1].y) < 5)
             {
                 rowBreakLeftUp = i;
                 counter = 0;
                 counterFilter++;
             }
-            else if (pointsEdgeLeft[i].y <= 5 && counterFilter > 10)
+            else if (pointsEdgeLeft[i].y <= 5 && abs(pointsEdgeLeft[i].y - pointsEdgeLeft[rowBreakLeftUp].y) > 5 && counterFilter > 10)
             {
                 counter++;
                 if (counter > 3)
@@ -903,18 +911,18 @@ private:
      */
     uint16_t searchBreakRightUp(vector<POINT> pointsEdgeRight)
     {
-        uint16_t rowBreakRightUp = 0;
+        uint16_t rowBreakRightUp = pointsEdgeRight.size() - 1;
         uint16_t counter = 0;
         uint16_t counterFilter = 0;
         for (int i = pointsEdgeRight.size() - 5; i > 0; i--)
         {
-            if (pointsEdgeRight[i].y < COLSIMAGE - 2 & abs(pointsEdgeRight[i].y - pointsEdgeRight[i + 1].y) < 5)
+            if (pointsEdgeRight[i].y < COLSIMAGE - 2 && abs(pointsEdgeRight[i].y - pointsEdgeRight[i + 1].y) < 5)
             {
                 rowBreakRightUp = i;
                 counter = 0;
                 counterFilter++;
             }
-            else if (pointsEdgeRight[i].y >= COLSIMAGE - 2 && counterFilter > 10)
+            else if (pointsEdgeRight[i].y >= COLSIMAGE - 2 && abs(pointsEdgeRight[i].y - pointsEdgeRight[rowBreakRightUp].y) > 5 && counterFilter > 10)
             {
                 counter++;
                 if (counter > 3)

@@ -46,7 +46,7 @@ enum RoadType
 
 void callbackSignal(int signum); // 系统退出回调函数
 void displayWindowInit(void);    // 显示窗口初始化
-void savePicture(Mat &image, RoadType roadType);
+void savePicture(Mat &image, RoadType roadType, bool flag);
 void ClearFolder(const std::string& folderPath);
 void slowDownEnable(void);
 
@@ -434,7 +434,7 @@ int main(int argc, char *argv[])
 				}
 				case RoadType::RingHandle:
 				{
-					motionController.motorSpeed = 1.2;
+					motionController.motorSpeed = 1.2f;
 					break;
 				}
 				case RoadType::SlowzoneHandle:
@@ -448,7 +448,7 @@ int main(int argc, char *argv[])
                     static bool AI_Last = false;
                     static float speed = 0.0f;
                     if(!AI_Last && AI_enable)
-                        speed = 0.0f;
+                        speed = -0.4f;
                     else if(AI_Last && !AI_enable)
                         speed = motionController.params.speedAI / 2;
 
@@ -550,7 +550,7 @@ int main(int argc, char *argv[])
                     "FPS: " + formatDoble2String(detFPS, 2),
                     Point(20, 20), FONT_HERSHEY_PLAIN, 1,
                     Scalar(0, 0, 255), 1); // 车速
-            savePicture(imageTrack, roadType);
+            savePicture(imageTrack, roadType, AI_enable);
 		}
     }
 
@@ -606,14 +606,14 @@ void displayWindowInit(void)
  *
  * @param image 需要存储的图像
  */
-void savePicture(Mat &image, RoadType roadType)
+void savePicture(Mat &image, RoadType roadType, bool flag)
 {
     // 存图
     string name = ".jpg";
     static int counter = 0;
     counter++;
     string img_path = "../res/train/";
-    name = img_path + to_string(counter) + "-" + to_string(roadType) + ".jpg";
+    name = img_path + to_string(counter) + "-" + to_string(roadType) + "_" + to_string(flag) + ".jpg";
     imwrite(name, image);
 }
 

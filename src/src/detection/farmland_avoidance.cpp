@@ -36,6 +36,7 @@ public:
      */
     void reset(void)
     {
+        _speed = 0.0f;
         counterRec = 0;
         counterSession = 0;
         farmlandStep = FarmlandStep::None;
@@ -112,11 +113,10 @@ public:
                 counterSession && (track.pointsEdgeLeft[10].x > COLSIMAGE / 2 || track.pointsEdgeRight[10].x > COLSIMAGE / 2))
             {
                 counterRec++;
-                if(counterRec > 5)
+                if(counterRec > 3)
                 {
-                    counterSession = 0;
-                    counterRec = 0;
                     farmlandStep = FarmlandStep::None; // 出农田
+                    reset();
                 }
             }
 
@@ -245,21 +245,22 @@ public:
 
     float get_speed()
     {
-        float speed = 0.0f;
         switch(farmlandStep)
         {
         case FarmlandStep::Enable:
         {
-            speed = params.Speed; 
+            _speed += 0.08f;
+            if(_speed > params.Speed)
+                _speed = params.Speed; 
             break;
         }
         case FarmlandStep::Cruise:
         {
-            speed = params.Speed * params.SpeedScale; 
+            _speed = params.Speed * params.SpeedScale; 
             break;
         }
         }
-        return speed;
+        return _speed;
     }
 
 
@@ -430,6 +431,7 @@ private:
     POINT pointAverage = POINT(0, 0);  // 玉米检测坐标
     uint16_t counterSession = 0;       // 图像场次计数器
     uint16_t counterRec = 0;           // 农田区标志检测计数器
+    float _speed = 0.0f;
     int indexDebug = 0;
     enum FarmlandStep
     {
