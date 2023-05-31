@@ -78,7 +78,7 @@ public:
         if (slowZoneEnable)
         {
             counterDisable++;
-            if (counterDisable > 25)
+            if (counterDisable > 15)
             {
                 counterRec = 0;
                 counterDisable = 0;

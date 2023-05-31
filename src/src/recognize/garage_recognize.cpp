@@ -101,6 +101,7 @@ public:
     int     picNum_brake    = 0;                        // 刹车帧数
     bool    Garage_screen   = false;                    // 车库屏蔽标志位
     int     garage_scre_num = params.shield_counter;    // 屏蔽计数器标志位
+    int     site_cross_x    = 0;                        // 识别出来的斑马线在图像的位置
 
 
 private:
@@ -594,7 +595,7 @@ public:
         bool status = false;
 
         // 检测斑马线
-        status = check_garage(predict);
+        status = check_garage(predict, track);
         
         // 判断目前的赛道类型->检测到斑马线，进行出库入库操作
         if(flag_garage == flag_garage_e::GARAGE_OUT_LEFT || flag_garage == flag_garage_e::GARAGE_OUT_RIGHT ||
@@ -623,7 +624,7 @@ public:
      * @param predict ai预测结果
      * @return bool
      */
-    bool check_garage(vector<PredictResult> predict) 
+    bool check_garage(vector<PredictResult> predict, TrackRecognition track) 
     {
         // 定义一个静态变量来进行计数，当超过20帧图像还没有检测到出库，则初始位置不在车库中
         static uint16_t count_to_CarNotInGarage = 0;
@@ -668,9 +669,18 @@ public:
         // 空闲状态机，完成出库后，回到空闲状态机
         else if (flag_garage == flag_garage_e::GARAGE_NONE)
         {
-            // 返回真，说明检测到斑马线，改变状态机
+            static bool flag_cross = false;
             if(searchCrosswalk_if_recognize(predict))
+            {
+                flag_cross = true;
+            }
+
+            // 返回真，说明检测到斑马线，改变状态机
+            if(searchCrosswalk_if_recognize(predict) || (track.garageEnable.x == 1 && flag_cross))
+            {
                 chack_picNum++;
+                site_cross_x = track.pointsEdgeRight[track.garageEnable.y].x;
+            }
             if(chack_picNum)
             {
                 // 图片帧数计数
@@ -685,6 +695,7 @@ public:
                     // 进入下一个状态机，清空计数器
                     ensure_picNum = 0;
                     chack_picNum = 0;
+                    flag_cross = false;
                 }
 
                 // 在第一次检测到斑马线之后，5真图片后，清空计数器
@@ -692,6 +703,7 @@ public:
                 {
                     ensure_picNum = 0;
                     chack_picNum = 0;
+                    flag_cross = false;
                 }
             }
         }
@@ -726,7 +738,7 @@ public:
                     flag_garage = GARAGE_IN_LEFT;
                 }
                 // 第一次经过车库不入库，状态机改为不进左库
-                else 
+                else
                 {
                     flag_garage = GARAGE_PASS_LEFT;
                 }
@@ -1301,6 +1313,20 @@ public:
         }
         putText(trackImage, step, Point(COLSIMAGE - 80, ROWSIMAGE - 20), cv::FONT_HERSHEY_TRIPLEX, 0.3, cv::Scalar(0, 0, 255), 1, CV_AA);
         // putText(trackImage, "Garage", Point(COLSIMAGE / 2 - 5, 20), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 255, 0), 1, CV_AA); // 显示赛道识别类型
+
+        // 传统视觉识别的斑马线绘制
+        if(site_cross_x > 0)
+        {
+            vector<POINT> cross_site;
+            for(int i = 0; i < COLSIMAGE; i++)
+            {
+                cross_site.push_back(POINT(site_cross_x, i));
+            }
+            for (int i = 0; i < cross_site.size(); i++)
+            {
+                circle(trackImage, Point(cross_site[i].y, cross_site[i].x), 1, Scalar(255, 255, 255), -1); // 白色点
+            }
+        }
 
         // ai识别框的中点绘图
         if (_crosswalk.x > 0)
