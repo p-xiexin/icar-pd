@@ -46,10 +46,11 @@ public:
     struct Params 
     {
         uint16_t BridgeCheck = 3;
+        uint16_t rowCheck = 90;
         float SpeedUp = 1.0;
         uint16_t ExitFrameCnt = 30;
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-            Params, BridgeCheck, SpeedUp, ExitFrameCnt); // 添加构造函数
+            Params, BridgeCheck, rowCheck, SpeedUp, ExitFrameCnt); // 添加构造函数
     };
 
     /**
@@ -61,10 +62,18 @@ public:
         counterSession = 0;   // 图像场次计数器
         counterRec = 0;       // 加油站标志检测计数器
         bridgeEnable = false; // 桥区域使能标志
+        counterFild = 0;
     }
 
     bool bridgeDetection(TrackRecognition &track, vector<PredictResult> predict)
     {
+        if(counterFild < 30)
+        {
+            counterFild++;//屏蔽计数器
+            return false;
+        }
+
+
         if (bridgeEnable) // 进入桥梁
         {
             if (track.pointsEdgeLeft.size() > ROWSIMAGE / 2 && track.pointsEdgeRight.size() > ROWSIMAGE / 2) // 切行，防止错误前瞻引发转向
@@ -86,7 +95,7 @@ public:
         {
             for (int i = 0; i < predict.size(); i++)
             {
-                if (predict[i].label == LABEL_BRIDGE)
+                if (predict[i].label == LABEL_BRIDGE && predict[i].y + predict[i].height / 2 > params.rowCheck)
                 {
                     counterRec++;
                     break;
@@ -176,4 +185,5 @@ private:
     uint16_t counterSession = 0; // 图像场次计数器
     uint16_t counterRec = 0;     // 加油站标志检测计数器
     bool bridgeEnable = false;   // 桥区域使能标志
+    uint16_t counterFild = 0;
 };

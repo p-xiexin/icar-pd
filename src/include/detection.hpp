@@ -70,7 +70,7 @@ public:
                     {
                         std::string label_name = _predictor->results[i].label;
                         if(label_name != "cone" && label_name != "granary" && _predictor->results[i].score > 0.62
-                            && _predictor->results[i].y + _predictor->results[i].height / 2 > 30)
+                            && _predictor->results[i].y + _predictor->results[i].height / 2 > 45)
                         {
                             flag = true;
                             break;

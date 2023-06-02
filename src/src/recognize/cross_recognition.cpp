@@ -346,7 +346,8 @@ public:
             for (int i = 2; i < track.widthBlock.size() - 10; i++)
             {
                 // 直入十字判断
-                if (track.spurroad.size() > 0 && track.widthBlock[i].y > COLSIMAGE - 5)
+                if (track.spurroad.size() > 0 && track.widthBlock[i].y > COLSIMAGE - 5 
+                    && track.stdevLeft > 65 && track.stdevRight > 65)
                 {
                     counterStrightA++;
                 }

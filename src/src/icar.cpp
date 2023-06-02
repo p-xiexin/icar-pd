@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
     }
 
     // PPNC初始化
-    if (!detection.init("../res/model/yolov3_mobilenet_v1")) // AI推理初始化
+    if (!detection.init("../res/model/yolov3_mobilenet_v1_new")) // AI推理初始化
         return 1;
 
     ipm.init(Size(COLSIMAGE, ROWSIMAGE),
@@ -172,7 +172,9 @@ int main(int argc, char *argv[])
         /*1.AI推理*/
         bool AI_enable = detection.AI_Enable();
         std::shared_ptr<DetectionResult> ai_results = nullptr;
+        if (controlCenterCal.style != "STRIGHT") AI_enable = false;
         if (roadType > 2) AI_enable = true;
+        else if (roadType == 1) AI_enable = false;
         if (AI_enable)
         {
             ai_results = detection.getLastFrame();
@@ -204,11 +206,9 @@ int main(int argc, char *argv[])
 				{
 					bridgeDetection.reset(); // 桥梁
 					depotDetection.reset();	 // 维修
-					// farmlandDetection.reset();				// 农田区域
-					// granaryDetection.reset();				// 粮仓
+					farmlandAvoidance.reset();	// 农田区域
 					slowZoneDetection.reset();	  // 慢行区
 					crossroadRecognition.reset(); // 十字道路
-					// freezoneRecognition.reset(); 			// 泛行区
 					ringRecognition.reset(); // 环岛
 
 					if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
@@ -409,7 +409,7 @@ int main(int argc, char *argv[])
         if (counterRunBegin > 30)
         {
             // 智能车方向控制
-            motionController.pdController(controlCenterCal.controlCenter); // PD控制器姿态控制
+            motionController.pdController(controlCenterCal.controlCenter, AI_enable); // PD控制器姿态控制
 
 			// 智能车速度控制
 			switch (roadType)
@@ -450,7 +450,7 @@ int main(int argc, char *argv[])
                     static bool AI_Last = false;
                     static float speed = 0.0f;
                     if(!AI_Last && AI_enable)
-                        speed = -0.4f;
+                        speed = -0.8f;
                     else if(AI_Last && !AI_enable)
                         speed = motionController.params.speedAI / 2;
 

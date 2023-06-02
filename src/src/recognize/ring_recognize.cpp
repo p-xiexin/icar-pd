@@ -519,6 +519,7 @@ public:
 
                     pointBreakD = track.pointsEdgeRight[rowBreakRight];
                     pointBreakU = track.pointsEdgeLeft[rowBreakLeft];
+                    pointBreakU.y += COLSIMAGE / 8;
                     line(track.pointsEdgeRight, rowBreakRight, pointBreakU);
                     track.pointsEdgeLeft.resize(rowBreakLeft);
                     track.pointsEdgeRight.resize(rowBreakLeft);
@@ -532,8 +533,11 @@ public:
                     track.pointsEdgeLeft.resize(rowBreakLeft);
                     track.pointsEdgeRight.resize(rowBreakLeft);
 
-                    ringStep = RingStep::Exiting;
-                    counterSpurroad = 0;
+                    if(track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].y < COLSIMAGE / 2)
+                    {
+                        ringStep = RingStep::Exiting;
+                        counterSpurroad = 0;
+                    }
                 }
                 else
                 {
@@ -577,12 +581,16 @@ public:
                 {
                     pointBreakU = track.pointsEdgeRight[rowBreakRight];
                     pointBreakD = track.pointsEdgeLeft[0];
+                    pointBreakU.y -= COLSIMAGE / 8;
                     line(track.pointsEdgeLeft, rowBreakLeft, pointBreakU);
                     track.pointsEdgeLeft.resize(rowBreakRight);
                     track.pointsEdgeRight.resize(rowBreakRight);
 
-                    ringStep = RingStep::Exiting;
-                    counterSpurroad = 0;
+                    if(track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].y > COLSIMAGE / 2)
+                    {
+                        ringStep = RingStep::Exiting;
+                        counterSpurroad = 0;
+                    }
                 }
                 else
                 {
@@ -649,7 +657,7 @@ public:
             }
             else if(ringType == RingType::RingRight)
             {
-                if(rowBreakLeft > ROWSIMAGE)
+                if(rowBreakLeft > ROWSIMAGE / 4)
                 {
                     pointBreakU = track.pointsEdgeRight[rowBreakRight];
                     pointBreakU.y -= COLSIMAGE / 8;
@@ -676,7 +684,7 @@ public:
                     pointBreakU = track.pointsEdgeLeft[rowBreakLeft];
                     line(track.pointsEdgeLeft, 0, pointBreakU);
                 }
-                else if(!rowBreakLeft && counterSpurroad > 3)
+                else if(rowBreakLeft < ROWSIMAGE / 3 && counterSpurroad > 3)
                 {
                     reset();
                 }
@@ -691,7 +699,7 @@ public:
                     pointBreakU = track.pointsEdgeRight[rowBreakRight];
                     line(track.pointsEdgeRight, 0, pointBreakU);
                 }
-                else if(!rowBreakRight && counterSpurroad > 3)
+                else if(rowBreakRight < ROWSIMAGE / 3 && counterSpurroad > 3)
                 {
                     reset();
                 }

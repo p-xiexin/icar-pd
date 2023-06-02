@@ -1,14 +1,14 @@
 {
-    "DepotCheck": 2,
-    "DepotDir": 0,
+    "DepotCheck": 1,
+    "DepotDir": 1,
     "DangerClose": 140,
-    "ServoRow": 45,
+    "ServoRow": 40,
     "ServoValue": 5,
     "DepotSpeed": 0.8,
-    "DepotSpeedScale": 1.2,
+    "DepotSpeedScale": 1.1,
     "DelayCnt": 3,
-    "BrakeCnt": 13,
-    "ExitFrameCnt": 10,
+    "BrakeCnt": 10,
+    "ExitFrameCnt": 7,
     "record": [
         {
             "#DepotCheck": "车库确认帧数",

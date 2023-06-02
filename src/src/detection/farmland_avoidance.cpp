@@ -39,6 +39,7 @@ public:
         _speed = 0.0f;
         counterRec = 0;
         counterSession = 0;
+        counterFild = 0;
         farmlandStep = FarmlandStep::None;
     }
     
@@ -50,6 +51,12 @@ public:
      */
     bool farmlandAvoid(TrackRecognition &track, vector<PredictResult> predict, cv::Mat frame)
     {
+        if(counterFild < 30)
+        {
+            counterFild++;//屏蔽计数器
+            return false;
+        }
+
         switch(farmlandStep)
         {
         case FarmlandStep::None:
@@ -110,7 +117,7 @@ public:
         {
             searchCorn(predict);
             if ((track.pointsEdgeLeft.size() > 80 || track.pointsEdgeRight.size() > 80) && pointCorn.x == 0 &&
-                counterSession && (track.pointsEdgeLeft[10].x > COLSIMAGE / 2 || track.pointsEdgeRight[10].x > COLSIMAGE / 2))
+                counterSession > 2 && (track.pointsEdgeLeft[10].x > COLSIMAGE / 2 || track.pointsEdgeRight[10].x > COLSIMAGE / 2))
             {
                 counterRec++;
                 if(counterRec > 3)
@@ -433,6 +440,7 @@ private:
     POINT pointAverage = POINT(0, 0);  // 玉米检测坐标
     uint16_t counterSession = 0;       // 图像场次计数器
     uint16_t counterRec = 0;           // 农田区标志检测计数器
+    uint16_t counterFild = 0;
     float _speed = 0.0f;
     int indexDebug = 0;
     enum FarmlandStep

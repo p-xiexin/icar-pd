@@ -656,7 +656,7 @@ public:
                 // 计数器自增
                 count_to_CarNotInGarage++;
                 // 判断计数器值，如果超过20帧还没有检测到起点，说明不在车库中，改变状态机，默认已经完成出库，并清零计数器
-                if(count_to_CarNotInGarage >= 20)
+                if(count_to_CarNotInGarage >= 40)
                 {
                     flag_garage = flag_garage_e::GARAGE_NONE;
                     count_to_CarNotInGarage = 0;
