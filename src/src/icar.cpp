@@ -19,7 +19,6 @@
 #include "controlcenter_cal.cpp"
 #include "motion_controller.cpp"
 
-#include "./detection/slowzone_detection.cpp"
 #include "./detection/depot_detection.cpp"
 
 #include "../include/capture.hpp"
@@ -63,7 +62,6 @@ int main(int argc, char *argv[])
     RingRecognition ringRecognition;           // 环岛识别
     CrossroadRecognition crossroadRecognition; // 十字道路处理
     GarageRecognition garageRecognition;       // 车库检测
-    SlowZoneDetection slowZoneDetection;       // 慢行区检测
     DepotDetection depotDetection;             // 车辆维修区检测
     FarmlandAvoidance farmlandAvoidance;       // 农田断路区检测
     uint16_t counterRunBegin = 1;              // 智能车启动计数器：等待摄像头图像帧稳定
@@ -313,7 +311,7 @@ int main(int argc, char *argv[])
         {
             if (roadType == RoadType::SlowzoneHandle || roadType == RoadType::BaseHandle)
             {
-                if (slowZoneDetection.slowZoneDetection(trackRecognition, ai_results->predictor_results))
+                if (slowZoneDetection.slowZoneDetection(trackRecognition))
                 {
                     if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
                         serialInterface.buzzerSound(1);   // OK

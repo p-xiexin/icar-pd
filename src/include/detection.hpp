@@ -6,9 +6,12 @@
 #include <condition_variable>
 #include <mutex>
 #include <thread>
+
 #include "../src/detection/bridge_detection.cpp"
+#include "../src/detection/slowzone_detection.cpp"
 
 BridgeDetection bridgeDetection;
+SlowZoneDetection slowZoneDetection;
 
 struct DetectionResult
 {
@@ -66,6 +69,7 @@ public:
                 _predictor->render();
 
                 bridgeDetection.bridgeCheck(_predictor->results);
+                slowZoneDetection.slowZoneCheck(_predictor->results);
 
                 bool flag = false;
                 for(int i = 0; i < _predictor->results.size(); i++)

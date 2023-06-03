@@ -24,7 +24,7 @@
     "CrossEnable": true,
     "StopEnable": false,
     "BridgeEnable": true,
-    "SlowzoneEnable": false,
+    "SlowzoneEnable": true,
     "DepotEnable": true,
     "FarmlandEnable": true,
     "record": [
