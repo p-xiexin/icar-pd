@@ -6,6 +6,9 @@
 #include <condition_variable>
 #include <mutex>
 #include <thread>
+#include "../src/detection/bridge_detection.cpp"
+
+BridgeDetection bridgeDetection;
 
 struct DetectionResult
 {
@@ -62,43 +65,31 @@ public:
                 _predictor->run(*feeds);
                 _predictor->render();
 
+                bridgeDetection.bridgeCheck(_predictor->results);
+
                 bool flag = false;
-                if(_predictor->results.size() > 0)
+                for(int i = 0; i < _predictor->results.size(); i++)
                 {
-                    // flag = true;
-                    for(int i = 0; i < _predictor->results.size(); i++)
+                    std::string label_name = _predictor->results[i].label;
+                    if((label_name == "tractor" || label_name == "corn") && _predictor->results[i].score > 0.62
+                        && _predictor->results[i].y + _predictor->results[i].height / 2 > 45)
                     {
-                        std::string label_name = _predictor->results[i].label;
-                        if(label_name != "cone" && label_name != "granary" && _predictor->results[i].score > 0.62
-                            && _predictor->results[i].y + _predictor->results[i].height / 2 > 45)
-                        {
-                            flag = true;
-                            break;
-                        }
-                        else if(label_name == "crosswalk")
-                        {
-                            flag == true;
-                            break;
-                        }
-                        // if(label_name == "cone")
-                        //     continue;
-                        // else if(label_name == "tractor") && _predictor->results[i].score > 0.7
-                        //     &&_predictor->results[i].y + _predictor->results[i].height / 2 > 0)
+                        flag = true;
+                        break;
+                    }
+                    else if(label_name == "crosswalk")
+                    {
+                        flag == true;
+                        break;
                     }
                 }
-
                 if(_Cnt == 0)
-                {
                     AI_Captured = flag;
-                }
-                
                 if(AI_Captured)
                 {
                     _Cnt++;
                     if(_Cnt > 2)
-                    {
                         _Cnt = 0;
-                    } 
                 }
             
                 //数据传递

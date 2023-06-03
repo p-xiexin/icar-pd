@@ -2,7 +2,7 @@
     "garage_run": 1,
     "corner_lines": 215,
     "slowdown_condition": 10,
-    "disGarageEntry": 105,
+    "disGarageEntry": 130,
     "stop_line": 80,
     "brakePicNum": 18,
     "speed_nor": 1.6,

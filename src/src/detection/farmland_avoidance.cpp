@@ -117,7 +117,7 @@ public:
         {
             searchCorn(predict);
             if ((track.pointsEdgeLeft.size() > 80 || track.pointsEdgeRight.size() > 80) && pointCorn.x == 0 &&
-                counterSession > 2 && (track.pointsEdgeLeft[10].x > COLSIMAGE / 2 || track.pointsEdgeRight[10].x > COLSIMAGE / 2))
+                counterSession > 1 && (track.pointsEdgeLeft[10].x > COLSIMAGE / 2 || track.pointsEdgeRight[10].x > COLSIMAGE / 2))
             {
                 counterRec++;
                 if(counterRec > 3)

@@ -19,7 +19,6 @@
 #include "controlcenter_cal.cpp"
 #include "motion_controller.cpp"
 
-#include "./detection/bridge_detection.cpp"
 #include "./detection/slowzone_detection.cpp"
 #include "./detection/depot_detection.cpp"
 
@@ -63,7 +62,6 @@ int main(int argc, char *argv[])
     TrackRecognition trackRecognition;         // 赛道识别
     RingRecognition ringRecognition;           // 环岛识别
     CrossroadRecognition crossroadRecognition; // 十字道路处理
-    BridgeDetection bridgeDetection;           // 桥梁检测
     GarageRecognition garageRecognition;       // 车库检测
     SlowZoneDetection slowZoneDetection;       // 慢行区检测
     DepotDetection depotDetection;             // 车辆维修区检测
@@ -79,7 +77,7 @@ int main(int argc, char *argv[])
     }
 
     // PPNC初始化
-    if (!detection.init("../res/model/yolov3_mobilenet_v1_new")) // AI推理初始化
+    if (!detection.init("../res/model/yolov3_mobilenet_v1")) // AI推理初始化
         return 1;
 
     ipm.init(Size(COLSIMAGE, ROWSIMAGE),
@@ -292,7 +290,7 @@ int main(int argc, char *argv[])
         {
             if (roadType == RoadType::BridgeHandle || roadType == RoadType::BaseHandle)
             {
-                if (bridgeDetection.bridgeDetection(trackRecognition, ai_results->predictor_results))
+                if (bridgeDetection.bridgeDetection(trackRecognition))
                 {
                     if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
                         serialInterface.buzzerSound(1);   // OK
