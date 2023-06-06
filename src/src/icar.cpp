@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
         bool AI_enable = detection.AI_Enable();
         std::shared_ptr<DetectionResult> ai_results = nullptr;
         if (controlCenterCal.style != "STRIGHT") AI_enable = false;
-        if (roadType > 2) AI_enable = true;
+        if (roadType == 6 || roadType == 9) AI_enable = true;
         else if (roadType == 1) AI_enable = false;
         if (AI_enable)
         {
@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
 			if (roadType == RoadType::GarageHandle || roadType == RoadType::BaseHandle)
 			{
 				// 进行斑马线检测，检测到斑马线，清空其他状态机
-				if (garageRecognition.garage_contral(ai_results->predictor_results, trackRecognition))
+				if (garageRecognition.garage_contral(trackRecognition))
 				{
 					bridgeDetection.reset(); // 桥梁
 					depotDetection.reset();	 // 维修
@@ -347,7 +347,6 @@ int main(int argc, char *argv[])
                         ringRecognition.drawImage(trackRecognition, imageRing);
                         imshow("imageRecognition", imageRing);
                     }
-                    ringRecognition.print();
                 }
                 else
                     roadType = RoadType::BaseHandle;

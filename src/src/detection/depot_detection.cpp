@@ -250,13 +250,13 @@ public:
 			{
 				track.pointsEdgeLeft = pathsEdgeLeft[pathsEdgeLeft.size() - 1];
 				track.pointsEdgeRight = pathsEdgeRight[pathsEdgeRight.size() - 1];
+				if(counterRec > params.ExitFrameCnt)
+				{
+					pathsEdgeLeft.pop_back();
+					pathsEdgeRight.pop_back();
+				}
 			}
 			
-			if(counterRec > params.ExitFrameCnt)
-			{
-				pathsEdgeLeft.pop_back();
-				pathsEdgeRight.pop_back();
-			}
 			break;
 		}
 		}
@@ -318,7 +318,9 @@ public:
 		}
 		case DepotStep::DepotCruise:
 		{
-			_speed = -params.DepotSpeed;
+			_speed -= 0.2f;
+			if(_speed < -params.DepotSpeed)
+				_speed = -params.DepotSpeed;
 			break;
 		}
 		case DepotStep::DepotStop:

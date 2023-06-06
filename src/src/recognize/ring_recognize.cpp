@@ -68,7 +68,7 @@ public:
             return ringType;
         }
 
-        if (track.garageEnable.x)
+        if (track.garageEnable.y > ROWSIMAGE / 3)
         {
             counterShield = 0;
         }
@@ -223,7 +223,7 @@ public:
                     pointBreakU = track.pointsEdgeLeft[rowBreakLeftU];
                     line(track.pointsEdgeLeft, rowBreakLeftD, rowBreakLeftU);
                 }
-                else if(counterSpurroad > 1)
+                else if(counterSpurroad > 2)
                 {
                     counterSpurroad = 0;
                     ringStep = RingStep::Entering;
@@ -241,7 +241,7 @@ public:
                     pointBreakU = track.pointsEdgeRight[rowBreakRightU];
                     line(track.pointsEdgeRight, rowBreakRightD, rowBreakRightU);
                 }
-                else if(counterSpurroad > 1)
+                else if(counterSpurroad > 2)
                 {
                     counterSpurroad = 0;
                     ringStep = RingStep::Entering;
@@ -541,7 +541,18 @@ public:
                 }
                 else
                 {
-                    track.pointsEdgeLeft.resize(0);
+                    if(track.pointsEdgeLeft.size() < 100 && track.pointsEdgeRight.size() < 100)
+                    {
+                        track.pointsEdgeLeft = pointsEdgeLeftLast;
+                        track.pointsEdgeRight = pointsEdgeRightLast;
+                        line(track.pointsEdgeRight, 0, track.pointsEdgeRight[track.pointsEdgeRight.size() - 1]);
+                    }
+                    else
+                    {
+                        track.pointsEdgeLeft.resize(0);
+                        pointsEdgeLeftLast = track.pointsEdgeLeft;
+                        pointsEdgeRightLast = track.pointsEdgeRight;
+                    }
                 }
             }
             else if(ringType == RingType::RingRight)
@@ -594,7 +605,18 @@ public:
                 }
                 else
                 {
-                    track.pointsEdgeRight.resize(0);
+                    if(track.pointsEdgeLeft.size() < 100 && track.pointsEdgeRight.size() < 100)
+                    {
+                        track.pointsEdgeLeft = pointsEdgeLeftLast;
+                        track.pointsEdgeRight = pointsEdgeRightLast;
+                        line(track.pointsEdgeLeft, 0, track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1]);
+                    }
+                    else
+                    {
+                        track.pointsEdgeRight.resize(0);
+                        pointsEdgeLeftLast = track.pointsEdgeLeft;
+                        pointsEdgeRightLast = track.pointsEdgeRight;
+                    }
                 }
             }
         }
@@ -641,7 +663,11 @@ public:
 
             if(ringType == RingType::RingLeft)
             {
-                if(rowBreakRight > ROWSIMAGE / 4)
+                if(rowBreakRight < ROWSIMAGE / 4 || track.pointsEdgeLeft.size() > 160)
+                {
+                    ringStep = RingStep::Finish;
+                }
+                else
                 {
                     pointBreakU = track.pointsEdgeLeft[rowBreakLeft];
                     pointBreakU.y += COLSIMAGE / 8;
@@ -650,14 +676,14 @@ public:
                     track.pointsEdgeLeft.resize(rowBreakLeft);
                     track.pointsEdgeRight.resize(rowBreakLeft);
                 }
-                else
+            }
+            else if(ringType == RingType::RingRight || track.pointsEdgeRight.size() > 160)
+            {
+                if(rowBreakLeft < ROWSIMAGE / 4)
                 {
                     ringStep = RingStep::Finish;
                 }
-            }
-            else if(ringType == RingType::RingRight)
-            {
-                if(rowBreakLeft > ROWSIMAGE / 4)
+                else
                 {
                     pointBreakU = track.pointsEdgeRight[rowBreakRight];
                     pointBreakU.y -= COLSIMAGE / 8;
@@ -665,10 +691,6 @@ public:
                     line(track.pointsEdgeLeft, 0, pointBreakU);
                     track.pointsEdgeLeft.resize(rowBreakRight);
                     track.pointsEdgeRight.resize(rowBreakRight);
-                }
-                else
-                {
-                    ringStep = RingStep::Finish;
                 }
             }
         }
@@ -823,7 +845,7 @@ private:
                 else if (pointsEdgeLeft[i].y <= pointsEdgeLeft[rowBreakLeft].y) // 突变点计数
                 {
                     counter++;
-                    if (counter > 8)
+                    if (counter > 5)
                         return rowBreakLeft;
                 }
             }
@@ -872,7 +894,7 @@ private:
                 else if (pointsEdgeRight[i].y > pointsEdgeRight[rowBreakRight].y) // 突变点计数
                 {
                     counter++;
-                    if (counter > 8)
+                    if (counter > 5)
                         return rowBreakRight;
                 }
             }
@@ -948,4 +970,6 @@ private:
 
     POINT pointBreakU;
     POINT pointBreakD;
+    vector<POINT> pointsEdgeLeftLast;  // 记录前一场左边缘点集
+    vector<POINT> pointsEdgeRightLast; // 记录前一场右边缘点集
 };

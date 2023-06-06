@@ -105,27 +105,37 @@ public:
             if(style == "RIGHTCC" || style == "LEFTCC")
             {
                 //中线拟合去掉上面1/4行，处理左边线
-                if(track.pointsEdgeLeft[track.pointsEdgeLeft.size()].x <= ROWSIMAGE / 3)
+                if(track.pointsEdgeLeft.size() > 0)
                 {
-                    int cnt = track.pointsEdgeLeft.size() - 1;
-                    // 去除图片上面固定行的点集
-                    for(int i = track.pointsEdgeLeft.size() - 1; track.pointsEdgeLeft[i].x <= ROWSIMAGE / 3; i--)
+                    if(track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].x <= ROWSIMAGE / 3)
                     {
-                        cnt--;
+                        int cnt = track.pointsEdgeLeft.size() - 1;
+                        // 去除图片上面固定行的点集
+                        for(int i = track.pointsEdgeLeft.size() - 1; track.pointsEdgeLeft[i].x <= ROWSIMAGE / 3; i--)
+                        {
+                            cnt--;
+                        }
+                        if(cnt <= 0)
+                            cnt = 0;
+                        track.pointsEdgeLeft.resize(cnt);
                     }
-                    track.pointsEdgeLeft.resize(cnt);
                 }
 
                 //中线拟合去掉上面1/4行，处理右边线
-                if(track.pointsEdgeRight[track.pointsEdgeRight.size()].x <= ROWSIMAGE / 3)
+                if(track.pointsEdgeRight.size() > 0)
                 {
-                    int cnt = track.pointsEdgeRight.size() - 1;
-                    // 去除图片上面固定行的点集
-                    for(int i = track.pointsEdgeRight.size() - 1; track.pointsEdgeLeft[i].x <= ROWSIMAGE / 3; i--)
+                    if(track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].x <= ROWSIMAGE / 3)
                     {
-                        cnt--;
+                        int cnt = track.pointsEdgeRight.size() - 1;
+                        // 去除图片上面固定行的点集
+                        for(int i = track.pointsEdgeRight.size() - 1; track.pointsEdgeRight[i].x <= ROWSIMAGE / 3; i--)
+                        {
+                            cnt--;
+                        }
+                        if(cnt <= 0)
+                            cnt = 0;
+                        track.pointsEdgeRight.resize(cnt);
                     }
-                    track.pointsEdgeRight.resize(cnt);
                 }
 
                 //中线曲线拟合

@@ -83,7 +83,7 @@ public:
                     }
                     else if(label_name == "crosswalk")
                     {
-                        flag == true;
+                        flag == false;
                         break;
                     }
                 }
