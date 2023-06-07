@@ -38,6 +38,7 @@ public:
      */
     struct Params 
     {
+        int MidLine = 160;          // 图像控制中线
         float speedLow = 1.0;       // 智能车最低速
         float speedHigh = 1.0;      // 智能车最高速
         float speedAI = 1.0;        // ai识别速度
@@ -67,8 +68,8 @@ public:
         bool DepotEnable = false;
         bool FarmlandEnable = false;
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-            Params, speedLow, speedHigh, speedAI, speedCorners, speedcoiled, runP1, runP2, runP3, runP1_ai, runP2_ai, turnP, 
-            turnD, rowCutUp, rowCutBottom, Kp, Ki, Kd, Debug, SaveImage, CloseLoop, GarageEnable, RingEnable, CrossEnable, 
+            Params, MidLine, speedLow, speedHigh, speedAI, speedCorners, speedcoiled, runP1, runP2, runP3, runP1_ai, runP2_ai, 
+            turnP, turnD, rowCutUp, rowCutBottom, Kp, Ki, Kd, Debug, SaveImage, CloseLoop, GarageEnable, RingEnable, CrossEnable, 
             StopEnable, BridgeEnable, SlowzoneEnable, DepotEnable, FarmlandEnable); // 添加构造函数
     };
 
@@ -83,14 +84,14 @@ public:
      */
     void pdController(int controlCenter, bool ai_enable)
     {
-        float error = controlCenter - COLSIMAGE / 2; // 图像控制中心转换偏差
-        static int errorLast = 0;                    // 记录前一次的偏差
+        float error = controlCenter - params.MidLine;           // 图像控制中心转换偏差
+        static int errorLast = 0;                               // 记录前一次的偏差
         static int T_cnt = 0;
 
-        if(abs(error - errorLast) > COLSIMAGE / 16) 
+        if(abs(error - errorLast) > COLSIMAGE / 14) 
         {
             T_cnt++;
-            error = error > errorLast ? errorLast + COLSIMAGE / 16 : errorLast - COLSIMAGE / 16;
+            error = error > errorLast ? errorLast + COLSIMAGE / 14 : errorLast - COLSIMAGE / 14;
         }
         else
         {

@@ -105,6 +105,7 @@ public:
             {
                 counterRec = 0;
                 counterSession = 0;
+                counterFild = 0;
                 _bridgeEnable = false;
             }
 

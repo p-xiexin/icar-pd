@@ -547,6 +547,7 @@ int main(int argc, char *argv[])
                     "FPS: " + formatDoble2String(detFPS, 2),
                     Point(20, 20), FONT_HERSHEY_PLAIN, 1,
                     Scalar(0, 0, 255), 1); // 车速
+            putText(imageTrack, "PWM"+formatDoble2String(motionController.servoPwm,2),Point(20,50),FONT_HERSHEY_PLAIN,1,Scalar(0,0,255),1);  //下发的pwm值
             savePicture(imageTrack, roadType, AI_enable);
 		}
     }
