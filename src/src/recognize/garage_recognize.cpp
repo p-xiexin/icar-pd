@@ -206,6 +206,11 @@ private:
      */
     bool detect_garage(TrackRecognition track)
     {
+        if (track.pointsEdgeRight.size() == 0 || track.pointsEdgeLeft.size() == 0) //环岛有效行限制
+        {
+            return false;
+        }
+
         // 左
         if(params.garage_run == 0 || params.garage_run == 2)
         {
@@ -1620,7 +1625,7 @@ public:
                 // 判断已经大半进库，不用补线
                 else
                 {
-                    if(num >= 5)
+                    if(num >= 3)
                     {
                         flag_garage = GARAGE_HALF_STOP;
                         num = 0;
@@ -1677,7 +1682,7 @@ public:
                 // 判断已经大半进库，不用补线
                 else
                 {
-                    if(num >= 5)
+                    if(num >= 3)
                     {
                         flag_garage = GARAGE_HALF_STOP;
                         num = 0;
