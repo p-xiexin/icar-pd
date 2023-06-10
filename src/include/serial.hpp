@@ -47,6 +47,14 @@ public:
         return _recvSpeed;
     }
 
+    bool get_signal()
+    {
+        if(_addr = 0x06)
+            return true;
+
+        return false;
+    }
+
     int open()
     {
         return _open();
@@ -79,18 +87,18 @@ public:
             {
                 float speed = _speed;
                 uint16_t servo_pwm = _servo_pwm;
-                // _driver->carControl(speed, servo_pwm);
                 if(_sound)
                 {
                     _driver->buzzerSound(_sound);
                     _sound = 0;
                 }
-                if(_ctrl)
-                {
-                    _driver->carControl(speed, servo_pwm);
-                    _ctrl = false;
-                }
-                // std::this_thread::sleep_for(std::chrono::milliseconds(8));
+                // if(_ctrl)
+                // {
+                //     _driver->carControl(speed, servo_pwm);
+                //     _ctrl = false;
+                // }
+                _driver->carControl(speed, servo_pwm);
+                std::this_thread::sleep_for(std::chrono::milliseconds(8));
 
             }
         });
@@ -103,6 +111,7 @@ public:
             {
                 uint8_t data_addr;
                 data_addr = _driver->receiveStartSignal();
+                _addr = data_addr;
                 if(data_addr == 0x08)
                 {
                     _recvSpeed = _driver->speed_unpack();
@@ -143,6 +152,7 @@ private:
     float _speed;
     uint16_t _servo_pwm;
     float _recvSpeed;
+    uint8_t _addr;
 
     std::mutex _mutex;
     std::condition_variable cond_;

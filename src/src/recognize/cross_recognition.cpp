@@ -161,7 +161,7 @@ public:
                         _index = 3;
                     }
                 }
-                else if(abs(pointBreakRD.y - track.pointsEdgeRight[rowBreakRightDown - 3].y) > 3)
+                else if(abs(pointBreakRD.y - track.pointsEdgeRight[rowBreakRightDown - 5].y) > 3)
                 {
                     track.pointsEdgeLeft.resize(rowBreakRightDown);
                     track.pointsEdgeRight.resize(rowBreakRightDown);
@@ -298,7 +298,7 @@ public:
                         _index = 3;
                     }
                 }
-                else if(abs(pointBreakLD.y - track.pointsEdgeLeft[rowBreakLeftDown - 3].y) > 3)
+                else if(abs(pointBreakLD.y - track.pointsEdgeLeft[rowBreakLeftDown - 5].y) > 3)
                 {
                     track.pointsEdgeLeft.resize(rowBreakLeftDown);
                     track.pointsEdgeRight.resize(rowBreakLeftDown);

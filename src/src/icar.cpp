@@ -136,6 +136,9 @@ int main(int argc, char *argv[])
             break;
         }
     }
+
+    // while (!serialInterface.get_signal()); // 串口接收下位机-比赛开始信号
+
     for (int i = 3; i > 0; i--) // 3秒后发车
     {
         cout << "------------- " << i << " -----------" << endl;

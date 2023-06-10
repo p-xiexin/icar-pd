@@ -111,7 +111,7 @@ public:
             //     params.turnP += params.runP3 * abs(error);
             // }
 
-            if(T_cnt >= 2)
+            if(T_cnt >= 3)
             {
                 params.turnP += params.runP3* abs(error)* abs(error);
             }
