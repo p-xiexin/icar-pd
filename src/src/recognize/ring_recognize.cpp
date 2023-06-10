@@ -68,7 +68,7 @@ public:
             return ringType;
         }
 
-        if (track.garageEnable.y > ROWSIMAGE / 3)
+        if (track.garageEnable.y > ROWSIMAGE / 3 && ringType == RingType::RingNone)
         {
             counterShield = 0;
         }
@@ -92,7 +92,7 @@ public:
                 && ((track.stdevLeft > 120 && track.stdevRight < 60) || (track.stdevLeft > 200 && track.stdevRight < 80))
                 && abs(track.pointsEdgeRight[0].y - track.pointsEdgeRight[track.pointsEdgeRight.size() / 2].y) > 5
                 && track.widthBlock[rowBreakLeftDown + 5].y > COLSIMAGE / 2 
-                && track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].y > COLSIMAGE / 2 - 30)
+                && track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].y > COLSIMAGE / 2)
             {
                 // for(int i = rowBreakLeftDown; i < rowBreakLeftDown + 50; i++)
                 // {
@@ -115,7 +115,7 @@ public:
                 && ((track.stdevLeft < 60 && track.stdevRight > 120) || (track.stdevLeft < 80 && track.stdevRight > 200))
                 && abs(track.pointsEdgeLeft[0].y - track.pointsEdgeLeft[track.pointsEdgeLeft.size() / 2].y) > 5
                 && track.widthBlock[rowBreakRightDown + 5].y > COLSIMAGE / 2
-                && track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].y < COLSIMAGE / 2 + 30)
+                && track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].y < COLSIMAGE / 2)
             {
                 // for(int i = rowBreakRightDown; i < rowBreakRightDown + 50; i++)
                 // {
@@ -886,12 +886,12 @@ private:
             }
             if(start)
             {
-                if (pointsEdgeRight[i].y <= pointsEdgeRight[rowBreakRight].y)
+                if (pointsEdgeRight[i].y < pointsEdgeRight[rowBreakRight].y)
                 {
                     rowBreakRight = i;
                     counter = 0;
                 }
-                else if (pointsEdgeRight[i].y > pointsEdgeRight[rowBreakRight].y) // 突变点计数
+                else if (pointsEdgeRight[i].y >= pointsEdgeRight[rowBreakRight].y) // 突变点计数
                 {
                     counter++;
                     if (counter > 5)
