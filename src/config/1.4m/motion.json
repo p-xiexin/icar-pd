@@ -5,19 +5,20 @@
     "speedAI": 0.8,
     "speedCorners":1.4,
     "speedcoiled":1.4,
-    "runP1": 1.449,
-    "runP2": 0.0249,
+    "runP1": 1.459,
+    "runP2": 0.0250,
     "runP3": 0.0110,
     "runP1_ai": 1.58,
     "runP2_ai": 0.0263,
     "turnP": 3.5,
-    "turnD": 3.6,
+    "turnD": 3.8,
     "Kp": 9000.0,
     "Ki": 12.45,
     "Kd": 4.5,
     "rowCutUp": 40,
     "rowCutBottom": 10,
     "Debug": false,
+    "Button": false,
     "SaveImage": true,
     "CloseLoop": true,
     "GarageEnable": true,
@@ -28,6 +29,7 @@
     "SlowzoneEnable": true,
     "DepotEnable": true,
     "FarmlandEnable": true,
+    "pathModel": "../res/model/yolov3_mobilenet_v1",
     "record": [
         {
             "#MidLine": "中线位置",
@@ -49,6 +51,7 @@
             "#rowCutUp": "图像顶部切行（前瞻距离）",
             "#rowCutBottom": "图像底部切行（盲区距离）",
             "#Debug": "智能车调试显示图像使能",
+            "#Button": "按钮发车使能",
             "#SaveImage": "智能车存图使能",
             "#CloseLoop": "闭环控制使能",
             "#GarageEnable": "车库使能",
@@ -58,7 +61,8 @@
             "#BridgeEnable": "桥梁检测使能",
             "#SlowzoneEnable": "慢行区检测使能",
             "#DepotEnable": "修车厂使能",
-            "#FarmlandEnable": "农田区域检测"
+            "#FarmlandEnable": "农田区域检测",
+            "#pathModel": "模型文件路径"
         }
     ]
 }

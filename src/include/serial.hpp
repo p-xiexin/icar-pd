@@ -47,12 +47,9 @@ public:
         return _recvSpeed;
     }
 
-    bool get_signal()
+    bool wait_signal()
     {
-        if(_addr = 0x06)
-            return true;
-
-        return false;
+        return _driver->receiveStartSignal();
     }
 
     int open()
@@ -64,7 +61,7 @@ public:
     {
         _loop = true;
         send();
-        recv();
+        // recv();
     }
 
     void Stop()
@@ -110,16 +107,19 @@ public:
             while(_loop)
             {
                 uint8_t data_addr;
-                data_addr = _driver->receiveStartSignal();
-                _addr = data_addr;
+                data_addr = _driver->receiveData();
                 if(data_addr == 0x08)
                 {
                     _recvSpeed = _driver->speed_unpack();
                 }
-                else
+                else if(data_addr == 0x06)
                 {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(8));
+                    _carSignal = true;
                 }
+                // else
+                // {
+                //     std::this_thread::sleep_for(std::chrono::milliseconds(8));
+                // }
             }
         });
     }
@@ -149,10 +149,10 @@ private:
     unsigned char _sound;
 
     bool _ctrl = false;
+    bool _carSignal = false;
     float _speed;
     uint16_t _servo_pwm;
     float _recvSpeed;
-    uint8_t _addr;
 
     std::mutex _mutex;
     std::condition_variable cond_;

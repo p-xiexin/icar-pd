@@ -124,20 +124,26 @@ int main(int argc, char *argv[])
 
     cout << "等待发车!!!" << endl;
 
-    while (motionController.params.Debug)
+    if(motionController.params.Button)
     {
-        Mat frame;
-        frame = captureInterface.get_frame();
-        imshow("imageTrack", frame);
-        char key = waitKey(5);
-        if (key == 13) // 回车
+        while (!serialInterface.wait_signal()); // 串口接收下位机-比赛开始信号
+    }
+    else if(motionController.params.Debug)
+    {
+        while (1)
         {
-            cout << "即将发车！！！" << endl;
-            break;
+            Mat frame;
+            frame = captureInterface.get_frame();
+            imshow("imageTrack", frame);
+            char key = waitKey(5);
+            if (key == 13) // 回车
+            {
+                cout << "即将发车！！！" << endl;
+                break;
+            }
         }
     }
 
-    // while (!serialInterface.get_signal()); // 串口接收下位机-比赛开始信号
 
     for (int i = 3; i > 0; i--) // 3秒后发车
     {

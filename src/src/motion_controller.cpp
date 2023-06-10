@@ -57,6 +57,7 @@ public:
         uint16_t rowCutUp = 30;     // 图像顶部切行
         uint16_t rowCutBottom = 10; // 图像顶部切行
         bool Debug = false;
+        bool Button = false;
         bool SaveImage = false;
         bool CloseLoop = true;
         bool GarageEnable = false;   // 出入库使能
@@ -70,7 +71,7 @@ public:
         string pathModel = "res/model/yolov3_mobilenet_v1";
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
             Params, MidLine, speedLow, speedHigh, speedAI, speedCorners, speedcoiled, runP1, runP2, runP3, runP1_ai, runP2_ai, 
-            turnP, turnD, rowCutUp, rowCutBottom, Kp, Ki, Kd, Debug, SaveImage, CloseLoop, GarageEnable, RingEnable, CrossEnable, 
+            turnP, turnD, rowCutUp, rowCutBottom, Kp, Ki, Kd, Debug, Button, SaveImage, CloseLoop, GarageEnable, RingEnable, CrossEnable, 
             StopEnable, BridgeEnable, SlowzoneEnable, DepotEnable, FarmlandEnable, pathModel); // 添加构造函数
     };
 
@@ -111,7 +112,7 @@ public:
             //     params.turnP += params.runP3 * abs(error);
             // }
 
-            if(T_cnt >= 3)
+            if(T_cnt >= 2)
             {
                 params.turnP += params.runP3* abs(error)* abs(error);
             }
