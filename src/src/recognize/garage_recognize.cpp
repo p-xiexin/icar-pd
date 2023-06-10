@@ -1137,9 +1137,10 @@ public:
                     track.pointsEdgeLeft.resize(0);
                     track.pointsEdgeRight.resize(0);
                 }
+
                 // 使用基础巡线即可，达到条件，停车
-                if((track.pointsEdgeLeft.size() <= params.stop_line && track.pointsEdgeRight.size() <= params.stop_line) &&
-                   (track.pointsEdgeLeft[0].x >= 121 || track.pointsEdgeRight[0].x >= 121 || track.pointsEdgeRight.size() == 0 || track.pointsEdgeLeft.size() == 0))
+                if((track.pointsEdgeLeft.size() <= params.stop_line && track.pointsEdgeRight.size() <= params.stop_line) || 
+                   (track.pointsEdgeRight.size() == 0 && track.pointsEdgeLeft.size() == 0) || (track.pointsEdgeLeft[0].x >= 121 && track.pointsEdgeRight[0].x >= 121))
                 {
                     flag_garage = GARAGE_BRAKE;
                     speed_ku = -params.speed_nor;

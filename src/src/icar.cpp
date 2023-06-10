@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
     }
 
     // PPNC初始化
-    if (!detection.init("../res/model/yolov3_mobilenet_v1")) // AI推理初始化
+    if (!detection.init(motionController.params.pathModel)) // AI推理初始化
         return 1;
 
     ipm.init(Size(COLSIMAGE, ROWSIMAGE),
@@ -171,6 +171,8 @@ int main(int argc, char *argv[])
         if (controlCenterCal.style != "STRIGHT") AI_enable = false;
         if (roadType == 6 || roadType == 9) AI_enable = true;
         else if (roadType == 1) AI_enable = false;
+        if(roadType) detection.Startdetect = false;
+        else detection.Startdetect = true;
         if (AI_enable)
         {
             ai_results = detection.getLastFrame();
@@ -188,7 +190,7 @@ int main(int argc, char *argv[])
         Mat imageBinary = imagePreprocess.imageBinaryzation(imgaeCorrect); // Gray
 
         /*3.基础赛道识别*/
-        trackRecognition.trackRecognition(imageBinary); // 赛道线识别
+        trackRecognition.trackRecognition(imageBinary, 0); // 赛道线识别
         Mat imageTrack = imgaeCorrect.clone();          // RGB
 
 		/*******4.出库和入库识别与路径规划*********/
@@ -543,11 +545,9 @@ int main(int argc, char *argv[])
             {
                 circle(imageTrack, Point(controlCenterCal.centerEdge[i].y, controlCenterCal.centerEdge[i].x), 1, Scalar(0, 0, 255), -1);
             }
-            putText(imageTrack,
-                    "FPS: " + formatDoble2String(detFPS, 2),
-                    Point(20, 20), FONT_HERSHEY_PLAIN, 1,
-                    Scalar(0, 0, 255), 1); // 车速
-            putText(imageTrack, "PWM"+formatDoble2String(motionController.servoPwm,2),Point(20,50),FONT_HERSHEY_PLAIN,1,Scalar(0,0,255),1);  //下发的pwm值
+            putText(imageTrack,"FPS: " + formatDoble2String(detFPS, 2),Point(20, 20), FONT_HERSHEY_PLAIN, 1,Scalar(0, 0, 255), 1); // 车速
+            putText(imageTrack, "PWM:"+formatDoble2String(motionController.servoPwm,2),Point(20,40),FONT_HERSHEY_PLAIN,1,Scalar(0,0,255),1);  //下发的pwm值
+            putText(imageTrack, "ERROR:"+to_string(motionController.error),Point(20,60),FONT_HERSHEY_PLAIN,1,Scalar(0,0,255),1);  //下发的pwm值
             savePicture(imageTrack, roadType, AI_enable);
 		}
     }

@@ -4,10 +4,10 @@
     "SpeedScale": 0.6,
     "CloseWidth" : 4,
     "CloseHeigth" : 4,
-    "EnrodeWidth" : 100,
+    "EnrodeWidth" : 105,
     "EnrodeHeigth" : 50,
-    "OpenSize": 50,
-    "EnterLine": 100,
+    "OpenSize": 55,
+    "EnterLine": 160,
     "record": [
         {
             "#FarmlandCheck": "农田区域确认帧数",

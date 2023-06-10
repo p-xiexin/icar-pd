@@ -161,6 +161,12 @@ public:
                         _index = 3;
                     }
                 }
+                else if(abs(pointBreakRD.y - track.pointsEdgeRight[rowBreakRightDown - 3].y) > 3)
+                {
+                    track.pointsEdgeLeft.resize(rowBreakRightDown);
+                    track.pointsEdgeRight.resize(rowBreakRightDown);
+                }
+
 
                 // if (!repaired && pointBreakRD.y < COLSIMAGE / 2) //[Step-2] 未搜索到岔路
                 // {
@@ -291,6 +297,11 @@ public:
                         repaired = true; // 补线成功
                         _index = 3;
                     }
+                }
+                else if(abs(pointBreakLD.y - track.pointsEdgeLeft[rowBreakLeftDown - 3].y) > 3)
+                {
+                    track.pointsEdgeLeft.resize(rowBreakLeftDown);
+                    track.pointsEdgeRight.resize(rowBreakLeftDown);
                 }
 
                 // if (!repaired && pointBreakRD.y < COLSIMAGE / 2) //[Step-2] 未搜索到岔路

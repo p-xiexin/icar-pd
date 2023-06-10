@@ -28,6 +28,7 @@
     "SlowzoneEnable": true,
     "DepotEnable": true,
     "FarmlandEnable": true,
+    "pathModel": "../res/model/yolov3_mobilenet_v1",
     "record": [
         {
             "#MidLine": "中线位置",
@@ -58,7 +59,8 @@
             "#BridgeEnable": "桥梁检测使能",
             "#SlowzoneEnable": "慢行区检测使能",
             "#DepotEnable": "修车厂使能",
-            "#FarmlandEnable": "农田区域检测"
+            "#FarmlandEnable": "农田区域检测",
+            "#pathModel": "模型文件路径"
         }
     ]
 }

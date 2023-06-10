@@ -129,7 +129,7 @@ public:
 
             searchCones(predict);
             pointsSortForX(pointEdgeDet);
-            if(pointEdgeDet[0].x > COLSIMAGE /2)
+            if(pointEdgeDet[0].x > ROWSIMAGE / 2)
             {
                 counterSession++;
             }
@@ -138,7 +138,7 @@ public:
             threshold(_imageGray, _imageBinary, 0, 255, THRESH_OTSU);
 
             track.reset();
-            track.trackRecognition(_imageBinary);
+            track.trackRecognition(_imageBinary, 0);
             movingAverageFilter(track.pointsEdgeLeft, 10);
             movingAverageFilter(track.pointsEdgeRight, 10);
             line_extend(track.pointsEdgeLeft);

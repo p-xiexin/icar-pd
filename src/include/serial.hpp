@@ -26,6 +26,7 @@ public:
     {
         _speed = speed;
         _servo_pwm = servo_pwm;
+        _ctrl = true;
     }
 
     void buzzerSound(unsigned char sound)
@@ -73,17 +74,23 @@ public:
     void send()
     {
         _thread_send = std::make_unique<std::thread>([this]{
+            _driver->carControl(0, 1500);
             while(_loop)
             {
                 float speed = _speed;
                 uint16_t servo_pwm = _servo_pwm;
-                _driver->carControl(speed, servo_pwm);
+                // _driver->carControl(speed, servo_pwm);
                 if(_sound)
                 {
                     _driver->buzzerSound(_sound);
                     _sound = 0;
                 }
-                std::this_thread::sleep_for(std::chrono::milliseconds(8));
+                if(_ctrl)
+                {
+                    _driver->carControl(speed, servo_pwm);
+                    _ctrl = false;
+                }
+                // std::this_thread::sleep_for(std::chrono::milliseconds(8));
 
             }
         });
@@ -131,6 +138,8 @@ private:
     LibSerial::BaudRate _bps;
     std::shared_ptr<Driver> _driver;
     unsigned char _sound;
+
+    bool _ctrl = false;
     float _speed;
     uint16_t _servo_pwm;
     float _recvSpeed;

@@ -67,16 +67,17 @@ public:
         bool SlowzoneEnable = false;
         bool DepotEnable = false;
         bool FarmlandEnable = false;
+        string pathModel = "res/model/yolov3_mobilenet_v1";
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
             Params, MidLine, speedLow, speedHigh, speedAI, speedCorners, speedcoiled, runP1, runP2, runP3, runP1_ai, runP2_ai, 
             turnP, turnD, rowCutUp, rowCutBottom, Kp, Ki, Kd, Debug, SaveImage, CloseLoop, GarageEnable, RingEnable, CrossEnable, 
-            StopEnable, BridgeEnable, SlowzoneEnable, DepotEnable, FarmlandEnable); // 添加构造函数
+            StopEnable, BridgeEnable, SlowzoneEnable, DepotEnable, FarmlandEnable, pathModel); // 添加构造函数
     };
 
     Params      params;                         // 读取控制参数
     uint16_t    servoPwm    = PWMSERVOMID;      // 发送给舵机的PWM
     float       motorSpeed  = 1.0;              // 发送给电机的速度
-
+    float       error;                          // 偏差
 
     /**
      * @brief 姿态PD控制器
@@ -84,7 +85,7 @@ public:
      */
     void pdController(int controlCenter, bool ai_enable)
     {
-        float error = controlCenter - params.MidLine;           // 图像控制中心转换偏差
+        error = controlCenter - params.MidLine;                 // 图像控制中心转换偏差
         static int errorLast = 0;                               // 记录前一次的偏差
         static int T_cnt = 0;
 
