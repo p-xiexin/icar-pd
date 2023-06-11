@@ -3,7 +3,7 @@
     "corner_lines": 215,
     "slowdown_condition": 10,
     "disGarageEntry": 190,
-    "stop_line": 105,
+    "stop_line": 100,
     "brakePicNum": 30,
     "speed_nor": 1.5,
     "speed_in": 1.0,

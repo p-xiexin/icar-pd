@@ -85,8 +85,8 @@ public:
         //[1]左右环岛判断
         if(ringType == RingType::RingNone && ringStep == RingStep::None)
         {
-            uint16_t rowBreakRightDown = searchBreakRightDown(track.pointsEdgeRight, 0, ROWSIMAGE / 2);
-            uint16_t rowBreakLeftDown = searchBreakLeftDown(track.pointsEdgeLeft, 0, ROWSIMAGE / 2);
+            uint16_t rowBreakRightDown = searchBreakRightDown(track.pointsEdgeRight, 0, COLSIMAGE / 2);
+            uint16_t rowBreakLeftDown = searchBreakLeftDown(track.pointsEdgeLeft, 0, COLSIMAGE / 2);
 
             if(rowBreakLeftDown != 0 && rowBreakRightDown == 0
                 && ((track.stdevLeft > 120 && track.stdevRight < 60) || (track.stdevLeft > 200 && track.stdevRight < 80))
@@ -108,6 +108,15 @@ public:
                 ring_cnt++;
                 if(ring_cnt > 1)
                 {
+                    for(int i = 0; i < track.pointsEdgeLeft.size() / 2; i++)
+                    {
+                        if(track.pointsEdgeLeft[i].y < 5)
+                            counterSpurroad++;
+                    }
+                    if(counterSpurroad > 30)
+                        ringStep = RingStep::Entering;
+
+                    counterSpurroad = 0;
                     ringType = RingType::RingLeft;
                 }
             }
@@ -131,6 +140,15 @@ public:
                 ring_cnt++;
                 if(ring_cnt > 1)
                 {
+                    for(int i = 0; i < track.pointsEdgeRight.size() / 2; i++)
+                    {
+                        if(track.pointsEdgeRight[i].y > COLSIMAGE - 5)
+                            counterSpurroad++;
+                    }
+                    if(counterSpurroad > 30)
+                        ringStep = RingStep::Entering;
+
+                    counterSpurroad = 0;
                     ringType = RingType::RingRight;
                 }
             }
@@ -845,7 +863,7 @@ private:
                 else if (pointsEdgeLeft[i].y <= pointsEdgeLeft[rowBreakLeft].y) // 突变点计数
                 {
                     counter++;
-                    if (counter > 5)
+                    if (counter > 8)
                         return rowBreakLeft;
                 }
             }
@@ -894,7 +912,7 @@ private:
                 else if (pointsEdgeRight[i].y >= pointsEdgeRight[rowBreakRight].y) // 突变点计数
                 {
                     counter++;
-                    if (counter > 5)
+                    if (counter > 8)
                         return rowBreakRight;
                 }
             }
