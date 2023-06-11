@@ -4,8 +4,8 @@
     "SpeedScale": 0.6,
     "CloseWidth" : 4,
     "CloseHeigth" : 4,
-    "EnrodeWidth" : 100,
-    "EnrodeHeigth" : 50,
+    "EnrodeWidth" : 60,
+    "EnrodeHeigth" : 30,
     "OpenSize": 50,
     "EnterLine": 150,
     "record": [

@@ -567,7 +567,7 @@ public:
                     }
                     else
                     {
-                        track.pointsEdgeLeft.resize(0);
+                        // track.pointsEdgeLeft.resize(0);
                         pointsEdgeLeftLast = track.pointsEdgeLeft;
                         pointsEdgeRightLast = track.pointsEdgeRight;
                     }
@@ -631,7 +631,7 @@ public:
                     }
                     else
                     {
-                        track.pointsEdgeRight.resize(0);
+                        // track.pointsEdgeRight.resize(0);
                         pointsEdgeLeftLast = track.pointsEdgeLeft;
                         pointsEdgeRightLast = track.pointsEdgeRight;
                     }

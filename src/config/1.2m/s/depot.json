@@ -1,6 +1,6 @@
 {
     "DepotCheck": 1,
-    "DepotDir": 1,
+    "DepotDir": 0,
     "DangerClose": 150,
     "ServoRow": 45,
     "ServoValue": 5,
