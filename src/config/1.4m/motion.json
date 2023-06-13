@@ -18,7 +18,7 @@
     "rowCutUp": 40,
     "rowCutBottom": 10,
     "Debug": false,
-    "Button": false,
+    "Button": true,
     "SaveImage": true,
     "CloseLoop": true,
     "GarageEnable": true,

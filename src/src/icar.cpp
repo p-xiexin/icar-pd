@@ -49,7 +49,7 @@ void ClearFolder(const std::string& folderPath);
 
 
 CaptureInterface captureInterface("/dev/video0");
-SerialInterface serialInterface("/dev/ttyUSB0", LibSerial::BaudRate::BAUD_460800);
+SerialInterface serialInterface("/dev/ttyUSB0", LibSerial::BaudRate::BAUD_115200);
 Detection detection;
 
 int main(int argc, char *argv[])

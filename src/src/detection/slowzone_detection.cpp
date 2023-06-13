@@ -25,6 +25,11 @@ using namespace std;
 class SlowZoneDetection
 {
 public:
+    SlowZoneDetection()
+    {
+        loadParams();
+    }
+    ~SlowZoneDetection() {}
     /**
      * @brief 初始化
      *
@@ -61,7 +66,7 @@ public:
             if (counterRec)
             {
                 counterSession++;
-                if (counterRec >= 4 && counterSession < 8)
+                if (counterRec >= params.SlowzoneCheck && counterSession < params.SlowzoneCheck * 2)
                 {
                     counterRec = 0;
                     counterSession = 0;
@@ -69,7 +74,7 @@ public:
                     _slowZoneEnable = true; // 检测到慢行区
                     return;
                 }
-                else if (counterSession >= 8)
+                else if (counterSession >= params.SlowzoneCheck * 2)
                 {
                     counterRec = 0;
                     counterSession = 0;
@@ -84,7 +89,7 @@ public:
         if (_slowZoneEnable)
         {
             counterDisable++;
-            if (counterDisable > 15)
+            if (counterDisable > params.ExitFrameCnt)
             {
                 counterRec = 0;
                 counterDisable = 0;
@@ -127,10 +132,50 @@ public:
             putText(image, "_slowZoneEnable", Point(COLSIMAGE / 2 - 10, 20), cv::FONT_HERSHEY_TRIPLEX, 0.3, cv::Scalar(0, 255, 0), 1, CV_AA);
     }
 
+    /**
+     * @brief 加载配置参数Json
+     */
+    void loadParams() 
+    {
+        string jsonPath = "../src/config/slowzone.json";
+        std::ifstream config_is(jsonPath);
+        if (!config_is.good()) 
+        {
+            std::cout << "Error: Params file path:[" << jsonPath << "] not find .\n";
+            exit(-1);
+        }
+
+        nlohmann::json js_value;
+        config_is >> js_value;
+
+        try 
+        {
+            params = js_value.get<Params>();
+        }
+        catch (const nlohmann::detail::exception &e) 
+        {
+            std::cerr << "Json Params Parse failed :" << e.what() << '\n';
+            exit(-1);
+        }
+    }
+
 private:
     uint16_t counterDisable = 0; // 标志失效计数
     uint16_t counterSession = 0; // 图像场次计数器
     uint16_t counterRec = 0;     // 检测计数器
     uint16_t counterFild = 0;    // 屏蔽计数器
     bool _slowZoneEnable = false; // 慢行区使能标志
+    /**
+     * @brief 动物出没区域核心参数
+     */
+    struct Params 
+    {
+        uint16_t SlowzoneCheck = 4;
+        uint16_t CheckRow = 30;
+        uint16_t ExitFrameCnt = 20;
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(
+            Params, SlowzoneCheck, CheckRow, ExitFrameCnt); // 添加构造函数
+    };
+    Params params;
+
 };

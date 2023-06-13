@@ -4,7 +4,7 @@
 
 using namespace std;
 
-SerialInterface serialInterface("/dev/ttyUSB0", LibSerial::BaudRate::BAUD_460800);
+SerialInterface serialInterface("/dev/ttyUSB0", LibSerial::BaudRate::BAUD_115200);
 int main()
 {
     // 下位机初始化通信
@@ -23,6 +23,8 @@ int main()
         // cout << "Buzzer Count: ";
         // unsigned char n;
         // cin >> n;
-		serialInterface.set_control(1.0, 1480);
+        float speed;
+        cin >> speed;
+		serialInterface.set_control(speed, 1500);
     }
 }

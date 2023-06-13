@@ -1,5 +1,5 @@
 {
-    "garage_run": 1,
+    "garage_run": 0,
     "corner_lines": 215,
     "slowdown_condition": 10,
     "disGarageEntry": 190,
