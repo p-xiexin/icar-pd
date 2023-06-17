@@ -240,6 +240,11 @@ public:
                     pointBreakU = track.pointsEdgeLeft[rowBreakLeftU];
                     line(track.pointsEdgeLeft, rowBreakLeftD, rowBreakLeftU);
                 }
+                else if(rowBreakLeftD && !rowBreakLeftU)
+                {
+                    counterSpurroad++;
+                    line(track.pointsEdgeLeft, rowBreakLeftD, track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1]);
+                }
                 else if(counterSpurroad > 2)
                 {
                     counterSpurroad = 0;
@@ -267,6 +272,11 @@ public:
                     counterSpurroad++;
                     pointBreakU = track.pointsEdgeRight[rowBreakRightU];
                     line(track.pointsEdgeRight, rowBreakRightD, rowBreakRightU);
+                }
+                else if(rowBreakRightD && !rowBreakRightU)
+                {
+                    counterSpurroad++;
+                    line(track.pointsEdgeRight, rowBreakRightD, track.pointsEdgeRight[track.pointsEdgeRight.size() - 1]);
                 }
                 else if(counterSpurroad > 2)
                 {
@@ -297,7 +307,7 @@ public:
                 {
                     rowBreakLeftD = searchBreakLeftDown(track.pointsEdgeLeft, 0, track.pointsEdgeLeft.size());
                     uint16_t rowBreakLeftU = searchBreakLeftUp(track.pointsEdgeLeft);
-                    if(rowBreakLeftU > ROWSIMAGE / 2)
+                    if(rowBreakLeftU > ROWSIMAGE / 2 && track.pointsEdgeLeft[rowBreakLeftU].y > 70)
                     {
                         spurroad_item = rowBreakLeftU;
                         _corner = track.pointsEdgeLeft[rowBreakLeftU];
@@ -416,8 +426,9 @@ public:
                 {
                     rowBreakRightD = searchBreakRightDown(track.pointsEdgeRight, 0, track.pointsEdgeRight.size());
                     uint16_t rowBreakRightU = searchBreakRightUp(track.pointsEdgeRight);
-                    if(rowBreakRightU > ROWSIMAGE / 2)
+                    if(rowBreakRightU > ROWSIMAGE / 2 && track.pointsEdgeRight[rowBreakRightU].y < COLSIMAGE - 70)
                     {
+                        spurroad_item = rowBreakRightU;
                         _corner = track.pointsEdgeRight[rowBreakRightU];
                     }
                 }
