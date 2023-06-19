@@ -68,7 +68,6 @@ public:
         if (track.pointsEdgeRight.size() < ROWSIMAGE / 2 || track.pointsEdgeLeft.size() < ROWSIMAGE / 2) // 十字有效行限制
             return false;
 
-        _index = 1;
         //----------------------------------------------------------------------------------------------------
 
         //[01] 左入十字处理
@@ -91,7 +90,6 @@ public:
                     if (counterRec > 4)
                     {
                         crossroadType = CrossroadType::CrossroadLeft; // 左入十字
-                        _index = 2;
                         break;
                     }
                 }
@@ -103,10 +101,12 @@ public:
         if (crossroadType == CrossroadType::CrossroadLeft) // 左入十字
         {
             uint16_t rowBreakRightDown = searchBreakRightDown(track.pointsEdgeRight); // 搜索十字赛道突变行（右下）
+            if(rowBreakRightDown)
+                pointBreakRD = track.pointsEdgeRight[rowBreakRightDown]; // 右下突变点
 
             if (rowBreakRightDown > 0 && track.pointsEdgeRight[rowBreakRightDown].y > 20 && rowBreakRightDown < track.pointsEdgeRight.size() - 30)
             {
-                pointBreakRD = track.pointsEdgeRight[rowBreakRightDown]; // 右下突变点
+                _index = 1;
                 if (track.spurroad.size() > 0)                           //[Step-1] 搜索到岔路
                 {
                     int indexSP = 0;
@@ -158,7 +158,6 @@ public:
                             track.pointsEdgeLeft.resize(rowEnd);
 
                         repaired = true; // 补线成功
-                        _index = 3;
                     }
                 }
                 else if(abs(pointBreakRD.y - track.pointsEdgeRight[rowBreakRightDown - 5].y) > 3)
@@ -228,7 +227,6 @@ public:
                     if (counterRec > 4)
                     {
                         crossroadType = CrossroadType::CrossroadRight; // 右入十字
-                        _index = 2;
                         break;
                     }
                 }
@@ -240,10 +238,12 @@ public:
         if (crossroadType == CrossroadType::CrossroadRight) // 右入十字
         {
             uint16_t rowBreakLeftDown = searchBreakLeftDown(track.pointsEdgeLeft); // 搜索十字赛道突变行（右下）
+            if(rowBreakLeftDown)
+                pointBreakLD = track.pointsEdgeLeft[rowBreakLeftDown]; // 右下突变点
 
             if (rowBreakLeftDown > 0 && track.pointsEdgeLeft[rowBreakLeftDown].y < COLSIMAGE - 20 && rowBreakLeftDown < track.pointsEdgeLeft.size() - 30)
             {
-                pointBreakLD = track.pointsEdgeLeft[rowBreakLeftDown]; // 右下突变点
+                _index = 1;
                 if (track.spurroad.size() > 0)                           //[Step-1] 搜索到岔路
                 {
                     int indexSP = 0;
@@ -295,7 +295,6 @@ public:
                             track.pointsEdgeRight.resize(rowEnd);
 
                         repaired = true; // 补线成功
-                        _index = 3;
                     }
                 }
                 else if(abs(pointBreakLD.y - track.pointsEdgeLeft[rowBreakLeftDown - 5].y) > 3)
@@ -373,7 +372,6 @@ public:
                     if (counterStrightA > 20) // 连续20行全宽
                     {
                         crossroadType = CrossroadType::CrossroadStraight; // 直入十字
-                        _index = 5;
                         break;
                     }
                 }
@@ -621,9 +619,9 @@ private:
         uint16_t rowBreakLeft = 0;
         uint16_t counter = 0;
 
-        for (int i = 0; i < pointsEdgeLeft.size(); i++) // 寻找左边跳变点
+        for (int i = 1; i < pointsEdgeLeft.size(); i++) // 寻找左边跳变点
         {
-            if (pointsEdgeLeft[i].y > 3 || i >= 30)
+            if(pointsEdgeLeft[i].y > pointsEdgeLeft[i - 1].y && start == false)
                 start = true;
             if(start)
             {
@@ -685,9 +683,9 @@ private:
         uint16_t rowBreakRight = 0;
         uint16_t counter = 0;
 
-        for (int i = 0; i < pointsEdgeRight.size(); i++) // 寻找右边跳变点
+        for (int i = 1; i < pointsEdgeRight.size(); i++) // 寻找右边跳变点
         {
-            if (pointsEdgeRight[i].y < COLSIMAGE - 3 || i >= 30)
+            if(pointsEdgeRight[i].y < pointsEdgeRight[i - 1].y && start == false)
                 start = true;
             if(start)
             {
