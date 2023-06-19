@@ -892,7 +892,7 @@ private:
                 }
                 else if (pointsEdgeLeft[i].y <= pointsEdgeLeft[rowBreakLeft].y) // 突变点计数
                 {
-                    if(row_end <= COLSIMAGE / 2 || abs(pointsEdgeLeft[i].y - pointsEdgeLeft[rowBreakLeft].y) > 5)
+                    if(row_end > COLSIMAGE / 2 || abs(pointsEdgeLeft[i].y - pointsEdgeLeft[rowBreakLeft].y) > 10)
                         counter++;
                     if (counter > 8)
                         return rowBreakLeft;
@@ -942,7 +942,7 @@ private:
                 }
                 else if (pointsEdgeRight[i].y >= pointsEdgeRight[rowBreakRight].y) // 突变点计数
                 {
-                    if(row_end <= COLSIMAGE / 2 || abs(pointsEdgeRight[i].y - pointsEdgeRight[rowBreakRight].y) > 5)
+                    if(row_end > COLSIMAGE / 2 || abs(pointsEdgeRight[i].y - pointsEdgeRight[rowBreakRight].y) > 10)
                         counter++;
                     if (counter > 8)
                         return rowBreakRight;

@@ -489,7 +489,9 @@ public:
             }
         }
 
-        return repaired;
+        // return repaired;
+        if(crossroadType != CrossroadType::None)
+            return true;
     }
 
     /**

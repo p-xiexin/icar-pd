@@ -45,6 +45,8 @@ public:
     POINT garageEnable = POINT(0, 0); // 车库识别标志：（x=1/0，y=row)
     uint16_t rowCutUp = 30;           // 图像顶部切行
     uint16_t rowCutBottom = 10;       // 图像底部切行
+    POINT pointLeftLast;              // 用于连通性判断
+    POINT pointRightLast;
 
     void reset()
     {
@@ -91,6 +93,8 @@ public:
             validRowsRight = 0;                  // 边缘有效行数（右）
             flagStartBlock = true;               // 搜索到色块起始行的标志（行）
             garageEnable = POINT(0, 0);          // 车库识别标志初始化
+            pointLeftLast = POINT(0, 0);
+            pointRightLast = POINT(0, 0);
             if(rowStart < rowCutBottom)
                 rowStart = rowCutBottom;
             rowStart = ROWSIMAGE - rowStart; // 默认底部起始行
@@ -211,6 +215,10 @@ public:
                     pointsEdgeRight.push_back(pointTmp);
                     widthBlock.emplace_back(row, endBlock[indexWidestBlock] - startBlock[indexWidestBlock]);
                     counterSearchRows++;
+                    {
+                        pointLeftLast = pointsEdgeLeft[pointsEdgeLeft.size() - 1];
+                        pointRightLast = pointsEdgeRight[pointsEdgeRight.size() - 1];
+                    }
                 }
                 spurroadEnable = false;
             }
@@ -270,8 +278,10 @@ public:
                 vector<int> indexBlocks;               // 色块序号（行）
                 for (int i = 0; i < counterBlock; i++) // 上下行色块的连通性判断
                 {
-                    int g_cover = min(endBlock[i], pointsEdgeRight[pointsEdgeRight.size() - 1].y) -
-                                  max(startBlock[i], pointsEdgeLeft[pointsEdgeLeft.size() - 1].y);
+                    int g_cover = min(endBlock[i], pointRightLast.y) -
+                                  max(startBlock[i], pointLeftLast.y);
+                    // int g_cover = min(endBlock[i], pointsEdgeRight[pointsEdgeRight.size() - 1].y) -
+                    //               max(startBlock[i], pointsEdgeLeft[pointsEdgeLeft.size() - 1].y);
                     if (g_cover >= 0)
                     {
                         indexBlocks.push_back(i);
@@ -362,6 +372,11 @@ public:
                         spurroadEnable = true;
                     }
                     //------------------------------------------------------------------------------------
+                }
+                if(pointsEdgeLeft[pointsEdgeLeft.size() - 1].y > 0 || pointsEdgeRight[pointsEdgeRight.size() - 1].y < COLSIMAGE - 1)
+                {
+                    pointLeftLast = pointsEdgeLeft[pointsEdgeLeft.size() - 1];
+                    pointRightLast = pointsEdgeRight[pointsEdgeRight.size() - 1];
                 }
 
                 stdevLeft = stdevEdgeCal(pointsEdgeLeft, ROWSIMAGE); // 计算边缘方差

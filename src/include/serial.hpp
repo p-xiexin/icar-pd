@@ -37,9 +37,9 @@ public:
         }
     }
 
-    void set_PID(float Kp, float Ki, float Kd)
+    void set_PID(float Kp, float Ki, float Kd, float Kv)
     {
-        _driver->PID_init(Kp, Ki, Kd);
+        _driver->PID_init(Kp, Ki, Kd, Kv);
     }
 
     float get_speed()

@@ -1,19 +1,26 @@
 #include "../include/uart.hpp"
 #include <iostream>
 #include "../include/serial.hpp"
+#include "motion_controller.cpp"
 
 using namespace std;
 
-SerialInterface serialInterface("/dev/ttyUSB0", LibSerial::BaudRate::BAUD_115200);
+SerialInterface serialInterface("/dev/ttyUSB0", LibSerial::BaudRate::BAUD_460800);
 int main()
 {
+    MotionController motionController;         // 运动控制
+
     // 下位机初始化通信
     int ret = serialInterface.open();
     if (ret != 0)
         return 0;
     {
         cout << "-------- 速度闭环控制 -------" << endl;
-        serialInterface.set_PID(9000, 12.5, 4.5);
+        serialInterface.set_PID(motionController.params.Kp, motionController.params.Ki, motionController.params.Kd, motionController.params.Kv);
+        cout << "Kp = " << motionController.params.Kp << endl;
+        cout << "Ki = " << motionController.params.Ki << endl;
+        cout << "Kd = " << motionController.params.Kd << endl;
+        cout << "Kv = " << motionController.params.Kv << endl;
     }
 	serialInterface.Start();
 

@@ -300,27 +300,58 @@ public:
 	 */
 	float get_speed()
 	{
+		// switch(depotStep)
+		// {
+		// case DepotStep::DepotEnable:
+		// {
+		// 	_speed += 0.05f;
+		// 	if(_speed > params.DepotSpeed)
+		// 		_speed = params.DepotSpeed;
+		// 	break;
+		// }
+		// case DepotStep::DepotEnter:
+		// {
+		// 	_speed += 0.05f;
+		// 	if(_speed > params.DepotSpeed)
+		// 		_speed = params.DepotSpeed;
+		// 	break;
+		// }
+		// case DepotStep::DepotCruise:
+		// {
+		// 	_speed -= 0.2f;
+		// 	if(_speed < -params.DepotSpeed)
+		// 		_speed = -params.DepotSpeed;
+		// 	break;
+		// }
+		// case DepotStep::DepotStop:
+		// {
+		// 	_speed = 0.0f;
+		// 	break;
+		// }
+		// case DepotStep::DepotExit:
+		// {
+		// 	_speed = -params.DepotSpeed * params.DepotSpeedScale;
+		// 	break;
+		// }
+		// }
+		// return _speed;
 		switch(depotStep)
 		{
 		case DepotStep::DepotEnable:
 		{
-			_speed += 0.05f;
-			if(_speed > params.DepotSpeed)
-				_speed = params.DepotSpeed;
+			_speed = params.DepotSpeed;
 			break;
 		}
 		case DepotStep::DepotEnter:
 		{
-			_speed += 0.05f;
-			if(_speed > params.DepotSpeed)
-				_speed = params.DepotSpeed;
+			_speed = params.DepotSpeed;
 			break;
 		}
 		case DepotStep::DepotCruise:
 		{
-			_speed -= 0.2f;
-			if(_speed < -params.DepotSpeed)
-				_speed = -params.DepotSpeed;
+			_speed -= params.DepotSpeed / params.BrakeCnt;
+			if(_speed < 0.0f)
+				_speed = 0.0f;
 			break;
 		}
 		case DepotStep::DepotStop:

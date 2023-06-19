@@ -911,7 +911,7 @@ public:
 
     /**
      * @brief 检测斑马线
-     * @param predict ai预测结果
+     * @param track 边线
      * @return bool
      */
     bool check_garage(TrackRecognition track) 

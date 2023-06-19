@@ -49,7 +49,7 @@ void ClearFolder(const std::string& folderPath);
 
 
 CaptureInterface captureInterface("/dev/video0");
-SerialInterface serialInterface("/dev/ttyUSB0", LibSerial::BaudRate::BAUD_115200);
+SerialInterface serialInterface("/dev/ttyUSB0", LibSerial::BaudRate::BAUD_460800);
 Detection detection;
 
 int main(int argc, char *argv[])
@@ -88,14 +88,14 @@ int main(int argc, char *argv[])
     if (motionController.params.CloseLoop)
     {
         cout << "-------- 速度闭环控制 -------" << endl;
-        serialInterface.set_PID(motionController.params.Kp, motionController.params.Ki, motionController.params.Kd);
+        serialInterface.set_PID(motionController.params.Kp, motionController.params.Ki, motionController.params.Kd ,motionController.params.Kv);
         cout << "Kp = " << motionController.params.Kp << endl;
         cout << "Ki = " << motionController.params.Ki << endl;
         cout << "Kd = " << motionController.params.Kd << endl;
     }
     else
     {
-        serialInterface.set_PID(0, 0, 0);
+        serialInterface.set_PID(0, 0, 0, 0);
         cout << "-------- 速度开环控制 -------" << endl;
     }
     serialInterface.Start();
