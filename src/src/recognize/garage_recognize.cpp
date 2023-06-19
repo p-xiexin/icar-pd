@@ -22,7 +22,8 @@
 #include "../../include/json.hpp"
 #include "../../include/common.hpp"
 #include "../../include/predictor.hpp"
-#include "../motion_controller.cpp"
+// #include "../motion_controller.cpp"
+#include "../motion_control.cpp"
 
 
 using namespace cv;

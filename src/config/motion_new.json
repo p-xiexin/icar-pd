@@ -1,5 +1,4 @@
 {
-    "MidLine": 160,
     "speedLow": 1.0,
     "speedHigh": 1.0,
     "speedAI": 0.7,
@@ -19,15 +18,23 @@
     "Kd": 0,
     "Kv": 0,
 
+    "Control_Mid": 160,
+    "Control_Skew": 20,
+    "Control_Down_set": 160,
+    "Control_Up_set": 160,
+    "ki_down_out_max": 25,
+    "Kp_dowm": 0.0,
+    "Ki_down": 0.0002,
+
     "rowCutUp": 40,
     "rowCutBottom": 10,
 
-    "Debug": true,
+    "Debug": false,
     "Button": false,
     "SaveImage": true,
     "CloseLoop": true,
     "GarageEnable": true,
-    "RingEnable": false,
+    "RingEnable": true,
     "CrossEnable": true,
     "StopEnable": false,
     "BridgeEnable": true,
@@ -37,12 +44,12 @@
     "pathModel": "../res/model/yolov3_mobilenet_v1",
     "record": [
         {
-            "#MidLine": "中线位置",
             "#speedLow": "智能车最低速",
             "#speedHigh": "智能车最高速",
             "#speedAI": "AI识别速度",
             "#speedCorners":"贴弯速度",
             "#speedcoiled": "连续弯道速度",
+
             "#runP1": "一阶比例系数：直线控制量",
             "#runP2": "二阶比例系数：弯道控制量",
             "#runP3": "三阶比例系数：弯道控制量",
@@ -50,12 +57,23 @@
             "#runP2_ai": "ai识别的二阶微分系数：转弯控制量",        
             "#turnP": "一阶比例系数：转弯控制量",
             "#turnD": "一阶微分系数：转弯控制量",
+
             "#Kp": "Kp",
             "#Ki": "Ki",
             "#Kd": "Kd",
             "#Kv": "kv",
+
+            "#Control_Mid": "控制中线",
+            "#Control_Skew": "路径规划线偏",
+            "#Control_Down_set": "图像近处点界限",
+            "#Control_Up_set": "图像远处点界限",
+            "#ki_down_out_max": "近处点积分项限幅",
+            "#Kp_dowm": "近处点pi控制kp",
+            "#Ki_down": "近处点pi控制ki",
+
             "#rowCutUp": "图像顶部切行（前瞻距离）",
             "#rowCutBottom": "图像底部切行（盲区距离）",
+
             "#Debug": "智能车调试显示图像使能",
             "#Button": "按钮发车使能",
             "#SaveImage": "智能车存图使能",

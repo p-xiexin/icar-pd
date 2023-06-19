@@ -602,4 +602,85 @@ private:
 
         return vec[(int)vec.size() / 2];
     }
+
+public:
+    /**
+     * @brief 最小二乘法 一元线性回归
+     *
+     * @param line 边缘点集
+     * @param k    斜率，注意此处的坐标系与习惯不同
+     * @param b 
+     */
+    void LeastSquare(vector<POINT> line, double& k, double& b)
+    {
+        double t1 = 0, t2 = 0, t3 = 0, t4 = 0;
+        uint16_t num = line.size();
+        for (int i = 0; i < num; i++)
+        {
+            t1 += line[i].x * line[i].x;
+            t2 += line[i].x;
+            t3 += line[i].y * line[i].x;
+            t4 += line[i].y;
+        }
+        k = (t3 * num - t2 * t4) / (t1 * num - t2 * t2);
+        b = (t1 * t4 - t2 * t3) / (t1 * num - t2 * t2);
+
+        return;
+    }
+    double LeastSquare(vector<POINT> line)
+    {
+        double k = 0, b = 0;
+        LeastSquare(line, k, b);
+        return k;
+    }
+
+    //计算目标段的最小二乘斜率
+    double LeastSquare(vector<POINT> line, uint16_t start, uint16_t end)
+    {
+        double t1 = 0, t2 = 0, t3 = 0, t4 = 0;
+        uint16_t num = line.size();
+        if(start < 0 || start > num - 1 || end < 0 || end > num)
+        {
+            std::cout << "LeastSqure err !" << std::endl;
+            return 0;
+        }
+
+        for (int i = start; i < end; i++)
+        {
+            t1 += line[i].x * line[i].x;
+            t2 += line[i].x;
+            t3 += line[i].y * line[i].x;
+            t4 += line[i].y;
+        }
+        double k = (t3 * num - t2 * t4) / (t1 * num - t2 * t2);
+        // b = (t1 * t4 - t2 * t3) / (t1 * num - t2 * t2);
+
+        return k;
+    }
+
+    //计算目标点处切线的斜率
+    double LeastSquare(vector<POINT> line, uint16_t index)
+    {
+        double t1 = 0, t2 = 0, t3 = 0, t4 = 0;
+        uint16_t num = line.size();
+        if(num < 5) {
+            return 0;
+        }
+        int start = index - 2;
+        int end = index + 2;
+        if(start < 0) start = 0;
+        if(end > num) end = num;
+
+        for (int i = start; i < end; i++)
+        {
+            t1 += line[i].x * line[i].x;
+            t2 += line[i].x;
+            t3 += line[i].y * line[i].x;
+            t4 += line[i].y;
+        }
+        double k = (t3 * num - t2 * t4) / (t1 * num - t2 * t2);
+        // b = (t1 * t4 - t2 * t3) / (t1 * num - t2 * t2);
+
+        return k;
+    }
 };

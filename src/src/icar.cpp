@@ -17,7 +17,7 @@
 
 #include "image_preprocess.cpp" //图像预处理
 #include "controlcenter_cal.cpp"
-#include "motion_controller.cpp"
+#include "motion_control.cpp"
 
 #include "./detection/depot_detection.cpp"
 
@@ -414,8 +414,8 @@ int main(int argc, char *argv[])
         /**************智能车运动控制,通讯******************/
         if (counterRunBegin > 30)
         {
-            // 智能车方向控制
-            motionController.pdController(controlCenterCal.controlCenter, AI_enable); // PD控制器姿态控制
+            // // 智能车方向控制
+            motionController.Angle_Controller(controlCenterCal, trackRecognition);
 
 			// 智能车速度控制
 			switch (roadType)
@@ -445,37 +445,17 @@ int main(int argc, char *argv[])
 					motionController.motorSpeed = motionController.params.speedCorners;
 					break;
 				}
-				case RoadType::SlowzoneHandle:
-				{
-					motionController.motorSpeed = 1.0f;
-					break;
-				}
 				default:
 				{
 					// 智能车变速度控制
-                    static bool AI_Last = false;
-                    static float speed = 0.0f;
-                    if(!AI_Last && AI_enable)
-                        speed = -0.8f;
-                    else if(AI_Last && !AI_enable)
-                        speed = motionController.params.speedAI / 2;
-
-					motionController.speedController(true, controlCenterCal);
-                    float speed_ctrl = motionController.motorSpeed;
 					if(AI_enable)
 					{
-                        speed += 0.02f;
-                        if(speed > motionController.params.speedAI)
-                            speed = motionController.params.speedAI;
+                        motionController.motorSpeed = motionController.params.speedAI;
 					}
                     else
                     {
-                        speed += 0.1f;
-                        if(speed > speed_ctrl);
-                            speed = speed_ctrl;
+                        motionController.speedController(true, controlCenterCal);
                     }
-                    motionController.motorSpeed = speed;
-                    AI_Last = AI_enable;
 					break;
 				}
 			}

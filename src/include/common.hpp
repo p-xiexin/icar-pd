@@ -16,7 +16,7 @@ using namespace cv;
 #define Weight_Ratio_parameter_middle 160               // 权重比例参数——中
 #define Weight_Ratio_parameter_under  80                // 权重比例参数——下
 
-#define highly_control_point    120      //定义方向控制，拟合曲线的最高权重x轴区域点坐标
+#define highly_control_point    90      //定义方向控制，拟合曲线的最高权重x轴区域点坐标
 #define AMPLIFICATION_FACTOR    950     //拟合曲线放大系数
 /*----------------------------------------方向控制相关参数宏定义------------------------------------------------*/
 
