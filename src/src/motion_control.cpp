@@ -16,6 +16,7 @@
 #include "../include/json.hpp"
 #include "controlcenter_cal.cpp"
 #include "./recognize/track_recognition.cpp"
+#include "math.h"
 
 using namespace std;
 
@@ -25,6 +26,7 @@ public:
     MotionController()
     {
         loadParams();
+        Mid_line = (double)params.Control_Mid;
     }
 private:
   int counterShift = 0; // 变速计数器
@@ -54,6 +56,12 @@ public:
         float Ki = 0.0;
         float Kd = 0.0;
         float Kv = 0.0;
+
+        float Angle_Kp = 0.0;
+        float Angle_Ki = 0.0;
+        int   dynamic_Mid_low = 140;
+        int   dynamic_Mid_high = 180;
+        float Angle_target = 0.1;
 
         int Control_Mid = 160;              // 控制中线
         int Control_Skew = 20;              // 路径规划线偏
@@ -86,8 +94,9 @@ public:
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
             Params, speedLow, speedHigh, speedAI, speedCorners, speedcoiled, runP1, runP2, runP3, runP1_ai, runP2_ai, 
             turnP, turnD,Control_Mid, Control_Skew, Control_Down_set, Control_Up_set, ki_down_out_max, Kp_dowm, Ki_down,
-            Kp, Ki, Kd, Kv, rowCutUp, rowCutBottom, Debug, Button, SaveImage, CloseLoop, GarageEnable, RingEnable, CrossEnable, 
-            StopEnable, BridgeEnable, SlowzoneEnable, DepotEnable, FarmlandEnable, pathModel); // 添加构造函数
+            Kp, Ki, Kd, Kv, Angle_Kp, Angle_Ki, dynamic_Mid_low, dynamic_Mid_high, Angle_target, rowCutUp, rowCutBottom, 
+            Debug, Button, SaveImage, CloseLoop, GarageEnable, RingEnable, CrossEnable, StopEnable, BridgeEnable, SlowzoneEnable, 
+            DepotEnable, FarmlandEnable, pathModel); // 添加构造函数
     };
 
 
@@ -122,58 +131,9 @@ public:
 
 
     /**********角偏线偏串级相关参数定义**************/
-    double      Mid_control = 0.0;
-
-
-    // /**
-    //  * @brief 姿态PD控制器
-    //  * @param controlCenter 智能车控制中心
-    //  */
-    // void pdController(int controlCenter, bool ai_enable)
-    // {
-    //     error = controlCenter - params.MidLine;                 // 图像控制中心转换偏差
-    //     static int errorLast = 0;                               // 记录前一次的偏差
-    //     static int T_cnt = 0;
-
-    //     if(abs(error - errorLast) > COLSIMAGE / 14) 
-    //     {
-    //         T_cnt++;
-    //         error = error > errorLast ? errorLast + COLSIMAGE / 14 : errorLast - COLSIMAGE / 14;
-    //     }
-    //     else
-    //     {
-    //         T_cnt = 0;
-    //     }
-
-    //     if(ai_enable)
-    //     {
-    //         params.turnP = abs(error) * params.runP2_ai + params.runP1_ai;
-    //     }
-    //     else
-    //     {
-    //         params.turnP = abs(error) * params.runP2 + params.runP1;
-    //         // if(T_cnt >= 5)
-    //         // {
-    //         //     params.turnP += params.runP3 * abs(error);
-    //         // }
-
-    //         if(T_cnt >= 3)
-    //         {
-    //             params.turnP += params.runP3* abs(error)* abs(error);
-    //         }
-
-    //         // turnP = max(turnP,0.2);
-    //         //  if(turnP<0.2){
-    //         //      turnP = 0.2;
-    //         //  }
-    //         // turnP = runP1 + heightest_line * runP2;
-    //     }
-
-    //     int pwmDiff = (error * params.turnP) + (error - errorLast) * params.turnD;
-    //     errorLast = error;
-
-    //     servoPwm = (uint16_t)(PWMSERVOMID + pwmDiff); // PWM转换
-    // }
+    double      Angle_rad = 0.0;
+    double      k = 0.0;
+    double      Mid_line = 160.0;               //角偏环输出
 
 
     /**
@@ -428,21 +388,23 @@ public:
     void Angle_Controller(ControlCenterCal controlCenter, TrackRecognition track)
     {
         // 线偏计算
-        vector<POINT> line_dowm;                //图像拟合中线下半部分的点
+        Line_offset_down = 0;
+        Line_offset_up = 0;
+        vector<POINT> line_perspective = track.line_perspective(controlCenter.centerEdge);  //得到俯视域的中线，算斜率
+        // 计算中线给定段的平均值
         for(int i=0;i<controlCenter.centerEdge.size();i++)
         {
-            if(controlCenter.centerEdge[i].x > (240 - params.Control_Down_set))
+            if(controlCenter.centerEdge[i].x > (ROWSIMAGE - params.Control_Down_set))
             {
                 Line_offset_down += controlCenter.centerEdge[i].y;
                 line_down_Num++;
-                line_dowm.push_back(controlCenter.centerEdge[i]);
             }
-            // else if(controlCenter.centerEdge[i].x <= (240 - params.Control_Down_set) && controlCenter.centerEdge[i].x > (240 - params.Control_Up_set))
+            // else if(controlCenter.centerEdge[i].x <= (ROWSIMAGE - params.Control_Down_set) && controlCenter.centerEdge[i].x > (ROWSIMAGE - params.Control_Up_set))
             // {
             //     Line_offset_mid += (controlCenter.centerEdge[i].y - params.Control_Mid);
             //     line_Mid_Num++;
             // }
-            else if(controlCenter.centerEdge[i].x <= (240 - params.Control_Up_set))
+            else if(controlCenter.centerEdge[i].x <= (ROWSIMAGE - params.Control_Up_set))
             {
                 Line_offset_up += controlCenter.centerEdge[i].y;
                 line_Up_Num++;
@@ -456,7 +418,7 @@ public:
             line_down_Num = 0;
         }
         else
-            Line_offset_down = 0;
+            Line_offset_down = COLSIMAGE / 2;
         
         // if(line_Mid_Num != 0)
         // {
@@ -472,22 +434,40 @@ public:
             line_Up_Num = 0;
         }
         else
-            Line_offset_up = 0;
+            Line_offset_up = COLSIMAGE / 2;
 
         /**********角偏控制**************/
-        Mid_control = track.LeastSquare(line_dowm);
-
+        k = track.LeastSquare(line_perspective);
+        // Angle_rad = atan(k);
+        // 角偏积分项
+        static float Angle_Iout = 0;
+        Angle_Iout += params.Ki_down * k;
+        // 积分项限幅
+        if(Angle_Iout >= params.ki_down_out_max)
+            Angle_Iout = params.ki_down_out_max;
+        else if(Angle_Iout <= -params.ki_down_out_max) 
+            Angle_Iout = -params.ki_down_out_max;
+        // 达到目标值动态中线积分项清除
+        if(abs(k) <= params.Angle_target)
+            Angle_Iout *= 0.5;
+        // 动态中线输出值
+        Mid_line = params.Control_Mid + (params.Angle_Kp * k + Angle_Iout);
+        // 动态中线限幅
+        if(Mid_line <= params.dynamic_Mid_low)
+            Mid_line = params.dynamic_Mid_low;
+        else if(Mid_line >= params.dynamic_Mid_high)
+            Mid_line = params.dynamic_Mid_high;
 
         /**********线偏控制**************/
-        error = Line_offset_down - params.Control_Mid;
-        static int errorLast = 0;
+        error = Line_offset_down - Mid_line;
+        static float errorLast = 0;
 
         // 限幅计算
-        if(abs(error - errorLast) > COLSIMAGE / 14) 
-            error = error > errorLast ? errorLast + COLSIMAGE / 14 : errorLast - COLSIMAGE / 14;
+        // if(abs(error - errorLast) > COLSIMAGE / 10) 
+        //     error = error > errorLast ? errorLast + COLSIMAGE / 10 : errorLast - COLSIMAGE / 10;
 
         // 计算动态线偏P值
-        params.turnP = abs(error) * params.runP2 + params.runP1;
+        params.turnP = abs(error) * abs(error) * params.runP3 + abs(error) * params.runP2 + params.runP1;
 
         int pwmDiff = (error * params.turnP) + (error - errorLast) * params.turnD;
         errorLast = error;

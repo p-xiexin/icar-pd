@@ -442,7 +442,7 @@ int main(int argc, char *argv[])
 				}
 				case RoadType::RingHandle:
 				{
-					motionController.motorSpeed = motionController.params.speedCorners;
+					motionController.motorSpeed = motionController.params.speedLow;
 					break;
 				}
 				default:
@@ -459,6 +459,7 @@ int main(int argc, char *argv[])
 					break;
 				}
 			}
+            // motionController.motorSpeed = motionController.params.speedLow;
 
             // 串口通信，姿态与速度控制
             serialInterface.set_control(motionController.motorSpeed, motionController.servoPwm);
@@ -534,9 +535,12 @@ int main(int argc, char *argv[])
             {
                 circle(imageTrack, Point(controlCenterCal.centerEdge[i].y, controlCenterCal.centerEdge[i].x), 1, Scalar(0, 0, 255), -1);
             }
-            putText(imageTrack,"FPS: " + formatDoble2String(detFPS, 2),Point(20, 20), FONT_HERSHEY_PLAIN, 1,Scalar(0, 0, 255), 1); // 车速
-            putText(imageTrack, "PWM:"+formatDoble2String(motionController.servoPwm,2),Point(20,40),FONT_HERSHEY_PLAIN,1,Scalar(0,0,255),1);  //下发的pwm值
-            putText(imageTrack, "ERROR:"+to_string(motionController.error),Point(20,60),FONT_HERSHEY_PLAIN,1,Scalar(0,0,255),1);  //下发的pwm值
+            putText(imageTrack,"FPS: " + formatDoble2String(detFPS, 2), Point(20, 20), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1); // 车速
+            putText(imageTrack, "PWM:" + formatDoble2String(motionController.servoPwm,2), Point(20,40),FONT_HERSHEY_PLAIN, 1, Scalar(0,0,255), 1);  //下发的pwm值
+            putText(imageTrack, "ERROR:" + formatDoble2String(motionController.error, 2), Point(20,60), FONT_HERSHEY_PLAIN, 1, Scalar(0,0,255), 1);  //下发的pwm值
+            putText(imageTrack, "K:" + formatDoble2String(motionController.k, 4), Point(20,80), FONT_HERSHEY_PLAIN, 1, Scalar(0,0,255), 1);
+            putText(imageTrack, "Mid:" + formatDoble2String(motionController.Mid_line, 2), Point(20,100), FONT_HERSHEY_PLAIN, 1, Scalar(0,0,255), 1);
+            line(imageTrack, Point(COLSIMAGE / 2, 0), Point(COLSIMAGE / 2, ROWSIMAGE - 1), Scalar(200, 200, 200), 1);
             savePicture(imageTrack, roadType, AI_enable);
 		}
     }

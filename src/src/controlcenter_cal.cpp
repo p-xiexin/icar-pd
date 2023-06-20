@@ -39,6 +39,10 @@ public:
      */
     void controlCenterCal(TrackRecognition &track)
     {
+        // 未裁线操作，点数小于一定数量，退出函数
+        if(track.pointsEdgeLeft.size() <= 3 || track.pointsEdgeRight.size() <= 3)
+            return;
+        
         sigmaCenter = 0;                    // 中心点集的方差
         controlCenter = COLSIMAGE / 2;      // 智能车控制中心（0~320）
         centerEdge.clear();
@@ -77,12 +81,12 @@ public:
         }
 
         /****补丁****/
-        if((track.stdevLeft == 0 && track.stdevRight > 50) && track.pointsEdgeLeft.size() < 90
+        if((track.stdevLeft == 0 && track.stdevRight > 50) && track.pointsEdgeLeft.size() < 100
             && track.pointsEdgeLeft[0].y == track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].y)
         {
             track.pointsEdgeLeft.resize(0);
         }
-        else if((track.stdevRight == 0 && track.stdevLeft > 50) && track.pointsEdgeRight.size() < 90
+        else if((track.stdevRight == 0 && track.stdevLeft > 50) && track.pointsEdgeRight.size() < 100
             && track.pointsEdgeRight[0].y == track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].y)
         {
             track.pointsEdgeRight.resize(0);

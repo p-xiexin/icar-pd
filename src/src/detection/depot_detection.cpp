@@ -41,12 +41,10 @@ public:
 		uint16_t ServoRow = 120;
 		uint16_t ServoValue = 15;
 		float DepotSpeed = 0.5;
-		float DepotSpeedScale = 1.0;
 		uint16_t DelayCnt = 3;
 		uint16_t BrakeCnt = 5;
-		uint16_t ExitFrameCnt = 10;
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-            Params, DepotCheck, DepotDir, DangerClose, ServoRow, ServoValue, DepotSpeed, DepotSpeedScale, DelayCnt, BrakeCnt, ExitFrameCnt); // 添加构造函数
+            Params, DepotCheck, DepotDir, DangerClose, ServoRow, ServoValue, DepotSpeed, DelayCnt, BrakeCnt); // 添加构造函数
     };
 
 	enum DepotStep
@@ -231,7 +229,7 @@ public:
 			if (counterRec > 30) // 停车：40场 = 2s
 			{
 				depotStep = DepotStep::DepotExit; // 出站使能
-				counterRec = 0;
+				counterRec = params.BrakeCnt * 2;
 			}
 			track.pointsEdgeLeft = pathsEdgeLeft[pathsEdgeLeft.size() - 1];//维持入库最后的打角
 			track.pointsEdgeRight = pathsEdgeRight[pathsEdgeRight.size() - 1];
@@ -240,21 +238,22 @@ public:
 
 		case DepotStep::DepotExit: //[06] 出站使能
 		{
-			counterRec++;
 			if (pathsEdgeLeft.size() < 1 || pathsEdgeRight.size() < 1)
 			{
-				depotStep = DepotStep::DepotNone; // 出厂完成
-				reset();
+				if(counterRec == 0)
+				{
+					depotStep = DepotStep::DepotNone; // 出厂完成
+					reset();
+				}
+				else
+					counterRec--;
 			}
 			else
 			{
 				track.pointsEdgeLeft = pathsEdgeLeft[pathsEdgeLeft.size() - 1];
 				track.pointsEdgeRight = pathsEdgeRight[pathsEdgeRight.size() - 1];
-				if(counterRec > params.ExitFrameCnt)
-				{
-					pathsEdgeLeft.pop_back();
-					pathsEdgeRight.pop_back();
-				}
+				pathsEdgeLeft.pop_back();
+				pathsEdgeRight.pop_back();
 			}
 			
 			break;
@@ -300,41 +299,6 @@ public:
 	 */
 	float get_speed()
 	{
-		// switch(depotStep)
-		// {
-		// case DepotStep::DepotEnable:
-		// {
-		// 	_speed += 0.05f;
-		// 	if(_speed > params.DepotSpeed)
-		// 		_speed = params.DepotSpeed;
-		// 	break;
-		// }
-		// case DepotStep::DepotEnter:
-		// {
-		// 	_speed += 0.05f;
-		// 	if(_speed > params.DepotSpeed)
-		// 		_speed = params.DepotSpeed;
-		// 	break;
-		// }
-		// case DepotStep::DepotCruise:
-		// {
-		// 	_speed -= 0.2f;
-		// 	if(_speed < -params.DepotSpeed)
-		// 		_speed = -params.DepotSpeed;
-		// 	break;
-		// }
-		// case DepotStep::DepotStop:
-		// {
-		// 	_speed = 0.0f;
-		// 	break;
-		// }
-		// case DepotStep::DepotExit:
-		// {
-		// 	_speed = -params.DepotSpeed * params.DepotSpeedScale;
-		// 	break;
-		// }
-		// }
-		// return _speed;
 		switch(depotStep)
 		{
 		case DepotStep::DepotEnable:
@@ -361,7 +325,10 @@ public:
 		}
 		case DepotStep::DepotExit:
 		{
-			_speed = -params.DepotSpeed * params.DepotSpeedScale;
+			if(pathsEdgeLeft.size() != 0 && pathsEdgeRight.size() != 0)
+				_speed -= params.DepotSpeed / params.BrakeCnt;
+			else
+				_speed += params.DepotSpeed / params.BrakeCnt;
 			break;
 		}
 		}

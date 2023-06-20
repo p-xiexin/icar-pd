@@ -85,17 +85,17 @@ public:
 
         if (!isResearch)
         {
-            pointsEdgeLeft.clear();              // 初始化边缘结果
-            pointsEdgeRight.clear();             // 初始化边缘结果
-            widthBlock.clear();                  // 初始化色块数据
-            spurroad.clear();                    // 岔路信息
-            validRowsLeft = 0;                   // 边缘有效行数（左）
-            validRowsRight = 0;                  // 边缘有效行数（右）
-            flagStartBlock = true;               // 搜索到色块起始行的标志（行）
-            garageEnable = POINT(0, 0);          // 车库识别标志初始化
+            pointsEdgeLeft.clear();     // 初始化边缘结果
+            pointsEdgeRight.clear();    // 初始化边缘结果
+            widthBlock.clear();         // 初始化色块数据
+            spurroad.clear();           // 岔路信息
+            validRowsLeft = 0;          // 边缘有效行数（左）
+            validRowsRight = 0;         // 边缘有效行数（右）
+            flagStartBlock = true;      // 搜索到色块起始行的标志（行）
+            garageEnable = POINT(0, 0); // 车库识别标志初始化
             pointLeftLast = POINT(0, 0);
             pointRightLast = POINT(0, 0);
-            if(rowStart < rowCutBottom)
+            if (rowStart < rowCutBottom)
                 rowStart = rowCutBottom;
             rowStart = ROWSIMAGE - rowStart; // 默认底部起始行
         }
@@ -113,7 +113,7 @@ public:
             }
 
             flagStartBlock = false; // 搜索到色块起始行的标志（行）
-        } 
+        }
 
         //  开始识别赛道左右边缘
         for (int row = rowStart; row > rowCutUp; row--) // 有效行：10~220
@@ -170,7 +170,7 @@ public:
                         {
                             endBlock[counterBlock++] = col;
                             if (counterBlock >= end(endBlock) - begin(endBlock))
-                                break;//在记录了足够数量的色块之后，提前退出循环，以加快执行速度。
+                                break; // 在记录了足够数量的色块之后，提前退出循环，以加快执行速度。
                         }
                     }
                 }
@@ -373,10 +373,18 @@ public:
                     }
                     //------------------------------------------------------------------------------------
                 }
-                if(pointsEdgeLeft[pointsEdgeLeft.size() - 1].y > 0 || pointsEdgeRight[pointsEdgeRight.size() - 1].y < COLSIMAGE - 1)
+                if (pointsEdgeLeft[pointsEdgeLeft.size() - 1].y > 0 || pointsEdgeRight[pointsEdgeRight.size() - 1].y < COLSIMAGE - 1)
                 {
                     pointLeftLast = pointsEdgeLeft[pointsEdgeLeft.size() - 1];
                     pointRightLast = pointsEdgeRight[pointsEdgeRight.size() - 1];
+                }
+                if(pointLeftLast.y < 10)
+                {
+                    pointLeftLast.y = 10;
+                }
+                if(pointRightLast.y > COLSIMAGE - 10)
+                {
+                    pointRightLast.y = COLSIMAGE - 10;
                 }
 
                 stdevLeft = stdevEdgeCal(pointsEdgeLeft, ROWSIMAGE); // 计算边缘方差
@@ -421,7 +429,7 @@ public:
             circle(trackImage, Point(spurroad[i].y, spurroad[i].x), 3,
                    Scalar(0, 0, 255), -1); // 红色点
         }
-        if(garageEnable.x)
+        if (garageEnable.x)
         {
             line(trackImage, Point(0, garageEnable.y), Point(trackImage.cols - 1, garageEnable.y), Scalar(211, 211, 211), 1);
         }
@@ -464,6 +472,111 @@ public:
         }
         else
             return 0;
+    }
+
+    /**
+     * @brief 最小二乘法 一元线性回归
+     *
+     * @param line 边缘点集
+     * @param k    斜率，注意此处的坐标系与习惯不同
+     * @param b
+     */
+    void LeastSquare(vector<POINT> line, double &k, double &b)
+    {
+        if(line.size() < 5)
+        {
+            k = 0;
+            b = 0;
+            return;
+        }
+        double t1 = 0, t2 = 0, t3 = 0, t4 = 0;
+        uint16_t num = line.size();
+        for (int i = 0; i < num; i++)
+        {
+            t1 += line[i].x * line[i].x;
+            t2 += line[i].x;
+            t3 += line[i].y * line[i].x;
+            t4 += line[i].y;
+        }
+        k = (t3 * num - t2 * t4) / (t1 * num - t2 * t2);
+        b = (t1 * t4 - t2 * t3) / (t1 * num - t2 * t2);
+
+        return;
+    }
+    double LeastSquare(vector<POINT> line)
+    {
+        double k = 0, b = 0;
+        LeastSquare(line, k, b);
+        return k;
+    }
+
+    // 计算目标段的最小二乘斜率
+    double LeastSquare(vector<POINT> line, uint16_t start, uint16_t end)
+    {
+        double t1 = 0, t2 = 0, t3 = 0, t4 = 0;
+        uint16_t num = line.size();
+        if (start < 0 || start > num - 1 || end < 0 || end > num)
+        {
+            std::cout << "LeastSqure err !" << std::endl;
+            return 0;
+        }
+
+        for (int i = start; i < end; i++)
+        {
+            t1 += line[i].x * line[i].x;
+            t2 += line[i].x;
+            t3 += line[i].y * line[i].x;
+            t4 += line[i].y;
+        }
+        double k = (t3 * num - t2 * t4) / (t1 * num - t2 * t2);
+        // b = (t1 * t4 - t2 * t3) / (t1 * num - t2 * t2);
+
+        return k;
+    }
+
+    // 计算目标点处切线的斜率
+    double LeastSquare(vector<POINT> line, uint16_t index)
+    {
+        double t1 = 0, t2 = 0, t3 = 0, t4 = 0;
+        uint16_t num = line.size();
+        if (num < 5)
+        {
+            return 0;
+        }
+        int start = index - 2;
+        int end = index + 2;
+        if (start < 0)
+            start = 0;
+        if (end > num)
+            end = num;
+
+        for (int i = start; i < end; i++)
+        {
+            t1 += line[i].x * line[i].x;
+            t2 += line[i].x;
+            t3 += line[i].y * line[i].x;
+            t4 += line[i].y;
+        }
+        double k = (t3 * num - t2 * t4) / (t1 * num - t2 * t2);
+        // b = (t1 * t4 - t2 * t3) / (t1 * num - t2 * t2);
+
+        return k;
+    }
+
+    /**
+     * @brief 得到俯视域下的中线
+     * @param edge 摄像机坐标系下的点集
+     */
+    std::vector<POINT> line_perspective(std::vector<POINT> pointsEdgeline)
+    {
+        std::vector<POINT> perspectivePoints;
+        for (int i = 0; i < pointsEdgeline.size(); i++)
+        {
+            cv::Point2d point2d = ipm.homography(Point2d(pointsEdgeline[i].y, pointsEdgeline[i].x)); // 透视变换
+            perspectivePoints.push_back(POINT(point2d.y, point2d.x));
+        }
+
+        return perspectivePoints;
     }
 
 private:
@@ -601,86 +714,5 @@ private:
         }
 
         return vec[(int)vec.size() / 2];
-    }
-
-public:
-    /**
-     * @brief 最小二乘法 一元线性回归
-     *
-     * @param line 边缘点集
-     * @param k    斜率，注意此处的坐标系与习惯不同
-     * @param b 
-     */
-    void LeastSquare(vector<POINT> line, double& k, double& b)
-    {
-        double t1 = 0, t2 = 0, t3 = 0, t4 = 0;
-        uint16_t num = line.size();
-        for (int i = 0; i < num; i++)
-        {
-            t1 += line[i].x * line[i].x;
-            t2 += line[i].x;
-            t3 += line[i].y * line[i].x;
-            t4 += line[i].y;
-        }
-        k = (t3 * num - t2 * t4) / (t1 * num - t2 * t2);
-        b = (t1 * t4 - t2 * t3) / (t1 * num - t2 * t2);
-
-        return;
-    }
-    double LeastSquare(vector<POINT> line)
-    {
-        double k = 0, b = 0;
-        LeastSquare(line, k, b);
-        return k;
-    }
-
-    //计算目标段的最小二乘斜率
-    double LeastSquare(vector<POINT> line, uint16_t start, uint16_t end)
-    {
-        double t1 = 0, t2 = 0, t3 = 0, t4 = 0;
-        uint16_t num = line.size();
-        if(start < 0 || start > num - 1 || end < 0 || end > num)
-        {
-            std::cout << "LeastSqure err !" << std::endl;
-            return 0;
-        }
-
-        for (int i = start; i < end; i++)
-        {
-            t1 += line[i].x * line[i].x;
-            t2 += line[i].x;
-            t3 += line[i].y * line[i].x;
-            t4 += line[i].y;
-        }
-        double k = (t3 * num - t2 * t4) / (t1 * num - t2 * t2);
-        // b = (t1 * t4 - t2 * t3) / (t1 * num - t2 * t2);
-
-        return k;
-    }
-
-    //计算目标点处切线的斜率
-    double LeastSquare(vector<POINT> line, uint16_t index)
-    {
-        double t1 = 0, t2 = 0, t3 = 0, t4 = 0;
-        uint16_t num = line.size();
-        if(num < 5) {
-            return 0;
-        }
-        int start = index - 2;
-        int end = index + 2;
-        if(start < 0) start = 0;
-        if(end > num) end = num;
-
-        for (int i = start; i < end; i++)
-        {
-            t1 += line[i].x * line[i].x;
-            t2 += line[i].x;
-            t3 += line[i].y * line[i].x;
-            t4 += line[i].y;
-        }
-        double k = (t3 * num - t2 * t4) / (t1 * num - t2 * t2);
-        // b = (t1 * t4 - t2 * t3) / (t1 * num - t2 * t2);
-
-        return k;
     }
 };

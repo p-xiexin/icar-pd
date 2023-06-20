@@ -63,7 +63,7 @@ public:
      */
     bool ringRecognition(TrackRecognition &track, Mat img_bin)
     {
-        if (track.pointsEdgeRight.size() < ROWSIMAGE / 8 || track.pointsEdgeLeft.size() < ROWSIMAGE / 8) //环岛有效行限制
+        if (track.pointsEdgeRight.size() < ROWSIMAGE / 4 || track.pointsEdgeLeft.size() < ROWSIMAGE / 4) //环岛有效行限制
         {
             return ringType;
         }
