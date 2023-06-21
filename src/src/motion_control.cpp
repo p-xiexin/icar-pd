@@ -44,6 +44,9 @@ public:
         float speedCorners = 1.0;   // 贴弯速度
         float speedcoiled = 1.0;    // 连续弯道速度
 
+        float speed_and_angle_k1 = 0.0;     // 速度方向耦合方程一次项
+        float speed_and_angle_k2 = 0.0;     // 速度方向耦合方程二次项
+
         float runP1 = 0.9;          // 一阶比例系数：直线控制量
         float runP2 = 0.018;        // 二阶比例系数：弯道控制量
         float runP3 = 0.0;          // 三阶比例系数：弯道控制量
@@ -92,11 +95,11 @@ public:
         //     turnP, turnD, rowCutUp, rowCutBottom, Kp, Ki, Kd, Debug, Button, SaveImage, CloseLoop, GarageEnable, RingEnable, CrossEnable, 
         //     StopEnable, BridgeEnable, SlowzoneEnable, DepotEnable, FarmlandEnable, pathModel); // 添加构造函数
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-            Params, speedLow, speedHigh, speedAI, speedCorners, speedcoiled, runP1, runP2, runP3, runP1_ai, runP2_ai, 
-            turnP, turnD,Control_Mid, Control_Skew, Control_Down_set, Control_Up_set, ki_down_out_max, Kp_dowm, Ki_down,
-            Kp, Ki, Kd, Kv, Angle_Kp, Angle_Ki, dynamic_Mid_low, dynamic_Mid_high, Angle_target, rowCutUp, rowCutBottom, 
-            Debug, Button, SaveImage, CloseLoop, GarageEnable, RingEnable, CrossEnable, StopEnable, BridgeEnable, SlowzoneEnable, 
-            DepotEnable, FarmlandEnable, pathModel); // 添加构造函数
+            Params, speedLow, speedHigh, speedAI, speedCorners, speedcoiled, speed_and_angle_k1, speed_and_angle_k2, 
+            runP1, runP2, runP3, runP1_ai, runP2_ai, turnP, turnD,Control_Mid, Control_Skew, Control_Down_set, Control_Up_set, 
+            ki_down_out_max, Kp_dowm, Ki_down, Kp, Ki, Kd, Kv, Angle_Kp, Angle_Ki, dynamic_Mid_low, dynamic_Mid_high, 
+            Angle_target, rowCutUp, rowCutBottom,  Debug, Button, SaveImage, CloseLoop, GarageEnable, RingEnable, CrossEnable, 
+            StopEnable, BridgeEnable, SlowzoneEnable, DepotEnable, FarmlandEnable, pathModel); // 添加构造函数
     };
 
 
@@ -119,99 +122,176 @@ public:
     int         line_Mid_Num = 0;               // 控制打角点个数
     int         line_Up_Num = 0;                // 远处点个数
 
+    // 模糊控制，用于速度控制
     float       Arr_Fuzzy_Error[7] = {-60,-40,-20,0,20,40,60};
     float       Arr_Fuzzy_dError[7] = {-60,-40,-20,0,20,40,60};
-    float       Arr_Fuzzy_PWM[7][7] = {1100.0,1275.5,1345.0,1375.0,1395.5,1450.5,1500.0,
-                                       1175.5,1275.5,1275.0,1387.5,1387.5,1500.0,1500.0,
-                                       1275.5,1275.0,1420.5,1500.0,1500.0,1612.5,1612.5,
-                                       1345.0,1387.5,1500.0,1500.0,1500.0,1612.5,1725.0,
-                                       1417.5,1387.5,1500.0,1500.0,1580.5,1725.0,1837.5,
-                                       1500.0,1500.0,1612.5,1612.5,1725.0,1725.0,1920.5,
-                                       1500.0,1550.5,1605.5,1725.0,1755.0,1837.5,1900.0};
-
+    float       Arr_Fuzzy_Speed[7][7] = {0.75,0.75,0.75,0.76,0.77,0.78,0.80,
+                                         0.75,0.76,0.76,0.76,0.80,0.80,0.80,
+                                         0.75,0.77,0.80,0.95,0.85,0.80,0.76,
+                                         0.76,0.80,0.90,1.00,0.90,0.80,0.77,
+                                         0.76,0.80,0.85,0.95,0.80,0.77,0.75,
+                                         0.80,0.80,0.80,0.76,0.76,0.76,0.76,
+                                         0.80,0.78,0.77,0.76,0.75,0.75,0.75};
 
     /**********角偏线偏串级相关参数定义**************/
     double      Angle_rad = 0.0;
-    double      k = 0.0;
+    double      CenterLine_k = 0.0;
     double      Mid_line = 160.0;               //角偏环输出
 
 
+    // /**
+    //  * @brief 变加速控制
+    //  * @param up_speed_enable 加速使能
+    //  * @param control 小车控制类
+    //  */
+    // void speedController(bool up_speed_enable, ControlCenterCal control) 
+    // {
+    //     // 控制率，在符合加速条件，并且一段时间后，开始加速，不然低速跑
+    //     uint8_t controlLow = 0;             // 速度控制计数器，限幅最低阈值
+    //     uint8_t controlspeedCorners = 3;    // 贴弯控制率，3帧图片，就加速
+    //     uint8_t controlMid = 3;             // 速度控制计数器，3帧图片就提速
+    //     uint8_t controlHigh = 10;           // 速度控制计数器，限幅最高阈值
+
+    //     if(up_speed_enable) // 加速使能
+    //     {
+    //         // 连续转弯，慢速行驶
+    //         if (control.style == "RIGHTCC" || control.style == "LEFTCC")
+    //         {
+    //             //发送的电机速度，最低速
+    //             motorSpeed = params.speedcoiled;
+    //             //变速计数器清零
+    //             counterShift = controlLow;
+    //             return;
+    //         }
+    //         // 急转弯中，不单边
+    //         else if (control.style == "RIGHT" || control.style == "LEFT")     
+    //         {
+    //             //发送的电机速度，最低速
+    //             motorSpeed = params.speedCorners;
+    //             return;
+    //         }
+    //         // 急转弯中，且单边，说明贴线行驶，可加速
+    //         else if (control.style == "RIGHT_D" || control.style == "LEFT_D")     
+    //         {
+    //             //发送的电机速度，最低速
+    //             motorSpeed = params.speedLow;
+    //             return;
+    //         }
+
+    //         // 直道
+    //         else if(control.style == "STRIGHT")
+    //         {
+    //             if (abs(control.sigmaCenter) < 100.0)
+    //             {
+    //                 //符合加速条件，开始计数
+    //                 counterShift++;
+    //                 //在符合条件下，达到计数长度上限
+    //                 if (counterShift > controlHigh)
+    //                     counterShift = controlHigh;
+
+    //                 //判断是加速还是减速
+    //                 if (counterShift > controlMid)
+    //                     motorSpeed = params.speedHigh;
+    //                 else
+    //                     motorSpeed = params.speedLow;
+    //             }
+    //             else    //控制线比较弯曲，并且持续一段时间，减速
+    //             {
+    //                 counterShift--;
+    //                 //在符合条件下，达到计数长度下限
+    //                 if (counterShift < controlLow)
+    //                     counterShift = controlLow;
+
+    //                 //判断是加速还是减速
+    //                 if (counterShift > controlMid)
+    //                     motorSpeed = params.speedHigh;
+    //                 else
+    //                     motorSpeed = params.speedLow;
+    //             }
+    //         }
+    //     }
+    //     else    //没有任何操作，最低速跑车
+    //     {
+    //         counterShift = controlLow;
+    //         motorSpeed = params.speedLow;
+    //     }
+    // }
+
+
     /**
-     * @brief 变加速控制
+     * @brief 基于模糊控制的变加速控制
      * @param up_speed_enable 加速使能
      * @param control 小车控制类
      */
-    void speedController(bool up_speed_enable, ControlCenterCal control) 
+    void speedController(ControlCenterCal control)
     {
-        // 控制率，在符合加速条件，并且一段时间后，开始加速，不然低速跑
-        uint8_t controlLow = 0;             // 速度控制计数器，限幅最低阈值
-        uint8_t controlspeedCorners = 3;    // 贴弯控制率，3帧图片，就加速
-        uint8_t controlMid = 3;             // 速度控制计数器，3帧图片就提速
-        uint8_t controlHigh = 10;           // 速度控制计数器，限幅最高阈值
+        // 记录前一次的偏差
+        static float errorLast = 0;                                     //定义上一次的偏差
+        float derror = error - errorLast;                               //derror
+        errorLast = error;                                              //上一次的偏差
 
-        if(up_speed_enable) // 加速使能
+        float **arr_fuzzy_error = (float **)malloc(2 * sizeof(float *));
+        for (int i = 0; i < 2; i++)
         {
-            // 连续转弯，慢速行驶
-            if (control.style == "RIGHTCC" || control.style == "LEFTCC")
-            {
-                //发送的电机速度，最低速
-                motorSpeed = params.speedcoiled;
-                //变速计数器清零
-                counterShift = controlLow;
-                return;
-            }
-            // 急转弯中，且单边，说明贴线行驶，可加速
-            else if (control.style == "RIGHT" || control.style == "LEFT")     
-            {
-                //发送的电机速度，最低速
-                motorSpeed = params.speedCorners;
-                return;
-            }
-            // 急转弯中，且单边，说明贴线行驶，可加速
-            else if (control.style == "RIGHT_D" || control.style == "LEFT_D")     
-            {
-                //发送的电机速度，最低速
-                motorSpeed = params.speedLow;
-                return;
-            }
-
-            // 直道
-            else if(control.style == "STRIGHT")
-            {
-                if (abs(control.sigmaCenter) < 100.0)
-                {
-                    //符合加速条件，开始计数
-                    counterShift++;
-                    //在符合条件下，达到计数长度上限
-                    if (counterShift > controlHigh)
-                        counterShift = controlHigh;
-
-                    //判断是加速还是减速
-                    if (counterShift > controlMid)
-                        motorSpeed = params.speedHigh;
-                    else
-                        motorSpeed = params.speedLow;
-                }
-                else    //控制线比较弯曲，并且持续一段时间，减速
-                {
-                    counterShift--;
-                    //在符合条件下，达到计数长度下限
-                    if (counterShift < controlLow)
-                        counterShift = controlLow;
-
-                    //判断是加速还是减速
-                    if (counterShift > controlMid)
-                        motorSpeed = params.speedHigh;
-                    else
-                        motorSpeed = params.speedLow;
-                }
-            }
+            arr_fuzzy_error[i] = (float *)malloc(2 * sizeof(float));
         }
-        else    //没有任何操作，最低速跑车
+        arr_fuzzy_error = Get_FuzzyRule(error);
+        
+        float **arr_fuzzy_derror = (float **)malloc(2 * sizeof(float *));
+        for (int i = 0; i < 2; i++)
         {
-            counterShift = controlLow;
-            motorSpeed = params.speedLow;
+            arr_fuzzy_derror[i] = (float *)malloc(2 * sizeof(float));
         }
+        arr_fuzzy_derror = Get_FuzzyRule(derror);
+
+        // 速度比例系数，急弯系数小，最大值为1
+        float speed_k = Arr_Fuzzy_Speed[(int)arr_fuzzy_derror[0][0]][(int)arr_fuzzy_error[0][0]] * arr_fuzzy_error[1][0] * arr_fuzzy_derror[1][0] +      //error和derror都小值
+                        Arr_Fuzzy_Speed[(int)arr_fuzzy_derror[0][0]][(int)arr_fuzzy_error[0][1]] * arr_fuzzy_error[1][1] * arr_fuzzy_derror[1][0] +      //error大值、derror小值
+                        Arr_Fuzzy_Speed[(int)arr_fuzzy_derror[0][1]][(int)arr_fuzzy_error[0][0]] * arr_fuzzy_error[1][0] * arr_fuzzy_derror[1][1] +      //error小值、derror大值
+                        Arr_Fuzzy_Speed[(int)arr_fuzzy_derror[0][1]][(int)arr_fuzzy_error[0][1]] * arr_fuzzy_error[1][1] * arr_fuzzy_derror[1][1];       //error和derror都大值
+
+        // 实际给定速度
+        motorSpeed = params.speedHigh * speed_k;
+
+        for(int i=0;i<2;i++)
+        {
+            delete []arr_fuzzy_error[i];
+        }
+        delete []arr_fuzzy_error;
+
+        for(int i=0;i<2;i++)
+        {
+            delete []arr_fuzzy_derror[i];
+        }
+        delete []arr_fuzzy_derror;
+    }
+
+
+    /**
+     * @brief 基于角偏的变加速控制
+     * @param up_speed_enable 加速使能
+     * @param control 小车控制类
+     */
+    void speedControl(ControlCenterCal control) 
+    {
+        if(control.centerEdge.size() < 1){
+            return;
+        }
+
+        // 计算拟合函数的k值
+        // float speed_and_angle_k = abs(CenterLine_k) * params.speed_and_angle_k2 + params.speed_and_angle_k1;
+
+        // 实际速度给定控制
+        // motorSpeed = params.speedHigh - speed_and_angle_k * abs(CenterLine_k);
+        double y_offset = ROWSIMAGE - control.centerEdge[0].x - params.rowCutBottom;
+        double x_offset = abs(control.centerEdge[0].y - Mid_line);
+        if(y_offset > 60)
+            y_offset = 60;
+        motorSpeed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(abs(CenterLine_k)) - y_offset / 40 - x_offset / 100;
+
+        // 最低速限制
+        if(motorSpeed < 0.8)
+            motorSpeed = 0.8;
     }
 
 
@@ -330,53 +410,56 @@ public:
     // }
 
 
-    // // 得到Error隶属度或者dError
-    // float** Get_FuzzyRule(float Error)
-    // {
-    //     float** arr = (float**)malloc(2*sizeof(float*));
-    //     for(int i=0;i<2;i++)
-    //     {
-    //         arr[i] = (float*)malloc(2*sizeof(float));
-    //     }
+    /**
+     * @brief 得到Error隶属度或者dError
+     * @param Error 智能车打角偏差
+     */
+    float** Get_FuzzyRule(float Error)
+    {
+        float** arr = (float**)malloc(2*sizeof(float*));
+        for(int i=0;i<2;i++)
+        {
+            arr[i] = (float*)malloc(2*sizeof(float));
+        }
 
-    //     for(int i = 0;i < 7;i++)
-    //     {
-    //         if(Error < Arr_Fuzzy_dError[i])
-    //         {
-    //             if(i == 0)
-    //             {
-    //                 arr[0][0] = 0;      //小值
-    //                 arr[0][1] = 0;      //大值
-    //                 arr[1][0] = 0;      //小值的隶属度
-    //                 arr[1][1] = 1;      //大值的隶属度
-    //                 break;
-    //             }
-    //             arr[0][0] = i -1;
-    //             arr[0][1] = i;
-    //             arr[1][0] = (Arr_Fuzzy_dError[i] - Error) / (Arr_Fuzzy_dError[i] - Arr_Fuzzy_dError[i-1]);
-    //             arr[1][1] = 1 - arr[1][0];
-    //             break;
-    //         }
+        for(int i = 0;i < 7;i++)
+        {
+            if(Error < Arr_Fuzzy_dError[i])
+            {
+                if(i == 0)
+                {
+                    arr[0][0] = 0;      //小值
+                    arr[0][1] = 0;      //大值
+                    arr[1][0] = 0;      //小值的隶属度
+                    arr[1][1] = 1;      //大值的隶属度
+                    break;
+                }
+                arr[0][0] = i -1;
+                arr[0][1] = i;
+                arr[1][0] = (Arr_Fuzzy_dError[i] - Error) / (Arr_Fuzzy_dError[i] - Arr_Fuzzy_dError[i-1]);
+                arr[1][1] = 1 - arr[1][0];
+                break;
+            }
 
-    //         if(i == 6 && Error > Arr_Fuzzy_dError[i])
-    //         {
-    //             arr[0][0] = 6;      //小值
-    //             arr[0][1] = 6;      //大值
-    //             arr[1][0] = 1;      //小值的隶属度
-    //             arr[1][1] = 0;      //大值的隶属度
-    //             break;
-    //         }
-    //     }
+            if(i == 6 && Error > Arr_Fuzzy_dError[i])
+            {
+                arr[0][0] = 6;      //小值
+                arr[0][1] = 6;      //大值
+                arr[1][0] = 1;      //小值的隶属度
+                arr[1][1] = 0;      //大值的隶属度
+                break;
+            }
+        }
 
-    //     return arr;
+        return arr;
 
-    //     //释放空间
-    //     for(int i=0;i<2;i++)
-    //     {
-    //         delete []arr[i];
-    //     }
-    //     delete []arr;
-    // }
+        //释放空间
+        for(int i=0;i<2;i++)
+        {
+            delete []arr[i];
+        }
+        delete []arr;
+    }
 
 
 
@@ -399,11 +482,11 @@ public:
                 Line_offset_down += controlCenter.centerEdge[i].y;
                 line_down_Num++;
             }
-            // else if(controlCenter.centerEdge[i].x <= (ROWSIMAGE - params.Control_Down_set) && controlCenter.centerEdge[i].x > (ROWSIMAGE - params.Control_Up_set))
-            // {
-            //     Line_offset_mid += (controlCenter.centerEdge[i].y - params.Control_Mid);
-            //     line_Mid_Num++;
-            // }
+            else if(controlCenter.centerEdge[i].x <= (ROWSIMAGE - params.Control_Down_set) && controlCenter.centerEdge[i].x > (ROWSIMAGE - params.Control_Up_set))
+            {
+                Line_offset_mid += controlCenter.centerEdge[i].y;
+                line_Mid_Num++;
+            }
             else if(controlCenter.centerEdge[i].x <= (ROWSIMAGE - params.Control_Up_set))
             {
                 Line_offset_up += controlCenter.centerEdge[i].y;
@@ -420,13 +503,13 @@ public:
         else
             Line_offset_down = COLSIMAGE / 2;
         
-        // if(line_Mid_Num != 0)
-        // {
-        //     Line_offset_mid = Line_offset_mid / line_Mid_Num;
-        //     line_Mid_Num = 0;
-        // }
-        // else
-        //     Line_offset_mid = 0;
+        if(line_Mid_Num != 0)
+        {
+            Line_offset_mid = Line_offset_mid / line_Mid_Num;
+            line_Mid_Num = 0;
+        }
+        else
+            Line_offset_mid = COLSIMAGE / 2;
 
         if(line_Up_Num != 0)
         {
@@ -437,21 +520,25 @@ public:
             Line_offset_up = COLSIMAGE / 2;
 
         /**********角偏控制**************/
-        k = track.LeastSquare(line_perspective);
-        // Angle_rad = atan(k);
+        CenterLine_k = track.LeastSquare(line_perspective);
+        float centerline_in_this_function_k = CenterLine_k;
+        // Angle_rad = atan(CenterLine_k);
         // 角偏积分项
         static float Angle_Iout = 0;
-        Angle_Iout += params.Ki_down * k;
+        Angle_Iout += params.Ki_down * CenterLine_k;
         // 积分项限幅
         if(Angle_Iout >= params.ki_down_out_max)
             Angle_Iout = params.ki_down_out_max;
         else if(Angle_Iout <= -params.ki_down_out_max) 
             Angle_Iout = -params.ki_down_out_max;
         // 达到目标值动态中线积分项清除
-        if(abs(k) <= params.Angle_target)
+        if(abs(CenterLine_k) <= params.Angle_target)
+        {
             Angle_Iout *= 0.5;
+            centerline_in_this_function_k = 0;
+        }
         // 动态中线输出值
-        Mid_line = params.Control_Mid + (params.Angle_Kp * k + Angle_Iout);
+        Mid_line = params.Control_Mid + (params.Angle_Kp * centerline_in_this_function_k + Angle_Iout);
         // 动态中线限幅
         if(Mid_line <= params.dynamic_Mid_low)
             Mid_line = params.dynamic_Mid_low;
@@ -459,7 +546,7 @@ public:
             Mid_line = params.dynamic_Mid_high;
 
         /**********线偏控制**************/
-        error = Line_offset_down - Mid_line;
+        error = Line_offset_mid - Mid_line;
         static float errorLast = 0;
 
         // 限幅计算

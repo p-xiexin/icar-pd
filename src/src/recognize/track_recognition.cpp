@@ -378,13 +378,13 @@ public:
                     pointLeftLast = pointsEdgeLeft[pointsEdgeLeft.size() - 1];
                     pointRightLast = pointsEdgeRight[pointsEdgeRight.size() - 1];
                 }
-                if(pointLeftLast.y < 10)
+                if(pointLeftLast.y < 30)
                 {
-                    pointLeftLast.y = 10;
+                    pointLeftLast.y = 30;
                 }
-                if(pointRightLast.y > COLSIMAGE - 10)
+                if(pointRightLast.y > COLSIMAGE - 30)
                 {
-                    pointRightLast.y = COLSIMAGE - 10;
+                    pointRightLast.y = COLSIMAGE - 30;
                 }
 
                 stdevLeft = stdevEdgeCal(pointsEdgeLeft, ROWSIMAGE); // 计算边缘方差
@@ -434,9 +434,9 @@ public:
             line(trackImage, Point(0, garageEnable.y), Point(trackImage.cols - 1, garageEnable.y), Scalar(211, 211, 211), 1);
         }
 
-        putText(trackImage, to_string(validRowsRight) + " " + to_string(stdevRight), Point(COLSIMAGE - 100, ROWSIMAGE - 50),
+        putText(trackImage, to_string(pointsEdgeRight.size()) + " " + to_string(stdevRight), Point(COLSIMAGE - 100, ROWSIMAGE - 50),
                 FONT_HERSHEY_TRIPLEX, 0.3, Scalar(0, 0, 255), 1);
-        putText(trackImage, to_string(validRowsLeft) + " " + to_string(stdevLeft), Point(20, ROWSIMAGE - 50),
+        putText(trackImage, to_string(pointsEdgeLeft.size()) + " " + to_string(stdevLeft), Point(20, ROWSIMAGE - 50),
                 FONT_HERSHEY_TRIPLEX, 0.3, Scalar(0, 0, 255), 1);
     }
 

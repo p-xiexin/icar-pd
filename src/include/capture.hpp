@@ -50,7 +50,7 @@ public:
         _cap->set(cv::CAP_PROP_FPS, _rate);
         _cap->set(cv::CAP_PROP_FRAME_WIDTH, _col);
         _cap->set(cv::CAP_PROP_FRAME_HEIGHT, _row);
-        _cap->set(cv::CAP_PROP_ZOOM, 14);
+        _cap->set(cv::CAP_PROP_ZOOM, 12);
         {
             // _cap->set(cv::CAP_PROP_BRIGHTNESS, 28);    //亮度
             // _cap->set(cv::CAP_PROP_CONTRAST, 50);      //对比度

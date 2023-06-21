@@ -82,12 +82,12 @@ public:
                 if (counterRec)
                 {
                     counterLinear++;
-                    if (counterLinear > 25)
+                    if (counterLinear > 15)
                     {
                         counterLinear = 0;
                         counterRec = 0;
                     }
-                    if (counterRec > 15)
+                    if (counterRec > 10)
                     {
                         crossroadType = CrossroadType::CrossroadLeft; // 左入十字
                         break;
@@ -219,12 +219,12 @@ public:
                 if (counterRec)
                 {
                     counterLinear++;
-                    if (counterLinear > 25)
+                    if (counterLinear > 15)
                     {
                         counterLinear = 0;
                         counterRec = 0;
                     }
-                    if (counterRec > 15)
+                    if (counterRec > 10)
                     {
                         crossroadType = CrossroadType::CrossroadRight; // 右入十字
                         break;
@@ -353,25 +353,30 @@ public:
             bool repairedR = false;
             uint16_t counterStrightA = 0; // 计数器
             uint16_t counterStrightB = 0; // 计数器
-            for (int i = 2; i < track.widthBlock.size() - 10; i++)
+            if((track.stdevLeft > 65 && track.stdevRight > 65)
+                || (track.stdevLeft < 65 && track.stdevRight > 300) 
+                || (track.stdevLeft > 300 && track.stdevRight < 65))
             {
-                // 直入十字判断
-                if (track.widthBlock[i].y > COLSIMAGE - 5 && track.stdevLeft > 65 && track.stdevRight > 65)
+                for (int i = 2; i < track.widthBlock.size() - 10; i++)
                 {
-                    counterStrightA++;
-                }
-                if (counterStrightA)
-                {
-                    counterStrightB++;
-                    if (counterStrightB > 30)
+                    // 直入十字判断
+                    if (track.widthBlock[i].y > COLSIMAGE - 5)
                     {
-                        counterStrightB = 0;
-                        counterStrightA = 0;
+                        counterStrightA++;
                     }
-                    if (counterStrightA > 20) // 连续20行全宽
+                    if (counterStrightA)
                     {
-                        crossroadType = CrossroadType::CrossroadStraight; // 直入十字
-                        break;
+                        counterStrightB++;
+                        if (counterStrightB > 30)
+                        {
+                            counterStrightB = 0;
+                            counterStrightA = 0;
+                        }
+                        if (counterStrightA > 20) // 连续20行全宽
+                        {
+                            crossroadType = CrossroadType::CrossroadStraight; // 直入十字
+                            break;
+                        }
                     }
                 }
             }

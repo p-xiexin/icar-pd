@@ -440,11 +440,11 @@ int main(int argc, char *argv[])
 					motionController.motorSpeed = farmlandAvoidance.get_speed();
 					break;
 				}
-				case RoadType::RingHandle:
-				{
-					motionController.motorSpeed = motionController.params.speedLow;
-					break;
-				}
+				// case RoadType::RingHandle:
+				// {
+				// 	motionController.motorSpeed = motionController.params.speedLow;
+				// 	break;
+				// }
 				default:
 				{
 					// 智能车变速度控制
@@ -454,7 +454,8 @@ int main(int argc, char *argv[])
 					}
                     else
                     {
-                        motionController.speedController(true, controlCenterCal);
+                        // motionController.speedController(controlCenterCal, motionController.k);
+                        motionController.speedControl(controlCenterCal);
                     }
 					break;
 				}
@@ -535,12 +536,17 @@ int main(int argc, char *argv[])
             {
                 circle(imageTrack, Point(controlCenterCal.centerEdge[i].y, controlCenterCal.centerEdge[i].x), 1, Scalar(0, 0, 255), -1);
             }
-            putText(imageTrack,"FPS: " + formatDoble2String(detFPS, 2), Point(20, 20), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1); // 车速
+            putText(imageTrack, "FPS: " + formatDoble2String(detFPS, 2), Point(20, 20), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1); // 车速
             putText(imageTrack, "PWM:" + formatDoble2String(motionController.servoPwm,2), Point(20,40),FONT_HERSHEY_PLAIN, 1, Scalar(0,0,255), 1);  //下发的pwm值
             putText(imageTrack, "ERROR:" + formatDoble2String(motionController.error, 2), Point(20,60), FONT_HERSHEY_PLAIN, 1, Scalar(0,0,255), 1);  //下发的pwm值
-            putText(imageTrack, "K:" + formatDoble2String(motionController.k, 4), Point(20,80), FONT_HERSHEY_PLAIN, 1, Scalar(0,0,255), 1);
+            putText(imageTrack, "K:" + formatDoble2String(motionController.CenterLine_k, 4), Point(20,80), FONT_HERSHEY_PLAIN, 1, Scalar(0,0,255), 1);
             putText(imageTrack, "Mid:" + formatDoble2String(motionController.Mid_line, 2), Point(20,100), FONT_HERSHEY_PLAIN, 1, Scalar(0,0,255), 1);
+            putText(imageTrack, "Speed: " + formatDoble2String(motionController.motorSpeed, 2), Point(COLSIMAGE / 2 + 20, 20), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1);
+            putText(imageTrack, controlCenterCal.style, Point(COLSIMAGE / 2 + 20, 40), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1); // 赛道类型
+
             line(imageTrack, Point(COLSIMAGE / 2, 0), Point(COLSIMAGE / 2, ROWSIMAGE - 1), Scalar(200, 200, 200), 1);
+            line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_Up_set), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_Up_set), 
+                    Scalar(200, 200, 200), 1);
             savePicture(imageTrack, roadType, AI_enable);
 		}
     }
