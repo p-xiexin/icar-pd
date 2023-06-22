@@ -519,11 +519,11 @@ public:
         /**********转弯撞线前馈计算**************/
         compensation_error = 0;
         // 左边与中线撞线的点
-        if((controlCenter.intersectionLeft.x < 180 && controlCenter.intersectionLeft.x > ROWSIMAGE / 2) && controlCenter.intersectionRight.x ==0)
-            compensation_error = (controlCenter.intersectionLeft.x - ROWSIMAGE / 2) * params.Line_compensation_coefficient;
+        if((controlCenter.intersectionLeft.x < 195 && controlCenter.intersectionLeft.x > 110) && controlCenter.intersectionRight.x ==0)
+            compensation_error = (controlCenter.intersectionLeft.x - 110) * params.Line_compensation_coefficient;
         // 右边与中线撞线的点
-        if((controlCenter.intersectionRight.x < 180 && controlCenter.intersectionRight.x > ROWSIMAGE / 2) && controlCenter.intersectionLeft.x ==0)
-            compensation_error = -(controlCenter.intersectionRight.x - ROWSIMAGE / 2) * params.Line_compensation_coefficient;
+        if((controlCenter.intersectionRight.x < 195 && controlCenter.intersectionRight.x > 110) && controlCenter.intersectionLeft.x ==0)
+            compensation_error = -(controlCenter.intersectionRight.x - 110) * params.Line_compensation_coefficient;
 
 
         /**********角偏控制**************/

@@ -1,6 +1,6 @@
 {
-    "speedLow": 1.5,
-    "speedHigh": 2.15,
+    "speedLow": 1.55,
+    "speedHigh": 2.25,
     "speedAI": 1.4,
     "speedCorners": 1.5,
     "speedcoiled": 1.4,
@@ -8,11 +8,11 @@
     "speed_and_angle_k1": 0.04,
     "speed_and_angle_k2": 3.8,
 
-    "runP1": 1.35,
+    "runP1": 1.247,
     "runP2": 0.0223,
     "runP3": 0.00012,
     "turnP": 3.5,
-    "turnD": 5.8,
+    "turnD": 5.76,
 
     "Kp": 10000,
     "Ki": 240,
@@ -26,12 +26,12 @@
     "Angle_target": 0.20,
 
     "Control_Mid": 160,
-    "Control_Down_set": 20,
-    "Control_Up_set": 170,
+    "Control_Down_set": 21,
+    "Control_Up_set": 175,
     "ki_down_out_max": 2.0,
     "Kp_dowm": 0.0,
     "Ki_down": 0.0,
-    "Line_compensation_coefficient": 0.2,
+    "Line_compensation_coefficient": 0.18,
 
     "rowCutUp": 40,
     "rowCutBottom": 10,

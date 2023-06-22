@@ -719,7 +719,7 @@ private:
     POINT searchLeftIntersection(std::vector<POINT> pointsEdgeLeft)
     {
         POINT Intersection = POINT(0, 0);
-        for(int i = 0; pointsEdgeLeft[i].x > ROWSIMAGE / 2; i++)
+        for(int i = 0; pointsEdgeLeft[i].x > ROWSIMAGE - COLSIMAGE / 2; i++)
         {
             if(pointsEdgeLeft[i].y >= COLSIMAGE / 2)
             {
@@ -738,7 +738,7 @@ private:
     POINT searchRightIntersection(std::vector<POINT> pointsEdgeRight)
     {
         POINT Intersection = POINT(0, 0);
-        for(int i = 0; pointsEdgeRight[i].x > ROWSIMAGE / 2; i++)
+        for(int i = 0; pointsEdgeRight[i].x > ROWSIMAGE - COLSIMAGE / 2; i++)
         {
             if(pointsEdgeRight[i].y <= COLSIMAGE / 2)
             {
