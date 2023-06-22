@@ -37,7 +37,6 @@ public:
      */
     struct Params 
     {
-        // int MidLine = 160;          // 图像控制中线
         float speedLow = 1.0;       // 智能车最低速
         float speedHigh = 1.0;      // 智能车最高速
         float speedAI = 1.0;        // ai识别速度
@@ -50,8 +49,6 @@ public:
         float runP1 = 0.9;          // 一阶比例系数：直线控制量
         float runP2 = 0.018;        // 二阶比例系数：弯道控制量
         float runP3 = 0.0;          // 三阶比例系数：弯道控制量
-        float runP1_ai = 1.0;       // ai一阶比例系数：直线控制量
-        float runP2_ai = 1.0;       // ai二阶比例系数：弯道控制量
         float turnP = 3.5;          // 一阶比例系数：转弯控制量
         float turnD = 3.5;          // 一阶微分系数：转弯控制量
 
@@ -67,12 +64,12 @@ public:
         float Angle_target = 0.1;
 
         int Control_Mid = 160;              // 控制中线
-        int Control_Skew = 20;              // 路径规划线偏
         int Control_Down_set = 20;          // 图像近处点界限
         int Control_Up_set = 190;           // 图像远处点界限
         float ki_down_out_max;              // 近处点积分项限幅
         float Kp_dowm = 1.0;                // 近处点pi控制kp
         float Ki_down = 0.1;                // 近处点pi控制ki
+        float Line_compensation_coefficient;// 线偏前馈补偿系数
 
         uint16_t rowCutUp = 30;     // 图像顶部切行
         uint16_t rowCutBottom = 10; // 图像顶部切行
@@ -83,21 +80,17 @@ public:
         bool CloseLoop = true;
         bool GarageEnable = false;   // 出入库使能
         bool RingEnable = false;     // 环岛使能
-        bool CrossEnable = true;    // 十字使能
+        bool CrossEnable = true;     // 十字使能
         bool StopEnable = false;     // 冲出赛道停止使能
         bool BridgeEnable = false;
         bool SlowzoneEnable = false;
         bool DepotEnable = false;
         bool FarmlandEnable = false;
         string pathModel = "res/model/yolov3_mobilenet_v1";
-        // NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-        //     Params, MidLine, speedLow, speedHigh, speedAI, speedCorners, speedcoiled, runP1, runP2, runP3, runP1_ai, runP2_ai, 
-        //     turnP, turnD, rowCutUp, rowCutBottom, Kp, Ki, Kd, Debug, Button, SaveImage, CloseLoop, GarageEnable, RingEnable, CrossEnable, 
-        //     StopEnable, BridgeEnable, SlowzoneEnable, DepotEnable, FarmlandEnable, pathModel); // 添加构造函数
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
             Params, speedLow, speedHigh, speedAI, speedCorners, speedcoiled, speed_and_angle_k1, speed_and_angle_k2, 
-            runP1, runP2, runP3, runP1_ai, runP2_ai, turnP, turnD,Control_Mid, Control_Skew, Control_Down_set, Control_Up_set, 
-            ki_down_out_max, Kp_dowm, Ki_down, Kp, Ki, Kd, Kv, Angle_Kp, Angle_Ki, dynamic_Mid_low, dynamic_Mid_high, 
+            runP1, runP2, runP3, turnP, turnD,Control_Mid, Control_Down_set, Control_Up_set, ki_down_out_max, Kp_dowm, 
+            Ki_down, Line_compensation_coefficient, Kp, Ki, Kd, Kv, Angle_Kp, Angle_Ki, dynamic_Mid_low, dynamic_Mid_high, 
             Angle_target, rowCutUp, rowCutBottom,  Debug, Button, SaveImage, CloseLoop, GarageEnable, RingEnable, CrossEnable, 
             StopEnable, BridgeEnable, SlowzoneEnable, DepotEnable, FarmlandEnable, pathModel); // 添加构造函数
     };
@@ -112,6 +105,7 @@ public:
 
     Params      params;                         // 读取控制参数
     uint16_t    servoPwm = PWMSERVOMID;         // 舵机打角     
+    float       compensation_error = 0;         // 线偏前馈
     float       error = 0;                      // 线偏
     float       motorSpeed  = 1.0;              // 发送给电机的速度
     float       Line_offset_down;               // 近处点线偏 
@@ -132,6 +126,7 @@ public:
                                          0.76,0.80,0.85,0.95,0.80,0.77,0.75,
                                          0.80,0.80,0.80,0.76,0.76,0.76,0.76,
                                          0.80,0.78,0.77,0.76,0.75,0.75,0.75};
+
 
     /**********角偏线偏串级相关参数定义**************/
     double      Angle_rad = 0.0;
@@ -470,7 +465,7 @@ public:
      */
     void Angle_Controller(ControlCenterCal controlCenter, TrackRecognition track)
     {
-        // 线偏计算
+        /**********线偏均值计算**************/
         Line_offset_down = 0;
         Line_offset_up = 0;
         vector<POINT> line_perspective = track.line_perspective(controlCenter.centerEdge);  //得到俯视域的中线，算斜率
@@ -494,7 +489,8 @@ public:
             }
         }
 
-        // 线偏值具体计算
+
+        /**********线偏值具体计算**************/
         if(line_down_Num != 0)
         {
             Line_offset_down = Line_offset_down / line_down_Num;
@@ -518,6 +514,17 @@ public:
         }
         else
             Line_offset_up = COLSIMAGE / 2;
+
+
+        /**********转弯撞线前馈计算**************/
+        compensation_error = 0;
+        // 左边与中线撞线的点
+        if((controlCenter.intersectionLeft.x < 180 && controlCenter.intersectionLeft.x > ROWSIMAGE / 2) && controlCenter.intersectionRight.x ==0)
+            compensation_error = (controlCenter.intersectionLeft.x - ROWSIMAGE / 2) * params.Line_compensation_coefficient;
+        // 右边与中线撞线的点
+        if((controlCenter.intersectionRight.x < 180 && controlCenter.intersectionRight.x > ROWSIMAGE / 2) && controlCenter.intersectionLeft.x ==0)
+            compensation_error = -(controlCenter.intersectionRight.x - ROWSIMAGE / 2) * params.Line_compensation_coefficient;
+
 
         /**********角偏控制**************/
         CenterLine_k = track.LeastSquare(line_perspective);
@@ -556,7 +563,7 @@ public:
         // 计算动态线偏P值
         params.turnP = abs(error) * abs(error) * params.runP3 + abs(error) * params.runP2 + params.runP1;
 
-        int pwmDiff = (error * params.turnP) + (error - errorLast) * params.turnD;
+        int pwmDiff = ((error + compensation_error) * params.turnP) + (error - errorLast) * params.turnD;
         errorLast = error;
 
         // PWM转换

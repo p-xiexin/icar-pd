@@ -11,8 +11,6 @@
     "runP1": 1.35,
     "runP2": 0.0223,
     "runP3": 0.00012,
-    "runP1_ai": 1.58,
-    "runP2_ai": 0.0273,
     "turnP": 3.5,
     "turnD": 5.8,
 
@@ -28,12 +26,12 @@
     "Angle_target": 0.20,
 
     "Control_Mid": 160,
-    "Control_Skew": 20,
     "Control_Down_set": 20,
     "Control_Up_set": 170,
     "ki_down_out_max": 2.0,
     "Kp_dowm": 0.0,
     "Ki_down": 0.0,
+    "Line_compensation_coefficient": 0.2,
 
     "rowCutUp": 40,
     "rowCutBottom": 10,
@@ -65,6 +63,10 @@
             "#runP1": "一阶比例系数：直线控制量",
             "#runP2": "二阶比例系数：弯道控制量",
             "#runP3": "三阶比例系数：弯道控制量",
+            "#runP3": "三阶比例系数：弯道控制量",
+            "#runP1_ai": "ai识别的一阶比例系数：转弯控制量",
+            "#runP2_ai": "ai识别的二阶微分系数：转弯控制量",        
+            "#runP3": "三阶比例系数：弯道控制量", 
             "#runP1_ai": "ai识别的一阶比例系数：转弯控制量",
             "#runP2_ai": "ai识别的二阶微分系数：转弯控制量",        
             "#turnP": "一阶比例系数：转弯控制量",
@@ -82,12 +84,12 @@
             "#Angle_target": "角偏目标值范围",
              
             "#Control_Mid": "控制中线",
-            "#Control_Skew": "路径规划线偏",
             "#Control_Down_set": "图像近处点界限",
             "#Control_Up_set": "图像远处点界限",
             "#ki_down_out_max": "近处点积分项限幅",
             "#Kp_dowm": "近处点pi控制kp",
             "#Ki_down": "近处点pi控制ki",
+            "#Line_compensation_coefficient": "线偏前馈补偿系数",
 
             "#rowCutUp": "图像顶部切行（前瞻距离）",
             "#rowCutBottom": "图像底部切行（盲区距离）",

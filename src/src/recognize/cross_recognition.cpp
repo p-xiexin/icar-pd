@@ -354,8 +354,8 @@ public:
             uint16_t counterStrightA = 0; // 计数器
             uint16_t counterStrightB = 0; // 计数器
             if((track.stdevLeft > 65 && track.stdevRight > 65)
-                || (track.stdevLeft < 65 && track.stdevRight > 300) 
-                || (track.stdevLeft > 300 && track.stdevRight < 65))
+                || (track.stdevLeft < 65 && track.stdevRight > 250) 
+                || (track.stdevLeft > 250 && track.stdevRight < 65))
             {
                 for (int i = 2; i < track.widthBlock.size() - 10; i++)
                 {
@@ -397,7 +397,7 @@ public:
                 pointBreakLD = track.pointsEdgeLeft[rowBreakLD];
 
                 // 优化左边缘
-                if (rowBreakLU > rowBreakLD && rowBreakLU < COLSIMAGE / 2 && rowBreakLD < COLSIMAGE / 2)
+                if (rowBreakLU > rowBreakLD/* && rowBreakLU < COLSIMAGE / 2 && rowBreakLD < COLSIMAGE / 2*/)
                 {
 
                     double k = (double)(pointBreakLU.y - pointBreakLD.y) /
@@ -417,7 +417,7 @@ public:
                 pointBreakRD = track.pointsEdgeRight[rowBreakRD];
 
                 // 优化右边缘
-                if (rowBreakRD < rowBreakRU && rowBreakRD < COLSIMAGE / 2 && rowBreakRU < COLSIMAGE / 2)
+                if (rowBreakRD < rowBreakRU/* && rowBreakRD < COLSIMAGE / 2 && rowBreakRU < COLSIMAGE / 2*/)
                 {
 
                     double k = (double)(pointBreakRU.y - pointBreakRD.y) /
@@ -600,7 +600,7 @@ private:
                 counter = 0;
                 counterFilter++;
             }
-            else if (pointsEdgeLeft[i].y <= 5 && counterFilter > 10)
+            else if (pointsEdgeLeft[i].y <= 5 && counterFilter > 5)
             {
                 counter++;
                 if (counter > 3)
@@ -668,7 +668,7 @@ private:
                 counter = 0;
                 counterFilter++;
             }
-            else if (pointsEdgeRight[i].y >= COLSIMAGE - 2 && counterFilter > 10)
+            else if (pointsEdgeRight[i].y >= COLSIMAGE - 2 && counterFilter > 5)
             {
                 counter++;
                 if (counter > 3)
