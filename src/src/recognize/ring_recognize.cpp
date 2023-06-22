@@ -757,31 +757,39 @@ public:
             if(ringType == RingType::RingLeft)
             {
                 uint16_t rowBreakLeft = searchBreakLeftUp(track.pointsEdgeLeft);
-                if(rowBreakLeft)
+                if(rowBreakLeft >= ROWSIMAGE / 3)
                 {
                     counterSpurroad++;
                     pointBreakD = track.pointsEdgeLeft[0];
                     pointBreakU = track.pointsEdgeLeft[rowBreakLeft];
                     line(track.pointsEdgeLeft, 0, pointBreakU);
                 }
-                else if(rowBreakLeft < ROWSIMAGE / 3 && counterSpurroad > 3)
+                else if(rowBreakLeft < ROWSIMAGE / 3 && rowBreakLeft > 0 && counterSpurroad > 3)
                 {
                     reset();
+                }
+                else if(counterSpurroad)
+                {
+                    track.pointsEdgeLeft = track.predictEdgeLeft(track.pointsEdgeRight);
                 }
             }
             else if(ringType == RingType::RingRight)
             {
                 uint16_t rowBreakRight = searchBreakRightUp(track.pointsEdgeRight);
-                if(rowBreakRight)
+                if(rowBreakRight >= ROWSIMAGE / 3)
                 {
                     counterSpurroad++;
                     pointBreakD = track.pointsEdgeRight[0];
                     pointBreakU = track.pointsEdgeRight[rowBreakRight];
                     line(track.pointsEdgeRight, 0, pointBreakU);
                 }
-                else if(rowBreakRight < ROWSIMAGE / 3 && counterSpurroad > 3)
+                else if(rowBreakRight < ROWSIMAGE / 3 && rowBreakRight > 0 && counterSpurroad > 3)
                 {
                     reset();
+                }
+                else if(counterSpurroad)
+                {
+                    track.pointsEdgeRight = track.predictEdgeRight(track.pointsEdgeLeft);                    
                 }
             }
         }
@@ -982,7 +990,7 @@ private:
                 counter = 0;
                 counterFilter++;
             }
-            else if (pointsEdgeLeft[i].y <= 5 && abs(pointsEdgeLeft[i].y - pointsEdgeLeft[rowBreakLeftUp].y) > 5 && counterFilter > 10)
+            else if (pointsEdgeLeft[i].y <= 5 && abs(pointsEdgeLeft[i].y - pointsEdgeLeft[rowBreakLeftUp].y) > 5 && counterFilter > 5)
             {
                 counter++;
                 if (counter > 3)
@@ -1012,7 +1020,7 @@ private:
                 counter = 0;
                 counterFilter++;
             }
-            else if (pointsEdgeRight[i].y >= COLSIMAGE - 2 && abs(pointsEdgeRight[i].y - pointsEdgeRight[rowBreakRightUp].y) > 5 && counterFilter > 10)
+            else if (pointsEdgeRight[i].y >= COLSIMAGE - 2 && abs(pointsEdgeRight[i].y - pointsEdgeRight[rowBreakRightUp].y) > 5 && counterFilter > 5)
             {
                 counter++;
                 if (counter > 3)

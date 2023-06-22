@@ -152,15 +152,15 @@ public:
                             track.pointsEdgeRight.push_back(repair[i]);
                         }
 
-                        // if (track.spurroad[indexSP].y > COLSIMAGE / 8)
-                        //     track.trackRecognition(true, rowEnd); // 赛道边缘重新搜索
-                        // else
-                        track.pointsEdgeLeft.resize(rowEnd);
+                        if (track.spurroad[indexSP].y > COLSIMAGE / 4)
+                            track.trackRecognition(true, rowEnd); // 赛道边缘重新搜索
+                        else
+                            track.pointsEdgeLeft.resize(rowEnd);
 
                         repaired = true; // 补线成功
                     }
                 }
-                else
+                else if(rowBreakRightDown)
                 {
                     track.pointsEdgeLeft.resize(rowBreakRightDown);
                     track.pointsEdgeRight.resize(rowBreakRightDown);
@@ -289,15 +289,15 @@ public:
                             track.pointsEdgeLeft.push_back(repair[i]);
                         }
 
-                        // if (track.spurroad[indexSP].y > COLSIMAGE / 8)
-                        //     track.trackRecognition(true, rowEnd); // 赛道边缘重新搜索
-                        // else
-                        track.pointsEdgeRight.resize(rowEnd);
+                        if (track.spurroad[indexSP].y < COLSIMAGE - COLSIMAGE / 4)
+                            track.trackRecognition(true, rowEnd); // 赛道边缘重新搜索
+                        else
+                            track.pointsEdgeRight.resize(rowEnd);
 
                         repaired = true; // 补线成功
                     }
                 }
-                else
+                else if(rowBreakLeftDown)
                 {
                     track.pointsEdgeLeft.resize(rowBreakLeftDown);
                     track.pointsEdgeRight.resize(rowBreakLeftDown);

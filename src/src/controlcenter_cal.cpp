@@ -27,6 +27,8 @@ class ControlCenterCal
 public:
     int controlCenter;           // 智能车控制中心（0~320）
     vector<POINT> centerEdge;    // 赛道中心点集
+    POINT intersectionLeft;      // 左边线与中线的交点
+    POINT intersectionRight;     // 右边线与中线的交点
     uint16_t validRowsLeft = 0;  // 边缘有效行数（左）
     uint16_t validRowsRight = 0; // 边缘有效行数（右）
     double sigmaCenter = 0;      // 中心点集的方差
@@ -55,6 +57,10 @@ public:
         // 边缘斜率标准差 重计算（边缘修正之后）
         track.stdevLeft = track.stdevEdgeCal(track.pointsEdgeLeft, ROWSIMAGE);
         track.stdevRight = track.stdevEdgeCal(track.pointsEdgeRight, ROWSIMAGE);
+
+        // 边线交点搜寻
+        intersectionLeft = searchLeftIntersection(track.pointsEdgeLeft);
+        intersectionRight = searchRightIntersection(track.pointsEdgeRight);
 
         // 连续弯道判断
         if (track.stdevLeft > 280 && track.stdevRight < 210)            // 右转连续
@@ -704,5 +710,43 @@ private:
             //改变类型
             style = "LEFT_CC";
         }
+    }
+
+    /**
+     * @brief 搜寻左边线与中线的交叉点
+     * @param pointsEdgeLeft
+     */
+    POINT searchLeftIntersection(std::vector<POINT> pointsEdgeLeft)
+    {
+        POINT Intersection = POINT(0, 0);
+        for(int i = 0; pointsEdgeLeft[i].x > ROWSIMAGE / 2; i++)
+        {
+            if(pointsEdgeLeft[i].y >= COLSIMAGE / 2)
+            {
+                Intersection = pointsEdgeLeft[i];
+                break;
+            }
+        }
+
+        return Intersection;
+    }
+
+    /**
+     * @brief 搜寻右边线与中线的交叉点
+     * @param pointsEdgeRight
+     */
+    POINT searchRightIntersection(std::vector<POINT> pointsEdgeRight)
+    {
+        POINT Intersection = POINT(0, 0);
+        for(int i = 0; pointsEdgeRight[i].x > ROWSIMAGE / 2; i++)
+        {
+            if(pointsEdgeRight[i].y <= COLSIMAGE / 2)
+            {
+                Intersection = pointsEdgeRight[i];
+                break;
+            }
+        }
+
+        return Intersection;
     }
 };

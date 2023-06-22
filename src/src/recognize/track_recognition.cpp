@@ -578,7 +578,124 @@ public:
 
         return perspectivePoints;
     }
+	/**
+	 * @brief 在俯视域由左边缘预测右边缘
+	 *
+	 * @param pointsEdgeLeft
+	 * @return vector<POINT>
+	 */
+	vector<POINT> predictEdgeRight(vector<POINT> &pointsEdgeLeft)
+	{
+		int offset = 120; // 右边缘平移尺度
+		vector<POINT> pointsEdgeRight;
+		if (pointsEdgeLeft.size() < 3)
+			return pointsEdgeRight;
 
+		// Start
+		Point2d startIpm = ipm.homography(
+			Point2d(pointsEdgeLeft[0].y, pointsEdgeLeft[0].x)); // 透视变换
+		Point2d prefictRight = Point2d(startIpm.x + offset, startIpm.y);
+		Point2d startIipm = ipm.homographyInv(prefictRight); // 反透视变换
+		POINT startPoint = POINT(startIipm.y, startIipm.x);
+
+		// Middle
+		Point2d middleIpm = ipm.homography(
+			Point2d(pointsEdgeLeft[pointsEdgeLeft.size() / 2].y,
+					pointsEdgeLeft[pointsEdgeLeft.size() / 2].x)); // 透视变换
+		prefictRight = Point2d(middleIpm.x + offset, middleIpm.y);
+		Point2d middleIipm = ipm.homographyInv(prefictRight); // 反透视变换
+		POINT midPoint = POINT(middleIipm.y, middleIipm.x);	  // 补线中点
+
+		// End
+		Point2d endIpm = ipm.homography(
+			Point2d(pointsEdgeLeft[pointsEdgeLeft.size() - 1].y,
+					pointsEdgeLeft[pointsEdgeLeft.size() - 1].x)); // 透视变换
+		prefictRight = Point2d(endIpm.x + offset, endIpm.y);
+		Point2d endtIipm = ipm.homographyInv(prefictRight); // 反透视变换
+		POINT endPoint = POINT(endtIipm.y, endtIipm.x);
+
+		// 补线
+		vector<POINT> input = {startPoint, midPoint, endPoint};
+		vector<POINT> repair = Bezier(0.05, input);
+
+		for (int i = 0; i < repair.size(); i++)
+		{
+			if (repair[i].x >= ROWSIMAGE)
+				repair[i].x = ROWSIMAGE - 1;
+
+			else if (repair[i].x < 0)
+				repair[i].x = 0;
+
+			else if (repair[i].y >= COLSIMAGE)
+				repair[i].y = COLSIMAGE - 1;
+			else if (repair[i].y < 0)
+				repair[i].y = 0;
+
+			pointsEdgeRight.push_back(repair[i]);
+		}
+
+		return pointsEdgeRight;
+	}
+
+	/**
+	 * @brief 在俯视域由右边缘预测左边缘
+	 *
+	 * @param pointsEdgeRight
+	 * @return vector<POINT>
+	 */
+	vector<POINT> predictEdgeLeft(vector<POINT> &pointsEdgeRight)
+	{
+		int offset = 120; // 右边缘平移尺度
+		vector<POINT> pointsEdgeLeft;
+		if (pointsEdgeRight.size() < 3)
+			return pointsEdgeLeft;
+
+		// Start
+		Point2d startIpm = ipm.homography(
+			Point2d(pointsEdgeRight[0].y, pointsEdgeRight[0].x)); // 透视变换
+		Point2d prefictLeft = Point2d(startIpm.x - offset, startIpm.y);
+		Point2d startIipm = ipm.homographyInv(prefictLeft); // 反透视变换
+		POINT startPoint = POINT(startIipm.y, startIipm.x);
+
+		// Middle
+		Point2d middleIpm = ipm.homography(
+			Point2d(pointsEdgeRight[pointsEdgeRight.size() / 2].y,
+					pointsEdgeRight[pointsEdgeRight.size() / 2].x)); // 透视变换
+		prefictLeft = Point2d(middleIpm.x - offset, middleIpm.y);
+		Point2d middleIipm = ipm.homographyInv(prefictLeft); // 反透视变换
+		POINT midPoint = POINT(middleIipm.y, middleIipm.x);	 // 补线中点
+
+		// End
+		Point2d endIpm = ipm.homography(
+			Point2d(pointsEdgeRight[pointsEdgeRight.size() - 1].y,
+					pointsEdgeRight[pointsEdgeRight.size() - 1].x)); // 透视变换
+		prefictLeft = Point2d(endIpm.x - offset, endIpm.y);
+		Point2d endtIipm = ipm.homographyInv(prefictLeft); // 反透视变换
+		POINT endPoint = POINT(endtIipm.y, endtIipm.x);
+
+		// 补线
+
+		vector<POINT> input = {startPoint, midPoint, endPoint};
+		vector<POINT> repair = Bezier(0.05, input);
+
+		for (int i = 0; i < repair.size(); i++)
+		{
+			if (repair[i].x >= ROWSIMAGE)
+				repair[i].x = ROWSIMAGE - 1;
+
+			else if (repair[i].x < 0)
+				repair[i].x = 0;
+
+			else if (repair[i].y >= COLSIMAGE)
+				repair[i].y = COLSIMAGE - 1;
+			else if (repair[i].y < 0)
+				repair[i].y = 0;
+
+			pointsEdgeLeft.push_back(repair[i]);
+		}
+
+		return pointsEdgeLeft;
+	}
 private:
     Mat imagePath; // 赛道搜索图像
     /**
