@@ -91,7 +91,7 @@ public:
             if(rowBreakLeftDown != 0 && rowBreakRightDown == 0
                 && ((track.stdevLeft > 120 && track.stdevRight < 60) || (track.stdevLeft > 200 && track.stdevRight < 80))
                 && abs(track.pointsEdgeRight[0].y - track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].y) > 10
-                && track.widthBlock[rowBreakLeftDown + 5].y > COLSIMAGE / 2 
+                && track.widthBlock[rowBreakLeftDown + 5].y > COLSIMAGE / 2 && track.pointsEdgeLeft[rowBreakLeftDown + 5].y < 5
                 && track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].y > COLSIMAGE / 2)
             {
                 // for(int i = rowBreakLeftDown; i < rowBreakLeftDown + 50; i++)
@@ -106,7 +106,7 @@ public:
                 //     }
                 // }
                 ring_cnt++;
-                if(ring_cnt > 1)
+                if(ring_cnt > 3)
                 {
                     // for(int i = 0; i < track.pointsEdgeLeft.size() / 2; i++)
                     // {
@@ -123,7 +123,7 @@ public:
             else if(rowBreakLeftDown == 0 && rowBreakRightDown != 0 
                 && ((track.stdevLeft < 60 && track.stdevRight > 120) || (track.stdevLeft < 80 && track.stdevRight > 200))
                 && abs(track.pointsEdgeLeft[0].y - track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].y) > 10
-                && track.widthBlock[rowBreakRightDown + 5].y > COLSIMAGE / 2
+                && track.widthBlock[rowBreakRightDown + 5].y > COLSIMAGE / 2 && track.pointsEdgeRight[rowBreakRightDown + 5].y > COLSIMAGE - 5
                 && track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].y < COLSIMAGE / 2)
             {
                 // for(int i = rowBreakRightDown; i < rowBreakRightDown + 50; i++)
@@ -138,7 +138,7 @@ public:
                 //     }
                 // }
                 ring_cnt++;
-                if(ring_cnt > 1)
+                if(ring_cnt > 3)
                 {
                     // for(int i = 0; i < track.pointsEdgeRight.size() / 2; i++)
                     // {
@@ -771,18 +771,18 @@ public:
             if(ringType == RingType::RingLeft)
             {
                 uint16_t rowBreakLeft = searchBreakLeftUp(track.pointsEdgeLeft);
-                if(rowBreakLeft >= ROWSIMAGE / 3)
+                pointBreakU = track.pointsEdgeLeft[rowBreakLeft];
+                if(rowBreakLeft >= ROWSIMAGE / 2)
                 {
                     counterSpurroad++;
                     pointBreakD = track.pointsEdgeLeft[0];
-                    pointBreakU = track.pointsEdgeLeft[rowBreakLeft];
                     line(track.pointsEdgeLeft, 0, pointBreakU);
                 }
-                else if(rowBreakLeft < ROWSIMAGE / 3 && rowBreakLeft > 0 && counterSpurroad > 3)
+                else if(rowBreakLeft < ROWSIMAGE / 2 && rowBreakLeft > 0 && counterSpurroad > 3)
                 {
                     reset();
                 }
-                else if(counterSpurroad <= 3 && counterSpurroad > 0)
+                else if(counterSpurroad && track.spurroad.size() > 0)
                 {
                     track.pointsEdgeLeft = track.predictEdgeLeft(track.pointsEdgeRight);
                 }
@@ -790,18 +790,18 @@ public:
             else if(ringType == RingType::RingRight)
             {
                 uint16_t rowBreakRight = searchBreakRightUp(track.pointsEdgeRight);
-                if(rowBreakRight >= ROWSIMAGE / 3)
+                pointBreakU = track.pointsEdgeRight[rowBreakRight];
+                if(rowBreakRight >= ROWSIMAGE / 2)
                 {
                     counterSpurroad++;
                     pointBreakD = track.pointsEdgeRight[0];
-                    pointBreakU = track.pointsEdgeRight[rowBreakRight];
                     line(track.pointsEdgeRight, 0, pointBreakU);
                 }
-                else if(rowBreakRight < ROWSIMAGE / 3 && rowBreakRight > 0 && counterSpurroad > 3)
+                else if(rowBreakRight < ROWSIMAGE / 2 && rowBreakRight > 0 && counterSpurroad > 3)
                 {
                     reset();
                 }
-                else if(counterSpurroad <= 3 && counterSpurroad > 0)
+                else if(counterSpurroad && track.spurroad.size() > 0)
                 {
                     track.pointsEdgeRight = track.predictEdgeRight(track.pointsEdgeLeft);                    
                 }

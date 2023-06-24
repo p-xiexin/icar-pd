@@ -347,14 +347,14 @@ private:
     bool search_garage_OutState(vector<POINT> pointsEdgeLeft, vector<POINT> pointsEdgeRight, vector<POINT> spurroad)
     {
         // 首先判断拐点是否满足要求，不满足要求则返回假
-        if(spurroad.size() <=2)
+        if(spurroad.size() < 2)
         {
             return false;
         }
 
         // 搜寻突变点
-        uint16_t rowBreakRight = searchBreakRightDown(pointsEdgeRight, 0, ROWSIMAGE);        // 右下补线点搜索,从0开始到20行
-        uint16_t rowBreakLeft = searchBreakLeftDown(pointsEdgeLeft, 0, ROWSIMAGE);           // 左下点搜索,从0开始到20行
+        uint16_t rowBreakRight = searchBreakRightDown(pointsEdgeRight, 0, ROWSIMAGE);        // 右下补线点搜索,从0开始到240行
+        uint16_t rowBreakLeft = searchBreakLeftDown(pointsEdgeLeft, 0, ROWSIMAGE);           // 左下点搜索,从0开始到240行
         // 满足条件，返回真
         if(rowBreakRight >= 20 || rowBreakLeft >= 20)
         {
@@ -947,12 +947,12 @@ public:
                 // 标记识别到的斑马线位置
                 site_cross_x = track.pointsEdgeRight[track.garageEnable.y].x;
                 // 根据配置文件，0为左库，跑两圈入库
-                if(params.garage_run == 0)
+                if(params.garage_run == 0 || params.garage_run == 2)
                 {
                     flag_garage = flag_garage_e::GARAGE_OUT_LEFT;
                 }
                 // 根据配置文件，1为右库，跑两圈入库
-                else if(params.garage_run == 1)
+                else if(params.garage_run == 1 || params.garage_run == 3)
                 {
                     flag_garage = flag_garage_e::GARAGE_OUT_RIGHT;
                 }
@@ -966,7 +966,7 @@ public:
                 // 计数器自增
                 count_to_CarNotInGarage++;
                 // 判断计数器值，如果超过20帧还没有检测到起点，说明不在车库中，改变状态机，默认已经完成出库，并清零计数器
-                if(count_to_CarNotInGarage >= 40)
+                if(count_to_CarNotInGarage >= 60)
                 {
                     flag_garage = flag_garage_e::GARAGE_NONE;
                     count_to_CarNotInGarage = 0;
@@ -1002,7 +1002,7 @@ public:
             {
                 // 图片帧数计数
                 ensure_picNum++;
-                // 当在5帧图像中，有大于等于3帧图片检测到斑马线，则进入下一个状态
+                // 当在4帧图像中，有大于等于3帧图片检测到斑马线，则进入下一个状态
                 if (chack_picNum >= 2)
                 {
                     flag_garage = GARAGE_DETECTION;
@@ -1174,9 +1174,19 @@ public:
         static uint16_t counterExit = 0;
         // 第一圈正常速度
         speed_ku = params.speed_nor;
-        // 调用ai来检测斑马线，来判定是否出库，连续5帧图片都达到判定条件，则完成出库
-        if (detect_garage(track)) 
+        // 检测斑马线，来判定是否出库，连续5帧图片都达到判定条件，则完成出库
+        if (!detect_garage(track)) 
         {
+            /***补线操作***/
+            // 左库补线
+            if(params.garage_run == 0 || params.garage_run == 2)
+            {
+                track.pointsEdgeLeft = track.predictEdgeLeft(track.pointsEdgeRight);
+                cout << "ok" << endl;
+            }
+            // 右库补线
+            if(params.garage_run == 1 || params.garage_run == 3)
+                track.pointsEdgeRight = track.predictEdgeRight(track.pointsEdgeLeft);
             // 计数器计数，如果有5帧图片，则出库完成，进入空闲状态机，并且开启屏蔽
             counterExit++;
             if (counterExit >= 5)
@@ -1351,7 +1361,7 @@ public:
             if (startPoint.x > endPoint.x && startPoint.y > endPoint.y)
             {
                 // 斑马线右边部分补线
-                midPoint = POINT((startPoint.x + endPoint.x) * 0.4, (startPoint.y + endPoint.y) * 0.5);     // 出库补线中点
+                midPoint = POINT((startPoint.x + endPoint.x) * 0.35, (startPoint.y + endPoint.y) * 0.5);     // 出库补线中点
                 _pointRU = endPoint;                                                                        // dubug图中显示，布线的中点
                 // 三阶贝塞尔曲线拟合
                 vector<POINT> repairPoints = {startPoint, midPoint, endPoint};
@@ -1366,7 +1376,7 @@ public:
             }
 
             // 左边缘错误点优化
-            track.pointsEdgeLeft.resize(rowBreakLeft_Down);
+            track.pointsEdgeLeft.resize(5);
             // }
         }
 
@@ -1506,7 +1516,7 @@ public:
             if (startPoint.x > endPoint.x && startPoint.y < endPoint.y)
             {
                 // 斑马线右边部分补线
-                midPoint = POINT((startPoint.x + endPoint.x) * 0.4, (startPoint.y + endPoint.y) * 0.5);     // 出库补线中点
+                midPoint = POINT((startPoint.x + endPoint.x) * 0.35, (startPoint.y + endPoint.y) * 0.5);     // 出库补线中点
                 _pointRU = endPoint;                                                                        // dubug图中显示，布线的中点
                 // 三阶贝塞尔曲线拟合
                 vector<POINT> repairPoints = {startPoint, midPoint, endPoint};
@@ -1521,7 +1531,7 @@ public:
             }
 
             // 右边缘错误点优化
-            track.pointsEdgeRight.resize(rowBreakRight_Down);
+            track.pointsEdgeRight.resize(5);
             // }
         }
     }
@@ -1616,7 +1626,7 @@ public:
                 }
 
                 // 清空基础赛道识别的路径
-                track.pointsEdgeLeft.clear();
+                track.pointsEdgeLeft.resize(5);
 
                 // 通过拐点判断是否已经大半进入车库
                 if(track.spurroad.size() >= 1)
@@ -1673,7 +1683,7 @@ public:
                 }
 
                 // 清空基础赛道识别的路径
-                track.pointsEdgeRight.clear();
+                track.pointsEdgeRight.resize(5);
 
                 // 通过拐点判断是否已经大半进入车库
                 if(track.spurroad.size() >= 1)

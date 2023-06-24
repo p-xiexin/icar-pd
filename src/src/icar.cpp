@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
     if (motionController.params.GarageEnable)
     {
         roadType = RoadType::GarageHandle;          // 初始赛道元素为出库
-        garageRecognition.garage_reset();       	// 出入库状态机，初始为出库准备
+        garageRecognition.garage_reset();       	// 出入库状态机，初始为出库准备cd
     }
 
     /*****调试模式初始化图像窗口*****/

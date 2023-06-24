@@ -81,7 +81,217 @@ public:
 		counterExit = 0;
 		counterImmunity = 0;
 		_speed = 0.0f;
+		_slowdown = false;
 	}
+
+	/**
+	 * @brief 维修厂检测，在Ai线程运行
+	 *
+	 * @param detection AI检测结果
+	 */
+	void depotDetection(vector<PredictResult> predict)
+	{
+		_pointNearCone = POINT(0, 0);
+		_distance = 0;
+		pointEdgeDet.clear();
+		indexDebug = 0;
+
+		if(counterImmunity < 30)
+		{
+			counterImmunity++;
+			return;
+		}
+
+		switch (depotStep)
+		{
+		case DepotStep::DepotNone: //[01] 维修厂标志检测
+		{
+			for (int i = 0; i < predict.size(); i++)
+			{
+				if (predict[i].label == LABEL_TRACTOR && predict[i].y + predict[i].height > 60) // 拖拉机标志检测
+				{
+					counterRec++;
+					break;
+				}
+			}
+			if (counterRec)
+			{
+				counterSession++;
+				if (counterRec > params.DepotCheck && counterSession < params.DepotCheck + 3)
+				{
+					if(params.DepotDir == 0)
+						depotType = DepotType::DepotLeft;
+					else if(params.DepotDir == 1)
+						depotType = DepotType::DepotRight;
+					depotStep = DepotStep::DepotEnable; // 维修厂使能
+					counterRec = 0;
+					counterSession = 0;
+				}
+				else if (counterSession >= params.DepotCheck + 3)
+				{
+					counterRec = 0;
+					counterSession = 0;
+				}
+			}
+			break;
+		}
+		case DepotStep::DepotEnable: //[02] 维修厂使能
+		{
+			counterExit++;
+			if (counterExit > 60) {
+			  reset();
+			  return;
+			}
+			counterSession++;//刚进入维修区，延时等待知道能看到所有锥桶
+
+			searchCones(predict);
+			for (int i = 0; i < predict.size(); i++)
+			{
+				if (predict[i].label == LABEL_TRACTOR && predict[i].x < ROWSIMAGE / 2) // 拖拉机标志检测
+				{
+					_slowdown = false;
+					break;
+				}
+				else
+					_slowdown = true;
+			}
+
+			// if(depotType == DepotType::DepotLeft)
+			// 	_pointNearCone = searchNearestCone(track.pointsEdgeLeft, pointEdgeDet);		 // 搜索右下锥桶
+			// else if(depotType == DepotType::DepotRight)
+			// 	_pointNearCone = searchNearestCone(track.pointsEdgeRight, pointEdgeDet);		 // 搜索右下锥桶
+
+			if (_pointNearCone.x > params.ServoRow && _pointNearCone.x < params.ServoRow + ROWSIMAGE / 3
+				&& _pointNearCone.y != 0 && counterSession > params.DelayCnt && _slowdown) // 当车辆开始靠近右边锥桶：准备入库
+			{
+				counterRec++;
+				if (counterRec > 2)
+				{
+					depotStep = DepotStep::DepotEnter; // 进站使能
+					counterRec = 0;
+					counterSession = 0;
+				}
+			}
+
+			indexDebug = counterRec;
+			break;
+		}
+		case DepotStep::DepotEnter: //[03] 进站使能
+		{
+			searchCones(predict);
+			_distance = 0;
+			_pointNearCone = searchClosestCone(pointEdgeDet);
+			if(_distance < params.DangerClose && _distance > 0)
+			{
+				counterRec++;
+				if(counterRec > 1)
+				{
+					depotStep = DepotStep::DepotCruise;
+					counterRec = 0;
+				}
+			}
+		}
+		}
+	}
+
+
+	/**
+	 * @brief 维修厂路径规划，在主线程运行
+	 *
+	 * @param track 赛道识别结果
+	 * @param detection AI检测结果
+	 */
+	bool depotDetection(TrackRecognition &track)
+	{
+		switch (depotStep)
+		{
+		case DepotStep::DepotEnter: //[03] 进站使能
+		{
+			if(depotType == DepotType::DepotLeft)
+			{
+				POINT start = POINT(ROWSIMAGE - 40, COLSIMAGE - 1);
+				POINT end = POINT(ROWSIMAGE / 2 - params.ServoValue, 0);
+				POINT middle = POINT((start.x + end.x) * 0.4, (start.y + end.y) * 0.6);
+				vector<POINT> input = {start, middle, end};
+				track.pointsEdgeRight = Bezier(0.05, input); // 补线
+				track.pointsEdgeLeft = predictEdgeLeft(track.pointsEdgeRight); // 由右边缘补偿左边缘
+			}
+			else if(depotType == DepotType::DepotRight)
+			{
+				POINT start = POINT(ROWSIMAGE - 40, 0);
+				POINT end = POINT(ROWSIMAGE / 2 - params.ServoValue, COLSIMAGE - 1);
+				POINT middle = POINT((start.x + end.x) * 0.4, (start.y + end.y) * 0.6);
+				vector<POINT> input = {start, middle, end};
+				track.pointsEdgeLeft = Bezier(0.05, input); // 补线
+				track.pointsEdgeRight = predictEdgeRight(track.pointsEdgeLeft); // 由右边缘补偿左边缘
+			}
+			pathsEdgeLeft.push_back(track.pointsEdgeLeft); // 记录进厂轨迹
+			pathsEdgeRight.push_back(track.pointsEdgeRight);
+
+			break;
+		}
+
+		case DepotStep::DepotCruise: //[04] 巡航使能(Brake)
+		{
+			{
+				// 预留给以后完善
+			}
+			counterRec++;
+			if(counterRec > params.BrakeCnt)
+			{
+				counterRec = 0;
+				depotStep = DepotStep::DepotStop;
+			}
+			track.pointsEdgeLeft = pathsEdgeLeft[pathsEdgeLeft.size() - 1];//维持入库最后的打角
+			track.pointsEdgeRight = pathsEdgeRight[pathsEdgeRight.size() - 1];
+			// pathsEdgeLeft.push_back(track.pointsEdgeLeft); // 记录进厂轨迹
+			// pathsEdgeRight.push_back(track.pointsEdgeRight);
+			break;
+		}
+
+		case DepotStep::DepotStop: //[05] 停车使能
+		{
+			counterRec++;
+			if (counterRec > 30) // 停车：40场 = 2s
+			{
+				depotStep = DepotStep::DepotExit; // 出站使能
+				counterRec = params.BrakeCnt * 2;
+			}
+			track.pointsEdgeLeft = pathsEdgeLeft[pathsEdgeLeft.size() - 1];//维持入库最后的打角
+			track.pointsEdgeRight = pathsEdgeRight[pathsEdgeRight.size() - 1];
+			break;
+		}
+
+		case DepotStep::DepotExit: //[06] 出站使能
+		{
+			if (pathsEdgeLeft.size() < 1 || pathsEdgeRight.size() < 1)
+			{
+				if(counterRec == 0)
+				{
+					depotStep = DepotStep::DepotNone; // 出厂完成
+					reset();
+				}
+				else
+					counterRec--;
+			}
+			else
+			{
+				track.pointsEdgeLeft = pathsEdgeLeft[pathsEdgeLeft.size() - 1];
+				track.pointsEdgeRight = pathsEdgeRight[pathsEdgeRight.size() - 1];
+				pathsEdgeLeft.pop_back();
+				pathsEdgeRight.pop_back();
+			}
+			
+			break;
+		}
+		}
+
+		if (depotStep == DepotStep::DepotNone) // 返回维修厂控制模式标志
+			return false;
+		else
+			return true;
+	}
+
 
 	/**
 	 * @brief 维修厂检测与路径规划
@@ -145,6 +355,16 @@ public:
 			counterSession++;//刚进入维修区，延时等待知道能看到所有锥桶
 
 			searchCones(predict);
+			for (int i = 0; i < predict.size(); i++)
+			{
+				if (predict[i].label == LABEL_TRACTOR && predict[i].x < ROWSIMAGE / 2) // 拖拉机标志检测
+				{
+					_slowdown = false;
+					break;
+				}
+				else
+					_slowdown = true;
+			}
 
 			if(depotType == DepotType::DepotLeft)
 				_pointNearCone = searchNearestCone(track.pointsEdgeLeft, pointEdgeDet);		 // 搜索右下锥桶
@@ -152,7 +372,7 @@ public:
 				_pointNearCone = searchNearestCone(track.pointsEdgeRight, pointEdgeDet);		 // 搜索右下锥桶
 
 			if (_pointNearCone.x > params.ServoRow && _pointNearCone.x < params.ServoRow + ROWSIMAGE / 3
-				&& _pointNearCone.y != 0 && counterSession > params.DelayCnt) // 当车辆开始靠近右边锥桶：准备入库
+				&& _pointNearCone.y != 0 && counterSession > params.DelayCnt && _slowdown) // 当车辆开始靠近右边锥桶：准备入库
 			{
 				counterRec++;
 				if (counterRec > 2)
@@ -294,6 +514,56 @@ public:
     }
 
 	/**
+	 * @brief 维修区速度规划
+	 *
+	 */
+	void speed_planning(float& speed)
+	{
+		switch(depotStep)
+		{
+		case DepotStep::DepotEnable:
+		{
+			if(_slowdown)
+				speed -= 0.1f;
+
+			if(speed < params.DepotSpeed)
+				speed = params.DepotSpeed;
+			break;
+		}
+		case DepotStep::DepotEnter:
+		{
+			speed = params.DepotSpeed;
+			break;
+		}
+		case DepotStep::DepotCruise:
+		{
+			speed -= params.DepotSpeed / params.BrakeCnt;
+			if(speed < 0.0f)
+				speed = 0.0f;
+			break;
+		}
+		case DepotStep::DepotStop:
+		{
+			speed = 0.0f;
+			break;
+		}
+		case DepotStep::DepotExit:
+		{
+			if(pathsEdgeLeft.size() != 0 && pathsEdgeRight.size() != 0)
+			{
+				_speed -= params.DepotSpeed / params.BrakeCnt;
+				if(_speed < -params.DepotSpeed)
+					_speed = -params.DepotSpeed;
+			}
+			else
+				speed += params.DepotSpeed / params.BrakeCnt;
+			break;
+		}
+		}
+	}
+
+
+	/**
 	 * @brief 获取维修区速度规划
 	 *
 	 */
@@ -326,7 +596,11 @@ public:
 		case DepotStep::DepotExit:
 		{
 			if(pathsEdgeLeft.size() != 0 && pathsEdgeRight.size() != 0)
+			{
 				_speed -= params.DepotSpeed / params.BrakeCnt;
+				if(_speed < -params.DepotSpeed)
+					_speed = -params.DepotSpeed;
+			}
 			else
 				_speed += params.DepotSpeed / params.BrakeCnt;
 			break;
@@ -611,6 +885,7 @@ private:
 		return len;
 	}
 	
+private:
 	DepotStep depotStep = DepotStep::DepotNone;
 	DepotType depotType = DepotType::None;
 	Params params;                   // 读取控制参数
@@ -628,4 +903,6 @@ private:
 	uint16_t counterRec = 0;	  // 维修厂标志检测计数器
 	uint16_t counterExit = 0;	  // 标志结束计数器
 	uint16_t counterImmunity = 0; // 屏蔽计数器
+
+	bool _slowdown = false;
 };

@@ -8,7 +8,7 @@
     "speed_and_angle_k1": 0.04,
     "speed_and_angle_k2": 3.8,
 
-    "runP1": 1.247,
+    "runP1": 1.2,
     "runP2": 0.0223,
     "runP3": 0.00012,
     "turnP": 3.5,
@@ -40,7 +40,7 @@
     "Button": false,
     "SaveImage": true,
     "CloseLoop": true,
-    "GarageEnable": true,
+    "GarageEnable": false,
     "RingEnable": true,
     "CrossEnable": true,
     "StopEnable": false,
@@ -48,7 +48,7 @@
     "SlowzoneEnable": true,
     "DepotEnable": true,
     "FarmlandEnable": true,
-    "pathModel": "../res/model/yolov3_mobilenet_v1",
+    "pathModel": "../res/model/yolov3_mobilenet_v1_light",
     "record": [
         {
             "#speedLow": "智能车最低速",
@@ -63,12 +63,6 @@
             "#runP1": "一阶比例系数：直线控制量",
             "#runP2": "二阶比例系数：弯道控制量",
             "#runP3": "三阶比例系数：弯道控制量",
-            "#runP3": "三阶比例系数：弯道控制量",
-            "#runP1_ai": "ai识别的一阶比例系数：转弯控制量",
-            "#runP2_ai": "ai识别的二阶微分系数：转弯控制量",        
-            "#runP3": "三阶比例系数：弯道控制量", 
-            "#runP1_ai": "ai识别的一阶比例系数：转弯控制量",
-            "#runP2_ai": "ai识别的二阶微分系数：转弯控制量",        
             "#turnP": "一阶比例系数：转弯控制量",
             "#turnD": "一阶微分系数：转弯控制量",
 

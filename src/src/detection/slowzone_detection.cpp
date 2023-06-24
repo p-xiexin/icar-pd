@@ -56,7 +56,7 @@ public:
         {
             for (int i = 0; i < predict.size(); i++)
             {
-                if (predict[i].label == LABEL_BUMP || predict[i].label == LABEL_PIG)
+                if ((predict[i].label == LABEL_BUMP && predict[i].x > 70) || (predict[i].label == LABEL_PIG && predict[i].x > 70))
                 {
                     counterRec++;
                     break;
