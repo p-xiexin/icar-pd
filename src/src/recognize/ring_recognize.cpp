@@ -68,27 +68,28 @@ public:
             return ringType;
         }
 
+        if (track.garageEnable.x && ringType == RingType::RingNone)
+        {
+            counterShield = 0;
+            return false;
+        }
         if (counterShield < 30)
         {
             counterShield++;
             return false;
         }
-        // if (track.garageEnable.y > ROWSIMAGE / 3 && ringType == RingType::RingNone)
+        // if(ringType == RingType::RingNone)
         // {
-        //    counterShield = 0;
+        //     for(int i = 0; i < track.spurroad.size(); i++)
+        //     {
+        //         uint16_t item = abs(track.spurroad[i].x - track.pointsEdgeLeft[0].x);
+        //         if(track.spurroad[i].y > track.pointsEdgeLeft[item].y + 10 && track.spurroad[i].y < track.pointsEdgeRight[item].y - 10)
+        //         {
+        //             counterShield = 0;
+        //             return false;
+        //         }
+        //     }
         // }
-        if(ringType == RingType::RingNone)
-        {
-            for(int i = 0; i < track.spurroad.size(); i++)
-            {
-                uint16_t item = abs(track.spurroad[i].x - track.pointsEdgeLeft[0].x);
-                if(track.spurroad[i].y > track.pointsEdgeLeft[item].y + 10 && track.spurroad[i].y < track.pointsEdgeRight[item].y - 10)
-                {
-                    counterShield = 20;
-                    return false;
-                }
-            }
-        }
         
 
 
@@ -104,7 +105,7 @@ public:
             if(rowBreakLeftDown != 0 && rowBreakRightDown == 0
                 && ((track.stdevLeft > 120 && track.stdevRight < 60) || (track.stdevLeft > 200 && track.stdevRight < 80) || (track.stdevLeft > 100 && track.stdevRight < 40))
                 && abs(track.pointsEdgeRight[0].y - track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].y) > 10
-                && track.widthBlock[rowBreakLeftDown + 5].y > COLSIMAGE / 2 && track.pointsEdgeLeft[rowBreakLeftDown + 5].y < 5
+                && track.widthBlock[rowBreakLeftDown + 10].y > COLSIMAGE / 2 && track.pointsEdgeLeft[rowBreakLeftDown + 10].y < 5
                 && track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].y > COLSIMAGE / 2 - 30)
             {
                 // for(int i = rowBreakLeftDown; i < rowBreakLeftDown + 50; i++)
@@ -136,7 +137,7 @@ public:
             else if(rowBreakLeftDown == 0 && rowBreakRightDown != 0 
                 && ((track.stdevLeft < 60 && track.stdevRight > 120) || (track.stdevLeft < 80 && track.stdevRight > 200) || (track.stdevLeft < 40 && track.stdevRight > 100))
                 && abs(track.pointsEdgeLeft[0].y - track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].y) > 10
-                && track.widthBlock[rowBreakRightDown + 5].y > COLSIMAGE / 2 && track.pointsEdgeRight[rowBreakRightDown + 5].y > COLSIMAGE - 5
+                && track.widthBlock[rowBreakRightDown + 10].y > COLSIMAGE / 2 && track.pointsEdgeRight[rowBreakRightDown + 10].y > COLSIMAGE - 5
                 && track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].y < COLSIMAGE / 2 + 30)
             {
                 // for(int i = rowBreakRightDown; i < rowBreakRightDown + 50; i++)
@@ -378,10 +379,7 @@ public:
                     repaired = true;
                 }
                 else if(_corner.x == 0)
-                {
                     line(track.pointsEdgeLeft, 0, track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1]);
-                    repaired = true;
-                }
 
                 if(_corner.x)
                 {
@@ -389,12 +387,26 @@ public:
                         counterSpurroad++;
                     // line(track.pointsEdgeRight, rowBreakLeftD, _corner);
                     {
-                        POINT startPoint = track.pointsEdgeRight[rowBreakLeftD];
+                        uint16_t rowBreakRightD = rowBreakLeftD;
+                        if(rowBreakRightD > 50)
+                            rowBreakRightD -= 50;
+                        else
+                            rowBreakRightD = 0;
+                        if(rowBreakRightD < 3)
+                        {
+                            float rowRate = _corner.x;
+                            if(rowRate < 60)
+                                rowRate = 0;
+                            else
+                                rowRate -= 60;
+                            track.pointsEdgeRight[rowBreakRightD].y -= (rowRate / ROWSIMAGE) * (COLSIMAGE - _corner.y);
+                        }
+                        POINT startPoint = track.pointsEdgeRight[rowBreakRightD];
                         POINT endPoint = _corner;
                         POINT midPoint = POINT((0.3*startPoint.x + 0.7*endPoint.x), (0.3*startPoint.y + 0.7*endPoint.y));
                         midPoint.y += abs(startPoint.y - endPoint.y) / 4;
-                        uint16_t rowBreakMid = abs(midPoint.x - startPoint.x) + rowBreakLeftD - 1;
-                        line(track.pointsEdgeRight, rowBreakLeftD, midPoint);
+                        uint16_t rowBreakMid = abs(midPoint.x - startPoint.x) + rowBreakRightD - 1;
+                        line(track.pointsEdgeRight, rowBreakRightD, midPoint);
                         line(track.pointsEdgeRight, rowBreakMid, endPoint);
                     }
                     track.pointsEdgeLeft.resize(spurroad_item);
@@ -404,7 +416,7 @@ public:
                     uint16_t mid = (track.pointsEdgeLeft[spurroad_item - 1].y + track.pointsEdgeRight[spurroad_item - 1].y) / 2;
                     POINT left(0, 0);
                     POINT right(0, 0);
-                    for(int i = _corner.x - 1; i > ROWSIMAGE / 3; i--)
+                    for(int i = _corner.x - 1; i > ROWSIMAGE / 4; i--)
                     {
                         int j = mid;
                         for(j = mid; j < COLSIMAGE - 5; j++)
@@ -439,9 +451,12 @@ public:
                         {
                             break;
                         }
-                        track.pointsEdgeLeft.push_back(left);
-                        track.pointsEdgeRight.push_back(right);
-                        track.widthBlock.push_back(POINT(i, width));
+                        if(left.x && right.x)
+                        {
+                            track.pointsEdgeLeft.push_back(left);
+                            track.pointsEdgeRight.push_back(right);
+                            track.widthBlock.push_back(POINT(i, width));
+                        }
 
                         mid = (right.y + left.y) / 2;
                     }
@@ -451,11 +466,25 @@ public:
                     counterSpurroad = 0;
                     ringStep = RingStep::Inside;
                 }
-                else if(repaired)
+                else if(repaired)//右边线优化
                 {
-                    // track.pointsEdgeRight = track.predictEdgeRight(track.pointsEdgeLeft);
+                    track.pointsEdgeRight = track.predictEdgeRight(track.pointsEdgeLeft, false);
                 }
 
+                if(rowBreakLeftD > 10)
+                {
+                    uint16_t counter = 0;
+                    for(int i = rowBreakLeftD; i < track.pointsEdgeLeft.size(); i++)
+                    {
+                        if(track.pointsEdgeLeft[i].y < 3)
+                            counter++;
+                        if(counter > 2)
+                        {
+                            track.pointsEdgeLeft.resize(i);
+                            break;
+                        }
+                    }
+                }
                 if(_corner.x && rowBreakLeftD == 0)
                     track.pointsEdgeLeft.resize(5);
             }
@@ -514,10 +543,7 @@ public:
                     line(track.pointsEdgeRight, 0, rowBreakRightD);
                 }
                 else if(_corner.x == 0)
-                {
-                    repaired = true;
                     line(track.pointsEdgeRight, 0, track.pointsEdgeRight[track.pointsEdgeRight.size() - 1]);
-                }
 
                 if(_corner.x)
                 {
@@ -525,12 +551,26 @@ public:
                         counterSpurroad++;
                     // line(track.pointsEdgeLeft, rowBreakRightD, _corner);
                     {
-                        POINT startPoint = track.pointsEdgeLeft[rowBreakRightD];
+                        uint16_t rowBreakLeftD = rowBreakRightD;
+                        if(rowBreakLeftD > 50)
+                            rowBreakLeftD -= 50;
+                        else 
+                            rowBreakLeftD = 0;
+                        if(rowBreakLeftD < 3)
+                        {
+                            float rowRate = _corner.x;
+                            if(rowRate < 60)
+                                rowRate = 0;
+                            else
+                                rowRate -= 60;
+                            track.pointsEdgeLeft[rowBreakLeftD].y += (rowRate / ROWSIMAGE) * (_corner.y);
+                        }
+                        POINT startPoint = track.pointsEdgeLeft[rowBreakLeftD];
                         POINT endPoint = _corner;
                         POINT midPoint = POINT((0.3*startPoint.x + 0.7*endPoint.x), (0.3*startPoint.y + 0.7*endPoint.y));
                         midPoint.y -= abs(startPoint.y - endPoint.y) / 4;
-                        uint16_t rowBreakMid = abs(midPoint.x - startPoint.x) + rowBreakRightD - 1;
-                        line(track.pointsEdgeLeft, rowBreakRightD, midPoint);
+                        uint16_t rowBreakMid = abs(midPoint.x - startPoint.x) + rowBreakLeftD - 1;
+                        line(track.pointsEdgeLeft, rowBreakLeftD, midPoint);
                         line(track.pointsEdgeLeft, rowBreakMid, endPoint);
                     }
                     track.pointsEdgeLeft.resize(spurroad_item);
@@ -540,7 +580,7 @@ public:
                     uint16_t mid = (track.pointsEdgeLeft[spurroad_item - 1].y + track.pointsEdgeRight[spurroad_item - 1].y) / 2;
                     POINT left(0, 0);
                     POINT right(0, 0);
-                    for(int i = _corner.x - 1; i > ROWSIMAGE / 3; i--)
+                    for(int i = _corner.x - 1; i > ROWSIMAGE / 4; i--)
                     {
                         int j = mid;
                         for(j = mid; j < COLSIMAGE - 5; j++)
@@ -575,21 +615,40 @@ public:
                         {
                             break;
                         }
-                        track.pointsEdgeLeft.push_back(left);
-                        track.pointsEdgeRight.push_back(right);
-                        track.widthBlock.push_back(POINT(i, width));
+                        if(left.x && right.x)
+                        {
+                            track.pointsEdgeLeft.push_back(left);
+                            track.pointsEdgeRight.push_back(right);
+                            track.widthBlock.push_back(POINT(i, width));
+                        }
 
                         mid = (right.y + left.y) / 2;
                     }
+                    
                 }
                 else if(_corner.x == 0 && counterSpurroad > 3)
                 {
                     counterSpurroad = 0;
                     ringStep = RingStep::Inside;
                 }
-                else if(repaired)
+                else if(repaired)//左边线优化
                 {
-                    // track.pointsEdgeLeft = track.predictEdgeLeft(track.pointsEdgeRight);
+                    track.pointsEdgeLeft = track.predictEdgeLeft(track.pointsEdgeRight, false);
+                }
+
+                if(rowBreakRightD > 10)
+                {
+                    uint16_t counter = 0;
+                    for(int i = rowBreakRightD; i < track.pointsEdgeRight.size(); i++)
+                    {
+                        if(track.pointsEdgeRight[i].y > COLSIMAGE - 3)
+                            counter++;
+                        if(counter > 2)
+                        {
+                            track.pointsEdgeRight.resize(i);
+                            break;
+                        }
+                    }
                 }
 
                 if(_corner.x && rowBreakRightD == 0)

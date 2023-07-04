@@ -266,10 +266,10 @@ public:
                             distance.push_back(widthGarage[indexGarage[i]] - widthGarage[indexGarage[i - 1]]);
                         }
                         double var = sigma(distance);
-                        if (var < 5.0) // 经验参数
+                        if (var < 8.0) // 经验参数
                         {
                             garageEnable.x = 1;                      // 车库标志使能
-                            garageEnable.y = pointsEdgeRight.size(); // 斑马线行序号
+                            garageEnable.y = row; // 斑马线行号
                         }
                     }
                 }
@@ -584,12 +584,37 @@ public:
 	 * @param pointsEdgeLeft
 	 * @return vector<POINT>
 	 */
-	vector<POINT> predictEdgeRight(vector<POINT> &pointsEdgeLeft)
+	vector<POINT> predictEdgeRight(vector<POINT> pointsEdgeLeft, bool bezier = true)
 	{
 		int offset = 120; // 右边缘平移尺度
 		vector<POINT> pointsEdgeRight;
 		if (pointsEdgeLeft.size() < 3)
 			return pointsEdgeRight;
+
+        if(!bezier)
+        {
+            for(int i = 0; i < pointsEdgeLeft.size(); i++)
+            {
+                Point2d edgeIpm = ipm.homography(
+                    Point2d(pointsEdgeLeft[i].y, pointsEdgeLeft[i].x)); // 透视变换
+                Point2d prefictRight = Point2d(edgeIpm.x + offset, edgeIpm.y);
+                Point2d edgeIipm = ipm.homographyInv(prefictRight); // 反透视变换
+                POINT edgePoint = POINT(edgeIipm.y, edgeIipm.x);
+                if (edgePoint.x >= ROWSIMAGE)
+                    edgePoint.x = ROWSIMAGE - 1;
+
+                else if (edgePoint.x < 0)
+                    edgePoint.x = 0;
+
+                else if (edgePoint.y >= COLSIMAGE)
+                    edgePoint.y = COLSIMAGE - 1;
+                else if (edgePoint.y < 0)
+                    edgePoint.y = 0;
+
+                pointsEdgeRight.push_back(edgePoint);
+            }
+            return pointsEdgeRight;
+        }
 
 		// Start
 		Point2d startIpm = ipm.homography(
@@ -643,12 +668,37 @@ public:
 	 * @param pointsEdgeRight
 	 * @return vector<POINT>
 	 */
-	vector<POINT> predictEdgeLeft(vector<POINT> &pointsEdgeRight)
+	vector<POINT> predictEdgeLeft(vector<POINT> pointsEdgeRight, bool bezier = true)
 	{
 		int offset = 120; // 右边缘平移尺度
 		vector<POINT> pointsEdgeLeft;
 		if (pointsEdgeRight.size() < 3)
 			return pointsEdgeLeft;
+
+        if(!bezier)
+        {
+            for(int i = 0; i < pointsEdgeRight.size(); i++)
+            {
+                Point2d edgeIpm = ipm.homography(
+                    Point2d(pointsEdgeRight[i].y, pointsEdgeRight[i].x)); // 透视变换
+                Point2d prefictRight = Point2d(edgeIpm.x - offset, edgeIpm.y);
+                Point2d edgeIipm = ipm.homographyInv(prefictRight); // 反透视变换
+                POINT edgePoint = POINT(edgeIipm.y, edgeIipm.x);
+                if (edgePoint.x >= ROWSIMAGE)
+                    edgePoint.x = ROWSIMAGE - 1;
+
+                else if (edgePoint.x < 0)
+                    edgePoint.x = 0;
+
+                else if (edgePoint.y >= COLSIMAGE)
+                    edgePoint.y = COLSIMAGE - 1;
+                else if (edgePoint.y < 0)
+                    edgePoint.y = 0;
+
+                pointsEdgeLeft.push_back(edgePoint);
+            }
+            return pointsEdgeLeft;
+        }
 
 		// Start
 		Point2d startIpm = ipm.homography(
