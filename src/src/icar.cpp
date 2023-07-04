@@ -536,9 +536,9 @@ int main(int argc, char *argv[])
             {
                 circle(imageTrack, Point(controlCenterCal.centerEdge[i].y, controlCenterCal.centerEdge[i].x), 1, Scalar(0, 0, 255), -1);
             }
-
             rectangle(imageTrack, Rect(controlCenterCal.intersectionLeft.y, controlCenterCal.intersectionLeft.x, 10, 10), Scalar(0, 0, 200), 1);
             rectangle(imageTrack, Rect(controlCenterCal.intersectionRight.y, controlCenterCal.intersectionRight.x, 10, 10), Scalar(0, 0, 200), 1);
+            putText(imageTrack, to_string(ringRecognition.counterShield), Point(COLSIMAGE / 2 - 5, ROWSIMAGE - 20), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 155), 1, CV_AA);
 
             putText(imageTrack, "FPS: " + formatDoble2String(detFPS, 2), Point(20, 20), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1); // 车速
             putText(imageTrack, "PWM:" + formatDoble2String(motionController.servoPwm,2), Point(20,40),FONT_HERSHEY_PLAIN, 1, Scalar(0,0,255), 1);  //下发的pwm值
@@ -549,7 +549,7 @@ int main(int argc, char *argv[])
             putText(imageTrack, controlCenterCal.style, Point(COLSIMAGE / 2 + 20, 40), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1); // 赛道类型
             putText(imageTrack, "CERROR: " + formatDoble2String(motionController.compensation_error, 2), Point(COLSIMAGE / 2 + 20, 60), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1);
 
-            line(imageTrack, Point(COLSIMAGE / 2, 0), Point(COLSIMAGE / 2, ROWSIMAGE - 1), Scalar(200, 200, 200), 1);
+            line(imageTrack, Point(motionController.Mid_line, 0), Point(motionController.Mid_line, ROWSIMAGE - 1), Scalar(200, 200, 200), 1);
             line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_Up_set), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_Up_set), 
                     Scalar(200, 200, 200), 1);
             savePicture(imageTrack, roadType, AI_enable);

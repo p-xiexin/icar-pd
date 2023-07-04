@@ -545,12 +545,15 @@ public:
             centerline_in_this_function_k = 0;
         }
         // 动态中线输出值
-        Mid_line = params.Control_Mid + (params.Angle_Kp * centerline_in_this_function_k + Angle_Iout);
-        // 动态中线限幅
-        if(Mid_line <= params.dynamic_Mid_low)
-            Mid_line = params.dynamic_Mid_low;
-        else if(Mid_line >= params.dynamic_Mid_high)
-            Mid_line = params.dynamic_Mid_high;
+        if(controlCenter.centerEdge.size() < params.Control_Up_set - params.Control_Down_set)
+        {
+            Mid_line = params.Control_Mid + (params.Angle_Kp * centerline_in_this_function_k + Angle_Iout);
+            // 动态中线限幅
+            if(Mid_line <= params.dynamic_Mid_low)
+                Mid_line = params.dynamic_Mid_low;
+            else if(Mid_line >= params.dynamic_Mid_high)
+                Mid_line = params.dynamic_Mid_high;
+        }
 
         /**********线偏控制**************/
         error = Line_offset_mid - Mid_line;

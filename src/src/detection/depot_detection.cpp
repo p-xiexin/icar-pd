@@ -449,7 +449,7 @@ public:
 			if (counterRec > 30) // 停车：40场 = 2s
 			{
 				depotStep = DepotStep::DepotExit; // 出站使能
-				counterRec = params.BrakeCnt * 2;
+				counterRec = params.BrakeCnt;
 			}
 			track.pointsEdgeLeft = pathsEdgeLeft[pathsEdgeLeft.size() - 1];//维持入库最后的打角
 			track.pointsEdgeRight = pathsEdgeRight[pathsEdgeRight.size() - 1];
@@ -602,7 +602,7 @@ public:
 					_speed = -params.DepotSpeed;
 			}
 			else
-				_speed += params.DepotSpeed / params.BrakeCnt;
+				_speed = 0.0f;
 			break;
 		}
 		}

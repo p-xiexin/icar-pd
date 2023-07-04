@@ -1,13 +1,13 @@
 {
-    "garage_run": 0,
+    "garage_run": 1,
     "corner_lines": 215,
     "slowdown_condition": 10,
-    "disGarageEntry": 190,
-    "stop_line": 145,
+    "disGarageEntry": 175,
+    "stop_line": 100,
     "brakePicNum": 0,
     "speed_nor": 2.25,
     "speed_in": 1.1,
-    "speed_out": 1.8,
+    "speed_out": 1.9,
     "shield_counter": 100,
     "speed_readyend": 0.9,
     "record": [
