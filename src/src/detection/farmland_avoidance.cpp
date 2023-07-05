@@ -61,10 +61,17 @@ public:
         {
         case FarmlandStep::None:
         {
-            searchCorn(predict); // 玉米检测
-            if (pointCorn.x > 0 || pointCorn.y > 0)
-                counterRec++;
-
+            // searchCorn(predict); // 玉米检测
+            // if (pointCorn.x > 0 || pointCorn.y > 0)
+            //     counterRec++;
+			for (int i = 0; i < predict.size(); i++)
+			{
+				if (predict[i].label == LABEL_CORN && predict[i].y + predict[i].height / 2 > 30 && predict[i].score > 0.5) // 拖拉机标志检测
+				{
+					counterRec++;
+					break;
+				}
+			}
             if (counterRec)
             {
                 counterSession++;
@@ -87,7 +94,7 @@ public:
             if (track.pointsEdgeLeft.size() < params.EnterLine && track.pointsEdgeRight.size() < params.EnterLine)
             {
                 counterRec++;
-                if (counterRec > 2)
+                if (counterRec > 1)
                 {
                     counterSession = 0;
                     counterRec = 0;
@@ -144,9 +151,9 @@ public:
             line_extend(track.pointsEdgeLeft);
             line_extend(track.pointsEdgeRight);
             uint16_t size = MIN(track.pointsEdgeLeft.size(), track.pointsEdgeRight.size());
-            if(size > 180)
+            if(size > 160)
             {
-                size = 180;
+                size = 160;
                 track.pointsEdgeRight.resize(size);
                 track.pointsEdgeLeft.resize(size);
             }
@@ -256,9 +263,7 @@ public:
         {
         case FarmlandStep::Enable:
         {
-            _speed += 0.04f;
-            if(_speed > params.Speed)
-                _speed = params.Speed; 
+            _speed = params.Speed; 
             break;
         }
         case FarmlandStep::Cruise:

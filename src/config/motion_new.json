@@ -38,7 +38,7 @@
 
     "Debug": false,
     "Button": false,
-    "SaveImage": false,
+    "SaveImage": true,
     "CloseLoop": true,
     "GarageEnable": false,
     "RingEnable": true,
