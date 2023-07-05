@@ -9,9 +9,11 @@
 
 #include "../src/detection/bridge_detection.cpp"
 #include "../src/detection/slowzone_detection.cpp"
+#include "../src/detection/depot_detection.cpp"
 
 BridgeDetection bridgeDetection;
 SlowZoneDetection slowZoneDetection;
+DepotDetection depotDetection;             // 车辆维修区检测
 
 struct DetectionResult
 {
@@ -74,13 +76,14 @@ public:
                 {
                     bridgeDetection.bridgeCheck(_predictor->results);
                     slowZoneDetection.slowZoneCheck(_predictor->results);
+                    depotDetection.depotDetection(_predictor->results);
                 }
 
                 bool flag = false;
                 for(int i = 0; i < _predictor->results.size(); i++)
                 {
                     std::string label_name = _predictor->results[i].label;
-                    if((label_name == "tractor" || label_name == "corn") && _predictor->results[i].score > 0.62
+                    if((/*label_name == "tractor" || */label_name == "corn") && _predictor->results[i].score > 0.62
                         && _predictor->results[i].y + _predictor->results[i].height / 2 > 45)
                     {
                         flag = true;

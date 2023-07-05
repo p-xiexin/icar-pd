@@ -91,11 +91,6 @@ public:
 	 */
 	void depotDetection(vector<PredictResult> predict)
 	{
-		_pointNearCone = POINT(0, 0);
-		_distance = 0;
-		pointEdgeDet.clear();
-		indexDebug = 0;
-
 		if(counterImmunity < 30)
 		{
 			counterImmunity++;
@@ -108,7 +103,7 @@ public:
 		{
 			for (int i = 0; i < predict.size(); i++)
 			{
-				if (predict[i].label == LABEL_TRACTOR && predict[i].y + predict[i].height > 60) // 拖拉机标志检测
+				if (predict[i].label == LABEL_TRACTOR && predict[i].y + predict[i].height / 2 > 30 && predict[i].score > 0.62) // 拖拉机标志检测
 				{
 					counterRec++;
 					break;
@@ -137,17 +132,9 @@ public:
 		}
 		case DepotStep::DepotEnable: //[02] 维修厂使能
 		{
-			counterExit++;
-			if (counterExit > 60) {
-			  reset();
-			  return;
-			}
-			counterSession++;//刚进入维修区，延时等待知道能看到所有锥桶
-
-			searchCones(predict);
 			for (int i = 0; i < predict.size(); i++)
 			{
-				if (predict[i].label == LABEL_TRACTOR && predict[i].x < ROWSIMAGE / 2) // 拖拉机标志检测
+				if (predict[i].label == LABEL_TRACTOR && predict[i].y + predict[i].height / 2 < ROWSIMAGE / 2) // 拖拉机标志检测
 				{
 					_slowdown = false;
 					break;
@@ -155,14 +142,47 @@ public:
 				else
 					_slowdown = true;
 			}
+			break;
+		}
+		}
+	}
 
-			// if(depotType == DepotType::DepotLeft)
-			// 	_pointNearCone = searchNearestCone(track.pointsEdgeLeft, pointEdgeDet);		 // 搜索右下锥桶
-			// else if(depotType == DepotType::DepotRight)
-			// 	_pointNearCone = searchNearestCone(track.pointsEdgeRight, pointEdgeDet);		 // 搜索右下锥桶
+
+	/**
+	 * @brief 维修厂路径规划，在主线程运行
+	 *
+	 * @param track 赛道识别结果
+	 * @param detection AI检测结果
+	 */
+	bool depotDetection(TrackRecognition &track, cv::Mat img_rgb)
+	{
+		_pointNearCone = POINT(0, 0);
+		_distance = 0;
+		pointEdgeDet.clear();
+		_coneRects.clear();
+		indexDebug = 0;
+
+		switch (depotStep)
+		{
+		case DepotStep::DepotEnable: //[02] 维修厂使能
+		{
+			counterExit++;
+			if (counterExit > 150) {
+				reset();
+				return false;
+			}
+			counterSession++;//刚进入维修区，延时等待知道能看到所有锥桶
+			
+			_coneRects = searchCones(img_rgb);
+			searchCones(_coneRects);
+
+			if(depotType == DepotType::DepotLeft)
+				_pointNearCone = searchNearestCone(track.pointsEdgeLeft, pointEdgeDet);		 // 搜索右下锥桶
+			else if(depotType == DepotType::DepotRight)
+				_pointNearCone = searchNearestCone(track.pointsEdgeRight, pointEdgeDet);		 // 搜索右下锥桶
 
 			if (_pointNearCone.x > params.ServoRow && _pointNearCone.x < params.ServoRow + ROWSIMAGE / 3
-				&& _pointNearCone.y != 0 && counterSession > params.DelayCnt && _slowdown) // 当车辆开始靠近右边锥桶：准备入库
+				&& _pointNearCone.y != 0 && counterSession > params.DelayCnt/* && _slowdown*/) // 当车辆开始靠近右边锥桶：准备入库
 			{
 				counterRec++;
 				if (counterRec > 2)
@@ -178,7 +198,8 @@ public:
 		}
 		case DepotStep::DepotEnter: //[03] 进站使能
 		{
-			searchCones(predict);
+			_coneRects = searchCones(img_rgb);
+			searchCones(_coneRects);
 			_distance = 0;
 			_pointNearCone = searchClosestCone(pointEdgeDet);
 			if(_distance < params.DangerClose && _distance > 0)
@@ -190,23 +211,6 @@ public:
 					counterRec = 0;
 				}
 			}
-		}
-		}
-	}
-
-
-	/**
-	 * @brief 维修厂路径规划，在主线程运行
-	 *
-	 * @param track 赛道识别结果
-	 * @param detection AI检测结果
-	 */
-	bool depotDetection(TrackRecognition &track)
-	{
-		switch (depotStep)
-		{
-		case DepotStep::DepotEnter: //[03] 进站使能
-		{
 			if(depotType == DepotType::DepotLeft)
 			{
 				POINT start = POINT(ROWSIMAGE - 40, COLSIMAGE - 1);
@@ -252,10 +256,10 @@ public:
 		case DepotStep::DepotStop: //[05] 停车使能
 		{
 			counterRec++;
-			if (counterRec > 30) // 停车：40场 = 2s
+			if (counterRec > 100) // 停车：40场 = 2s
 			{
 				depotStep = DepotStep::DepotExit; // 出站使能
-				counterRec = params.BrakeCnt * 2;
+				counterRec = params.BrakeCnt;
 			}
 			track.pointsEdgeLeft = pathsEdgeLeft[pathsEdgeLeft.size() - 1];//维持入库最后的打角
 			track.pointsEdgeRight = pathsEdgeRight[pathsEdgeRight.size() - 1];
@@ -318,7 +322,7 @@ public:
 		{
 			for (int i = 0; i < predict.size(); i++)
 			{
-				if (predict[i].label == LABEL_TRACTOR && predict[i].y + predict[i].height > 60) // 拖拉机标志检测
+				if (predict[i].label == LABEL_TRACTOR && predict[i].y + predict[i].height / 2 > 60) // 拖拉机标志检测
 				{
 					counterRec++;
 					break;
@@ -595,14 +599,16 @@ public:
 		}
 		case DepotStep::DepotExit:
 		{
-			if(pathsEdgeLeft.size() != 0 && pathsEdgeRight.size() != 0)
+			if(pathsEdgeLeft.size() > params.BrakeCnt && pathsEdgeRight.size() > params.BrakeCnt)
 			{
 				_speed -= params.DepotSpeed / params.BrakeCnt;
 				if(_speed < -params.DepotSpeed)
 					_speed = -params.DepotSpeed;
 			}
 			else
-				_speed = 0.0f;
+			{
+				_speed += params.DepotSpeed / params.BrakeCnt;
+			}
 			break;
 		}
 		}
@@ -659,7 +665,7 @@ public:
 		if(depotType == DepotType::DepotRight)
 			state += " Right";
 		putText(image, state, Point(COLSIMAGE / 2 - 20, 20),
-				cv::FONT_HERSHEY_TRIPLEX, 0.3, cv::Scalar(0, 255, 0), 1, CV_AA);
+				cv::FONT_HERSHEY_TRIPLEX, 0.3, cv::Scalar(0, 0, 200), 1, CV_AA);
 
 		putText(image, to_string(_distance), Point(COLSIMAGE / 2 - 15, 40),
 				cv::FONT_HERSHEY_TRIPLEX, 0.3, cv::Scalar(0, 255, 0), 1,
@@ -671,6 +677,12 @@ public:
 		putText(image, to_string(indexDebug),
 				Point(COLSIMAGE / 2 - 10, ROWSIMAGE - 20), cv::FONT_HERSHEY_TRIPLEX,
 				0.3, cv::Scalar(0, 0, 255), 1, CV_AA);
+		if(_slowdown)
+		{
+			putText(image, "slowdown",
+					Point(COLSIMAGE / 2 - 10, ROWSIMAGE - 40), cv::FONT_HERSHEY_TRIPLEX,
+					0.3, cv::Scalar(0, 0, 255), 1, CV_AA);
+		}
 	}
 
 private:
@@ -692,7 +704,21 @@ private:
 			}
 		}
 	}
-
+	/**
+	 * @brief 从视觉结果中检索锥桶坐标集合
+	 *
+	 * @param predict AI检测结果
+	 * @return vector<POINT>
+	 */
+	void searchCones(vector<Rect> predict)
+	{
+		pointEdgeDet.clear();
+		for (int i = 0; i < predict.size(); i++)
+		{
+			pointEdgeDet.push_back(POINT(predict[i].y + predict[i].height / 2,
+											predict[i].x + predict[i].width / 2));
+		}
+	}
 	/**
 	 * @brief 搜索距离赛道左边缘锥桶坐标(右下，非常规意义上的)
 	 *
@@ -884,6 +910,48 @@ private:
 		double len = std::sqrt(dx * dx + dy * dy);
 		return len;
 	}
+
+	//传统视觉识别锥桶
+	std::vector<cv::Rect> searchCones(cv::Mat img_rgb)
+	{
+		std::vector<cv::Rect> coneRects;
+		// 设置锥桶颜色的RGB范围（黄色）
+		cv::Scalar lowerYellow(0, 100, 100);
+		cv::Scalar upperYellow(100, 255, 255);
+
+		// 在RGB图像中根据颜色范围提取锥桶区域
+		cv::Mat mask;
+		cv::inRange(img_rgb, lowerYellow, upperYellow, mask);
+
+		// 进行形态学操作，去除噪声并提取锥桶区域的轮廓
+		cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
+		cv::morphologyEx(mask, mask, cv::MORPH_OPEN, kernel);
+
+		std::vector<std::vector<cv::Point>> contours;
+		cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+		// 查找最大轮廓
+		size_t maxContourIndex = 0;
+		double maxContourArea = 0.0;
+		for (size_t i = 0; i < contours.size(); ++i)
+		{
+			double contourArea = cv::contourArea(contours[i]);
+			if (contourArea > maxContourArea)
+			{
+				maxContourArea = contourArea;
+				maxContourIndex = i;
+			}
+		}
+
+		// 绘制正方形框选中锥桶区域
+		for (const auto& contour : contours)
+		{
+			cv::Rect boundingRect = cv::boundingRect(contour);
+			coneRects.push_back(boundingRect);
+		}	
+		return coneRects;
+	}
+
 	
 private:
 	DepotStep depotStep = DepotStep::DepotNone;
@@ -892,11 +960,12 @@ private:
 	
 	double _distance = 0;
 	POINT _pointNearCone;
-	vector<POINT> pointEdgeDet; // AI元素检测边缘点集
+	std::vector<POINT> pointEdgeDet; // AI元素检测边缘点集
+	std::vector<cv::Rect> _coneRects;
 	float _speed = 0.0f;
 
-	vector<vector<POINT>> pathsEdgeLeft; // 记录入库路径
-	vector<vector<POINT>> pathsEdgeRight;
+	std::vector<std::vector<POINT>> pathsEdgeLeft; // 记录入库路径
+	std::vector<std::vector<POINT>> pathsEdgeRight;
 	int indexDebug = 0;
 
 	uint16_t counterSession = 0;  // 图像场次计数器

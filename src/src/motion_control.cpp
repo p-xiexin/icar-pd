@@ -282,7 +282,7 @@ public:
         double x_offset = abs(control.centerEdge[0].y - Mid_line);
         if(y_offset > 60)
             y_offset = 60;
-        motorSpeed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(abs(CenterLine_k)) - y_offset / 40 - x_offset / 100;
+        motorSpeed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(abs(CenterLine_k)) - y_offset / 100 - x_offset / 100;
 
         // 最低速限制
         if(motorSpeed < 0.8)
@@ -463,7 +463,7 @@ public:
      * @param controlCenter 智能车控制中心
      * @param track 路径
      */
-    void Angle_Controller(ControlCenterCal controlCenter, TrackRecognition track)
+    void Angle_Controller(ControlCenterCal controlCenter, TrackRecognition track, int enum_RoadType = 0)
     {
         /**********线偏均值计算**************/
         Line_offset_down = 0;
@@ -532,7 +532,14 @@ public:
         // Angle_rad = atan(CenterLine_k);
         // 角偏积分项
         static float Angle_Iout = 0;
-        Angle_Iout += params.Ki_down * CenterLine_k;
+        if(enum_RoadType == 1)
+        {
+            Angle_Iout += params.Ki_down * CenterLine_k;
+        }
+        else 
+        {
+            Angle_Iout = 0;
+        }
         // 积分项限幅
         if(Angle_Iout >= params.ki_down_out_max)
             Angle_Iout = params.ki_down_out_max;

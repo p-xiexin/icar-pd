@@ -62,7 +62,6 @@ int main(int argc, char *argv[])
     RingRecognition ringRecognition;           // 环岛识别
     CrossroadRecognition crossroadRecognition; // 十字道路处理
     GarageRecognition garageRecognition;       // 车库检测
-    DepotDetection depotDetection;             // 车辆维修区检测
     FarmlandAvoidance farmlandAvoidance;       // 农田断路区检测
     uint16_t counterRunBegin = 1;              // 智能车启动计数器：等待摄像头图像帧稳定
     uint16_t counterOutTrackA = 0;             // 车辆冲出赛道计数器A
@@ -178,7 +177,7 @@ int main(int argc, char *argv[])
         bool AI_enable = detection.AI_Enable();
         std::shared_ptr<DetectionResult> ai_results = nullptr;
         if (controlCenterCal.style != "STRIGHT") AI_enable = false;
-        if (roadType == 6 || roadType == 9) AI_enable = true;
+        if (/*roadType == 6 || */roadType == 9) AI_enable = true;
         else if (roadType == 1) AI_enable = false;
         if(roadType) detection.Startdetect = false;
         else detection.Startdetect = true;
@@ -195,7 +194,7 @@ int main(int argc, char *argv[])
 
         /*2.图像预处理*/
         // Mat imgaeCorrect = imagePreprocess.imageCorrection(frame);         // RGB
-        Mat imgaeCorrect = frame;                                          // RGB
+        Mat imgaeCorrect = frame.clone();                                          // RGB
         Mat imageBinary = imagePreprocess.imageBinaryzation(imgaeCorrect); // Gray
 
         /*3.基础赛道识别*/
@@ -275,7 +274,7 @@ int main(int argc, char *argv[])
         {
             if (roadType == RoadType::DepotHandle || roadType == RoadType::BaseHandle)
             {
-                if (depotDetection.depotDetection(trackRecognition, ai_results->predictor_results))
+                if (depotDetection.depotDetection(trackRecognition, imgaeCorrect))
                 {
                     if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
                         serialInterface.buzzerSound(1);   // OK
@@ -538,7 +537,7 @@ int main(int argc, char *argv[])
             }
             rectangle(imageTrack, Rect(controlCenterCal.intersectionLeft.y, controlCenterCal.intersectionLeft.x, 10, 10), Scalar(0, 0, 200), 1);
             rectangle(imageTrack, Rect(controlCenterCal.intersectionRight.y, controlCenterCal.intersectionRight.x, 10, 10), Scalar(0, 0, 200), 1);
-            putText(imageTrack, to_string(ringRecognition.counterShield), Point(COLSIMAGE / 2 - 5, ROWSIMAGE - 20), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 155), 1, CV_AA);
+            // putText(imageTrack, to_string(ringRecognition.counterShield), Point(COLSIMAGE / 2 - 5, ROWSIMAGE - 20), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 155), 1, CV_AA);
 
             putText(imageTrack, "FPS: " + formatDoble2String(detFPS, 2), Point(20, 20), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1); // 车速
             putText(imageTrack, "PWM:" + formatDoble2String(motionController.servoPwm,2), Point(20,40),FONT_HERSHEY_PLAIN, 1, Scalar(0,0,255), 1);  //下发的pwm值

@@ -1,6 +1,6 @@
 {
-    "speedLow": 1.2,
-    "speedHigh": 1.4,
+    "speedLow": 1.4,
+    "speedHigh": 1.8,
     "speedAI": 1.2,
     "speedCorners": 1.5,
     "speedcoiled": 1.4,
@@ -20,25 +20,25 @@
     "Kv": 0,
 
     "Angle_Kp": 7.2,
-    "Angle_Ki": 0.0,
+    "Angle_Ki": 0.1,
     "dynamic_Mid_low": 140,
     "dynamic_Mid_high": 180,
     "Angle_target": 0.40,
 
     "Control_Mid": 160,
     "Control_Down_set": 21,
-    "Control_Up_set": 175,
+    "Control_Up_set": 180,
     "ki_down_out_max": 2.0,
     "Kp_dowm": 0.0,
     "Ki_down": 0.0,
-    "Line_compensation_coefficient": 0.18,
+    "Line_compensation_coefficient": 0.20,
 
     "rowCutUp": 40,
     "rowCutBottom": 10,
 
     "Debug": false,
     "Button": false,
-    "SaveImage": true,
+    "SaveImage": false,
     "CloseLoop": true,
     "GarageEnable": false,
     "RingEnable": true,
