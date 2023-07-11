@@ -22,7 +22,6 @@
 #include "../../include/json.hpp"
 #include "../../include/common.hpp"
 #include "../../include/predictor.hpp"
-// #include "../motion_controller.cpp"
 #include "../motion_control.cpp"
 
 
@@ -104,6 +103,8 @@ public:
     int     garage_scre_num = params.shield_counter;    // 屏蔽计数器标志位
     int     site_cross_x    = 0;                        // 识别出来的斑马线在图像的位置
     int     site_cross_y    = 0;                        // 识别出来的斑马线在图像的位置
+    int     cross_down_line = 0;                        // 识别出来的车库下拐点
+    int     cross_up_line   = 0;                        // 识别出来的车库上拐点
 
 private:
     /**
@@ -215,14 +216,14 @@ private:
         // 左
         if(params.garage_run == 0 || params.garage_run == 2)
         {
-            // 有边线去除掉前1/3的线，然后斜率小于一定范围，既直线
+            // 有边线去除掉前1/5的线，然后斜率小于一定范围，既直线
             if(track.pointsEdgeRight.size() > 0)
             {
-                if(track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].x <= ROWSIMAGE / 3)
+                if(track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].x <= ROWSIMAGE / 5)
                 {
                     int cnt = track.pointsEdgeRight.size() - 1;
                     // 去除图片上面固定行的点集
-                    for(int i = track.pointsEdgeRight.size() - 1; track.pointsEdgeRight[i].x <= ROWSIMAGE / 3; i--)
+                    for(int i = track.pointsEdgeRight.size() - 1; track.pointsEdgeRight[i].x <= ROWSIMAGE / 5; i--)
                     {
                         cnt--;
                     }
@@ -245,6 +246,9 @@ private:
 
             int searchLeft_down = garage_point_search_left(track.pointsEdgeLeft);
             int searchLeft_up = sBreakLeftUp(track.pointsEdgeLeft);
+
+            cross_down_line = searchLeft_down;
+            cross_up_line = searchLeft_up;
 
             // if(searchLeft_down != 0 && searchLeft_up != 0)
             // {
@@ -275,14 +279,14 @@ private:
         // 右
         else if(params.garage_run == 1 || params.garage_run == 3)
         {
-            // 有边线去除掉前1/3的线，然后斜率小于一定范围，既直线
+            // 有边线去除掉前1/5的线，然后斜率小于一定范围，既直线
             if(track.pointsEdgeLeft.size() > 0)
             {
-                if(track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].x <= ROWSIMAGE / 3)
+                if(track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].x <= ROWSIMAGE / 5)
                 {
                     int cnt = track.pointsEdgeLeft.size() - 1;
                     // 去除图片上面固定行的点集
-                    for(int i = track.pointsEdgeLeft.size() - 1; track.pointsEdgeLeft[i].x <= ROWSIMAGE / 3; i--)
+                    for(int i = track.pointsEdgeLeft.size() - 1; track.pointsEdgeLeft[i].x <= ROWSIMAGE / 5; i--)
                     {
                         cnt--;
                     }
@@ -305,12 +309,15 @@ private:
 
             int searchRight_down = garage_point_search_right(track.pointsEdgeRight);
             int searchRight_up = sBreakRightUp(track.pointsEdgeRight);
-            
-            if(searchRight_down != 0 && searchRight_up != 0)
-            {
+
+            cross_down_line = searchRight_down;
+            cross_up_line = searchRight_down;
+
+            // if(searchRight_down != 0 && searchRight_up != 0)
+            // {
                 site_cross_x = track.pointsEdgeLeft[searchRight_down].x;
                 site_cross_y = track.pointsEdgeLeft[searchRight_up].x;
-            }
+            // }
 
             if(searchRight_up == track.pointsEdgeRight.size() - 1 || searchRight_down == 0)
                 return false;
@@ -600,7 +607,7 @@ private:
                 }
             }
         }
-        // 没有搜寻到，返回0
+        // 没有搜寻到，返回
         return rowBreakRight;
     }
 
@@ -708,7 +715,7 @@ private:
             // {
             //     continue;
             // }
-            if (pointsEdgeRight[i].y <= pointsEdgeRight[rowBreakRight].y || (abs(pointsEdgeRight[i].y - pointsEdgeRight[rowBreakRight].y) < 10))
+            if (pointsEdgeRight[i].y <= pointsEdgeRight[rowBreakRight].y || (abs(pointsEdgeRight[i].y - pointsEdgeRight[rowBreakRight].y) < 3))
             {
                 rowBreakRight = i;
                 counter = 0;
@@ -748,7 +755,7 @@ private:
             // {
             //     continue;
             // }
-            if (pointsEdgeLeft[i].y >= pointsEdgeLeft[rowBreakLeft].y || (abs(pointsEdgeLeft[i].y - pointsEdgeLeft[rowBreakLeft].y) < 10))
+            if (pointsEdgeLeft[i].y >= pointsEdgeLeft[rowBreakLeft].y || (abs(pointsEdgeLeft[i].y - pointsEdgeLeft[rowBreakLeft].y) < 3))
             {
                 rowBreakLeft = i;
                 counter = 0;
@@ -997,7 +1004,7 @@ public:
                 chack_picNum++;
                 // site_cross_x = track.pointsEdgeRight[track.garageEnable.y].x;
             }
-       
+
             if(chack_picNum)
             {
                 // 图片帧数计数
@@ -1133,7 +1140,7 @@ public:
             // 半入库
             case GARAGE_HALF_STOP:
                 // 屏蔽图像前半部分的信息
-                if(track.pointsEdgeLeft[0].x <= 120 || track.pointsEdgeRight[0].x <= 120)
+                if(track.pointsEdgeLeft[0].x <= 60 || track.pointsEdgeRight[0].x <= 60)
                 {
                     track.pointsEdgeLeft.resize(0);
                     track.pointsEdgeRight.resize(0);
@@ -1144,13 +1151,13 @@ public:
                    (track.pointsEdgeRight.size() == 0 && track.pointsEdgeLeft.size() == 0) || (track.pointsEdgeLeft[0].x >= 121 && track.pointsEdgeRight[0].x >= 121))
                 {
                     flag_garage = GARAGE_BRAKE;
-                    speed_ku = -params.speed_nor;
+                    // speed_ku = -params.speed_nor;
                 }
                 break;
         /* ********************************************************* */
             // 刹车
             case GARAGE_BRAKE:
-                speed_ku = -params.speed_nor;
+                // speed_ku = -params.speed_nor;
                 picNum_brake++;
                 if(picNum_brake >= params.brakePicNum)
                 {
@@ -1168,37 +1175,55 @@ public:
      * @brief 第一圈跑完，经过车库，是否完全过车库判断
      * @param track 路径
      */
-    void no_processing(TrackRecognition track)
+    void no_processing(TrackRecognition &track)
     {
         // 定义静态变量，用于计数，完全经过车库
         static uint16_t counterExit = 0;
         // 第一圈正常速度
         speed_ku = params.speed_nor;
         // 检测斑马线，来判定是否出库，连续5帧图片都达到判定条件，则完成出库
-        if (!detect_garage(track)) 
+        if (!detect_garage(track))
         {
-            /***补线操作***/
             // 左库补线
             if(params.garage_run == 0 || params.garage_run == 2)
             {
-                track.pointsEdgeLeft = track.predictEdgeLeft(track.pointsEdgeRight);
-                cout << "ok" << endl;
+                track.pointsEdgeLeft[0] = POINT(225, 10);
+                if(cross_up_line != 0)
+                    line(track.pointsEdgeLeft, 0, cross_up_line);
+                if(track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].y > 160)
+                    track.pointsEdgeLeft = track.predictEdgeLeft(track.pointsEdgeRight);
             }
             // 右库补线
             if(params.garage_run == 1 || params.garage_run == 3)
-                track.pointsEdgeRight = track.predictEdgeRight(track.pointsEdgeLeft);
-            // 计数器计数，如果有5帧图片，则出库完成，进入空闲状态机，并且开启屏蔽
+            {
+                track.pointsEdgeRight[0] = POINT(225, 310);
+                if(cross_up_line != 0)
+                    line(track.pointsEdgeRight, 0, cross_up_line);
+                // 如果出现帧错误，靠逆透视补线
+                if(track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].y < 160)
+                    track.pointsEdgeRight = track.predictEdgeRight(track.pointsEdgeLeft);
+            }
+
+            // 计数器计数，如果有12帧图片，则出库完成，进入空闲状态机，并且开启屏蔽
             counterExit++;
-            if (counterExit >= 5)
+            if (counterExit >= 12)
             {
                 Garage_screen = true;
                 garage_scre_num = params.shield_counter;
-                flag_garage = flag_garage_e::GARAGE_NONE;
+                flag_garage = flag_garage_e::GARAGE_NONE; 
             }
         }
         // 检测到斑马线，计数器清零
         else
         {
+            /***补线操作***/
+            // 左库补线
+            if(params.garage_run == 0 || params.garage_run == 2)
+                line(track.pointsEdgeLeft, cross_down_line, cross_up_line);
+            // 右库补线
+            if(params.garage_run == 1 || params.garage_run == 3)
+                line(track.pointsEdgeRight, cross_down_line, cross_up_line);
+            // 计数器清零
             counterExit = 0;
         }
     }
@@ -1285,16 +1310,19 @@ public:
             //     return;
 
             // 拐点的搜寻
-            uint16_t rowBreakLeft = searchBreakLeft(track.pointsEdgeLeft);                      // 左上拐点搜索
-            uint16_t rowBreakRight = searchBreakRightDown(track.pointsEdgeRight, 0, 60);        // 右下补线点搜索,从0开始到20行
-            uint16_t rowBreakLeft_Down = searchBreakLeftDown(track.pointsEdgeLeft, 0, 60);      // 左下点搜索,从0开始到20行
+            uint16_t rowBreakLeft = searchBreakLeft(track.pointsEdgeLeft);                       // 左上拐点搜索
+            uint16_t rowBreakRight = searchBreakRightDown(track.pointsEdgeRight, 0, 180);        // 右下补线点搜索,从0开始到180行
+            uint16_t rowBreakLeft_Down = searchBreakLeftDown(track.pointsEdgeLeft, 0, 180);      // 左下点搜索,从0开始到180行
 
             // 避免出库提前转向优化->当右下角或者左下角的拐点到达图像的下方20行的位置时，在开始转弯；参数在配置文件中，方便修改
             if (track.pointsEdgeRight[rowBreakRight].x <= params.corner_lines) 
             {
                 // 优化右边的边线
                 track.pointsEdgeRight.resize(rowBreakRight);
-                track.pointsEdgeLeft.resize(rowBreakLeft_Down);
+                if(rowBreakLeft_Down == 0 && rowBreakRight <= track.pointsEdgeLeft.size())
+                    track.pointsEdgeLeft.resize(rowBreakRight);
+                else
+                    track.pointsEdgeLeft.resize(rowBreakLeft_Down);
                 // 退出该函数，不进行补线
                 return;
             }
@@ -1306,9 +1334,10 @@ public:
             // }
 
             // 开始进行出库补线，左库
-            if(rowBreakRight == 0)
+            if(rowBreakRight == 0 || track.pointsEdgeRight[rowBreakRight].y < 270)
             {
                 startPoint = POINT(225,315);
+                track.pointsEdgeRight.clear();
             }
             else
             {
@@ -1356,18 +1385,19 @@ public:
             //     }
 
             // 出库补线终点
-            endPoint = POINT(90, 10);
+            endPoint = POINT(50, 1);
             // 补线起点和终点正确性校验，判断起点和中点的位置关系是否正确
             if (startPoint.x > endPoint.x && startPoint.y > endPoint.y)
             {
                 // 斑马线右边部分补线
                 midPoint = POINT((startPoint.x + endPoint.x) * 0.35, (startPoint.y + endPoint.y) * 0.5);     // 出库补线中点
-                _pointRU = endPoint;                                                                        // dubug图中显示，布线的中点
+                _pointRU = endPoint;                                                                         // dubug图中显示，布线的中点
                 // 三阶贝塞尔曲线拟合
                 vector<POINT> repairPoints = {startPoint, midPoint, endPoint};
                 vector<POINT> modifyEdge = Bezier(0.02, repairPoints);
                 // 删除基础巡线找到的无效点
-                track.pointsEdgeRight.resize(rowBreakRight);
+                if (track.pointsEdgeRight.size() != 0)
+                    track.pointsEdgeRight.resize(rowBreakRight);
                 // 将拟合曲线加进去
                 for (int i = 0; i < modifyEdge.size(); i++)
                 {
@@ -1440,16 +1470,19 @@ public:
                 return;
 
             // 拐点的搜寻
-            uint16_t rowBreakLeft = searchBreakLeftDown(track.pointsEdgeLeft, 0, 60);           // 左下补线点搜索，从0开始到20行
-            uint16_t rowBreakRight_Down = searchBreakRightDown(track.pointsEdgeRight, 0, 60);   // 右下补线点搜索,从0开始到20行
-            uint16_t rowBreakRight = searchBreakRight(track.pointsEdgeRight);                   // 右上拐点搜索
+            uint16_t rowBreakLeft = searchBreakLeftDown(track.pointsEdgeLeft, 0, 180);           // 左下补线点搜索，从0开始到180行
+            uint16_t rowBreakRight_Down = searchBreakRightDown(track.pointsEdgeRight, 0, 180);   // 右下补线点搜索,从0开始到180行
+            uint16_t rowBreakRight = searchBreakRight(track.pointsEdgeRight);                    // 右上拐点搜索
 
             // 避免出库提前转向优化->当右下角或者左下角的拐点到达图像的下方25行的位置时，在开始转弯
             if (track.pointsEdgeLeft[rowBreakLeft].x <= params.corner_lines) 
             {
                 // 优化左右两边的边线
                 track.pointsEdgeLeft.resize(rowBreakLeft);
-                track.pointsEdgeRight.resize(rowBreakRight_Down);
+                if(rowBreakRight_Down == 0 && rowBreakLeft <= track.pointsEdgeRight.size())
+                    track.pointsEdgeRight.resize(rowBreakLeft);
+                else
+                    track.pointsEdgeRight.resize(rowBreakRight_Down);
                 // 退出该函数，不进行补线
                 return;
             }
@@ -1461,9 +1494,10 @@ public:
             // }
 
             // 开始进行出库补线，右库
-            if(rowBreakLeft == 0)
+            if(rowBreakLeft == 0 || track.pointsEdgeLeft[rowBreakLeft].y > 50)
             {
                 startPoint = POINT(225,5);
+                track.pointsEdgeLeft.clear();
             }
             else
             {
@@ -1511,18 +1545,19 @@ public:
             //     }
 
             // 出库补线终点
-            endPoint = POINT(90, 310);
+            endPoint = POINT(50, 319);
             // 补线起点和终点正确性校验，判断起点和中点的位置关系是否正确
             if (startPoint.x > endPoint.x && startPoint.y < endPoint.y)
             {
                 // 斑马线右边部分补线
                 midPoint = POINT((startPoint.x + endPoint.x) * 0.35, (startPoint.y + endPoint.y) * 0.5);     // 出库补线中点
-                _pointRU = endPoint;                                                                        // dubug图中显示，布线的中点
+                _pointRU = endPoint;                                                                         // dubug图中显示，布线的中点
                 // 三阶贝塞尔曲线拟合
                 vector<POINT> repairPoints = {startPoint, midPoint, endPoint};
                 vector<POINT> modifyEdge = Bezier(0.02, repairPoints);
                 // 删除基础巡线找到的无效点
-                track.pointsEdgeLeft.resize(rowBreakLeft);
+                if (track.pointsEdgeLeft.size() != 0)
+                    track.pointsEdgeLeft.resize(rowBreakLeft);
                 // 将拟合曲线加进去
                 for (int i = 0; i < modifyEdge.size(); i++)
                 {
@@ -1613,7 +1648,7 @@ public:
 
                 // 二次补线，左边完整补线
                 startPoint = endPoint;
-                endPoint = POINT(120,5);                                                                        // 固定点左边中点补线
+                endPoint = POINT(endPoint.x,1);                                                                        // 固定点左边中点补线
                 midPoint = POINT((startPoint.x + endPoint.x) * 0.5, (startPoint.y + endPoint.y) * 0.5);         // 入库补线中点
                 // 三阶贝塞尔曲线拟合
                 repairPoints = {startPoint, midPoint, endPoint};
@@ -1626,7 +1661,11 @@ public:
                 }
 
                 // 清空基础赛道识别的路径
-                track.pointsEdgeLeft.resize(5);
+                track.pointsEdgeLeft.clear();
+                for(int i = 0;i < 5;i++)
+                {
+                    track.pointsEdgeLeft.push_back(POINT(ROWSIMAGE - track.rowCutBottom, i));
+                }
 
                 // 通过拐点判断是否已经大半进入车库
                 if(track.spurroad.size() >= 1)
@@ -1670,7 +1709,7 @@ public:
 
                 // 二次补线，左边完整补线
                 startPoint = endPoint;
-                endPoint = POINT(120,315);                                                                      // 固定点右边中点补线
+                endPoint = POINT(endPoint.x,319);                                                                      // 固定点右边中点补线
                 midPoint = POINT((startPoint.x + endPoint.x) * 0.5, (startPoint.y + endPoint.y) * 0.5);         // 入库补线中点
                 // 三阶贝塞尔曲线拟合
                 repairPoints = {startPoint, midPoint, endPoint};
@@ -1683,7 +1722,11 @@ public:
                 }
 
                 // 清空基础赛道识别的路径
-                track.pointsEdgeRight.resize(5);
+                track.pointsEdgeRight.clear();
+                for(int i = 0;i < 5;i++)
+                {
+                    track.pointsEdgeRight.push_back(POINT(ROWSIMAGE - track.rowCutBottom, COLSIMAGE - i));
+                }
 
                 // 通过拐点判断是否已经大半进入车库
                 if(track.spurroad.size() >= 1)
@@ -1774,7 +1817,7 @@ public:
         putText(trackImage, step, Point(COLSIMAGE - 80, ROWSIMAGE - 20), cv::FONT_HERSHEY_TRIPLEX, 0.3, cv::Scalar(0, 0, 255), 1, CV_AA);
         // putText(trackImage, "Garage", Point(COLSIMAGE / 2 - 5, 20), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 255, 0), 1, CV_AA); // 显示赛道识别类型
 
-        // 传统视觉识别的斑马线绘制
+        // 传统视觉识别的车库下角点
         if(site_cross_x > 0)
         {
             vector<POINT> cross_site;
@@ -1788,13 +1831,27 @@ public:
             }
         }
 
-        // 传统视觉识别的斑马线绘制
+        // 传统视觉识别的车库上角点
         if(site_cross_y > 0)
         {
             vector<POINT> cross_site;
             for(int i = 0; i < COLSIMAGE; i++)
             {
                 cross_site.push_back(POINT(site_cross_y, i));
+            }
+            for (int i = 0; i < cross_site.size(); i++)
+            {
+                circle(trackImage, Point(cross_site[i].y, cross_site[i].x), 1, Scalar(255, 255, 255), -1); // 白色点
+            }
+        }
+
+        // 传统视觉识别的斑马线中点
+        if(track.garageEnable.x == 1)
+        {
+            vector<POINT> cross_site;
+            for(int i = 0; i < COLSIMAGE; i++)
+            {
+                cross_site.push_back(POINT(track.garageEnable.y, i));
             }
             for (int i = 0; i < cross_site.size(); i++)
             {

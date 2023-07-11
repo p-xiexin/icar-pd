@@ -79,7 +79,14 @@ public:
         }
 
         // 边缘有效行优化，左边方差大右边方差小；或者左边小右边大，就是转弯。将边缘没用的边线优化
-        if ((track.stdevLeft < 65 && track.stdevRight > 65) || (track.stdevLeft > 65 && track.stdevRight < 65))
+        if ((track.stdevLeft < 60 && track.stdevRight > 60) || (track.stdevLeft > 60 && track.stdevRight < 60))
+        {
+            validRowsCal(track.pointsEdgeLeft, track.pointsEdgeRight); // 边缘有效行计算
+            track.pointsEdgeLeft.resize(validRowsLeft);
+            track.pointsEdgeRight.resize(validRowsRight);
+        }
+        else if(track.pointsEdgeLeft.size() < 185 && track.pointsEdgeRight.size() < 185 && 
+                (track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].y > COLSIMAGE / 2 + 30 || track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].y < COLSIMAGE / 2 - 30))
         {
             validRowsCal(track.pointsEdgeLeft, track.pointsEdgeRight); // 边缘有效行计算
             track.pointsEdgeLeft.resize(validRowsLeft);
@@ -87,12 +94,12 @@ public:
         }
 
         /****补丁****/
-        if((track.stdevLeft == 0 && track.stdevRight > 50) && track.pointsEdgeLeft.size() < 100
+        if((track.stdevLeft == 0 && track.stdevRight > 50) && track.pointsEdgeLeft.size() < 90
             && track.pointsEdgeLeft[0].y == track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].y)
         {
             track.pointsEdgeLeft.resize(0);
         }
-        else if((track.stdevRight == 0 && track.stdevLeft > 50) && track.pointsEdgeRight.size() < 100
+        else if((track.stdevRight == 0 && track.stdevLeft > 50) && track.pointsEdgeRight.size() < 90
             && track.pointsEdgeRight[0].y == track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].y)
         {
             track.pointsEdgeRight.resize(0);
@@ -151,37 +158,57 @@ public:
         }
         else if (track.pointsEdgeLeft.size() > 4 && track.pointsEdgeRight.size() == 0) // 左单边
         {
-            v_center[0] = {(track.pointsEdgeLeft[0].x + ROWSIMAGE - 1) / 2,
-                           (track.pointsEdgeLeft[0].y + COLSIMAGE - 1) / 2};
+            // if(enum_RoadType == 4)
+            // {
+                // 手动给单边补七个点
+                for(int i = 0;i < 7;i++)
+                    track.pointsEdgeRight.push_back(POINT(ROWSIMAGE - track.rowCutBottom - i, COLSIMAGE - 1));
+                centerEdge = bezier_curve_fitting(track.pointsEdgeLeft, track.pointsEdgeRight);
+            // }
+            // else
+            // {
+            //     v_center[0] = {(track.pointsEdgeLeft[0].x + ROWSIMAGE - 1) / 2,
+            //                 (track.pointsEdgeLeft[0].y + COLSIMAGE - 1) / 2};
 
-            v_center[1] = {(track.pointsEdgeLeft[track.pointsEdgeLeft.size() / 3].x + ROWSIMAGE - 1) / 2,
-                           (track.pointsEdgeLeft[track.pointsEdgeLeft.size() / 3].y + COLSIMAGE - 1) / 2};
+            //     v_center[1] = {(track.pointsEdgeLeft[track.pointsEdgeLeft.size() / 3].x + ROWSIMAGE - 1) / 2,
+            //                 (track.pointsEdgeLeft[track.pointsEdgeLeft.size() / 3].y + COLSIMAGE - 1) / 2};
 
-            v_center[2] = {(track.pointsEdgeLeft[track.pointsEdgeLeft.size() * 2 / 3].x + ROWSIMAGE - 1) / 2,
-                           (track.pointsEdgeLeft[track.pointsEdgeLeft.size() * 2 / 3].y + COLSIMAGE - 1) / 2};
+            //     v_center[2] = {(track.pointsEdgeLeft[track.pointsEdgeLeft.size() * 2 / 3].x + ROWSIMAGE - 1) / 2,
+            //                 (track.pointsEdgeLeft[track.pointsEdgeLeft.size() * 2 / 3].y + COLSIMAGE - 1) / 2};
 
-            v_center[3] = {(track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].x + ROWSIMAGE - 1) / 2,
-                           (track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].y + COLSIMAGE - 1) / 2};
+            //     v_center[3] = {(track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].x + ROWSIMAGE - 1) / 2,
+            //                 (track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].y + COLSIMAGE - 1) / 2};
 
-            centerEdge = Bezier(0.02, v_center);
+            //     centerEdge = Bezier(0.02, v_center);
+            // }
 
             style = "RIGHT_D";
         }
         else if (track.pointsEdgeLeft.size() == 0 && track.pointsEdgeRight.size() > 4) // 右单边
         {
-            v_center[0] = {(track.pointsEdgeRight[0].x + ROWSIMAGE - 1) / 2,
-                            (track.pointsEdgeRight[0].y) / 2};
+            // if(enum_RoadType == 4)
+            // {
+                // 手动给单边补七个点
+                for(int i = 0;i < 7;i++)
+                    track.pointsEdgeLeft.push_back(POINT(ROWSIMAGE - track.rowCutBottom - i, 0));
+                centerEdge = bezier_curve_fitting(track.pointsEdgeLeft, track.pointsEdgeRight);
+            // }
+            // else
+            // {
+            //     v_center[0] = {(track.pointsEdgeRight[0].x + ROWSIMAGE - 1) / 2,
+            //                     (track.pointsEdgeRight[0].y) / 2};
 
-            v_center[1] = {(track.pointsEdgeRight[track.pointsEdgeRight.size() / 3].x + ROWSIMAGE - 1) / 2,
-                           (track.pointsEdgeRight[track.pointsEdgeRight.size() / 3].y) / 2};
+            //     v_center[1] = {(track.pointsEdgeRight[track.pointsEdgeRight.size() / 3].x + ROWSIMAGE - 1) / 2,
+            //                 (track.pointsEdgeRight[track.pointsEdgeRight.size() / 3].y) / 2};
 
-            v_center[2] = {(track.pointsEdgeRight[track.pointsEdgeRight.size() * 2 / 3].x + ROWSIMAGE - 1) / 2,
-                           (track.pointsEdgeRight[track.pointsEdgeRight.size() * 2 / 3].y) / 2};
+            //     v_center[2] = {(track.pointsEdgeRight[track.pointsEdgeRight.size() * 2 / 3].x + ROWSIMAGE - 1) / 2,
+            //                 (track.pointsEdgeRight[track.pointsEdgeRight.size() * 2 / 3].y) / 2};
 
-            v_center[3] = {(track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].x + ROWSIMAGE - 1) / 2,
-                           (track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].y) / 2};
+            //     v_center[3] = {(track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].x + ROWSIMAGE - 1) / 2,
+            //                 (track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].y) / 2};
 
-            centerEdge = Bezier(0.02, v_center);
+            //     centerEdge = Bezier(0.02, v_center);
+            // }
 
             style = "LEFT_D";
         }
@@ -598,7 +625,7 @@ private:
                             counter++;
                             if (counter >= 3)
                             {
-                                pointsEdgeLeft.resize(i - 3);
+                                pointsEdgeLeft.resize(i);
                             }
                         }
                         else
@@ -619,7 +646,7 @@ private:
                             counter++;
                             if (counter >= 3)
                             {
-                                pointsEdgeRight.resize(i - 3);
+                                pointsEdgeRight.resize(i);
                             }
                         }
                         else

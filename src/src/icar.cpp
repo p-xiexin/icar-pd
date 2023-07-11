@@ -62,7 +62,6 @@ int main(int argc, char *argv[])
     RingRecognition ringRecognition;           // 环岛识别
     CrossroadRecognition crossroadRecognition; // 十字道路处理
     GarageRecognition garageRecognition;       // 车库检测
-    FarmlandAvoidance farmlandAvoidance;       // 农田断路区检测
     uint16_t counterRunBegin = 1;              // 智能车启动计数器：等待摄像头图像帧稳定
     uint16_t counterOutTrackA = 0;             // 车辆冲出赛道计数器A
     uint16_t counterOutTrackB = 0;             // 车辆冲出赛道计数器B
@@ -181,6 +180,7 @@ int main(int argc, char *argv[])
         else if (roadType == 1) AI_enable = false;
         if(roadType) detection.Startdetect = false;
         else detection.Startdetect = true;
+        // AI_enable = false; 
         if (AI_enable)
         {
             ai_results = detection.getLastFrame();
@@ -414,7 +414,7 @@ int main(int argc, char *argv[])
         if (counterRunBegin > 30)
         {
             // // 智能车方向控制
-            motionController.Angle_Controller(controlCenterCal, trackRecognition);
+            motionController.Angle_Controller(controlCenterCal, trackRecognition, roadType);
 
 			// 智能车速度控制
 			switch (roadType)

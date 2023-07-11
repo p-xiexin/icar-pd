@@ -99,8 +99,8 @@ public:
         //[1]左右环岛判断
         if(ringType == RingType::RingNone && ringStep == RingStep::None)
         {
-            uint16_t rowBreakRightDown = searchBreakRightDown(track.pointsEdgeRight, 0, COLSIMAGE / 2);
-            uint16_t rowBreakLeftDown = searchBreakLeftDown(track.pointsEdgeLeft, 0, COLSIMAGE / 2);
+            uint16_t rowBreakRightDown = searchBreakRightDown(track.pointsEdgeRight, 0, COLSIMAGE / 2 - 20);
+            uint16_t rowBreakLeftDown = searchBreakLeftDown(track.pointsEdgeLeft, 0, COLSIMAGE / 2 - 20);
 
             if(rowBreakLeftDown != 0 && rowBreakRightDown == 0
                 && ((track.stdevLeft > 120 && track.stdevRight < 60) || (track.stdevLeft > 200 && track.stdevRight < 80) || (track.stdevLeft > 100 && track.stdevRight < 40))
@@ -236,6 +236,11 @@ public:
         }
         else if(ringType != RingType::RingNone && ringStep == RingStep::None)
         {
+            if (track.garageEnable.x)
+            {
+                reset();
+                return false;
+            }
 			// counterExit++;
 			// if (counterExit > 40) {
 			//   reset();
@@ -248,7 +253,7 @@ public:
                 uint16_t rowBreakLeftU = searchBreakLeftDown(track.pointsEdgeLeft, rowBreakLeftD + 30, track.pointsEdgeLeft.size());
                 
                 pointBreakD = track.pointsEdgeLeft[rowBreakLeftD];
-                if(rowBreakLeftD && rowBreakLeftU)///////////////////////////////
+                if(rowBreakLeftD && rowBreakLeftU && rowBreakLeftU > rowBreakLeftD)///////////////////////////////
                 {
                     counterSpurroad++;
                     pointBreakU = track.pointsEdgeLeft[rowBreakLeftU];
@@ -286,7 +291,7 @@ public:
                 uint16_t rowBreakRightU = searchBreakRightDown(track.pointsEdgeRight, rowBreakRightD + 30, track.pointsEdgeRight.size());
 
                 pointBreakD = track.pointsEdgeRight[rowBreakRightD];
-                if(rowBreakRightD && rowBreakRightU)//////////////////////
+                if(rowBreakRightD && rowBreakRightU && rowBreakRightU > rowBreakRightD)//////////////////////
                 {
                     counterSpurroad++;
                     pointBreakU = track.pointsEdgeRight[rowBreakRightU];
@@ -383,7 +388,7 @@ public:
 
                 if(_corner.x)
                 {
-                    if(_corner.x > ROWSIMAGE / 2)
+                    if(_corner.x > ROWSIMAGE / 3)
                         counterSpurroad++;
                     // line(track.pointsEdgeRight, rowBreakLeftD, _corner);
                     {
@@ -461,7 +466,7 @@ public:
                         mid = (right.y + left.y) / 2;
                     }
                 }
-                else if(_corner.x == 0 && counterSpurroad > 3)
+                else if(_corner.x == 0 && counterSpurroad > 2)
                 {
                     counterSpurroad = 0;
                     ringStep = RingStep::Inside;
@@ -547,7 +552,7 @@ public:
 
                 if(_corner.x)
                 {
-                    if(_corner.x > ROWSIMAGE / 2)
+                    if(_corner.x > ROWSIMAGE / 3)
                         counterSpurroad++;
                     // line(track.pointsEdgeLeft, rowBreakRightD, _corner);
                     {
@@ -626,7 +631,7 @@ public:
                     }
                     
                 }
-                else if(_corner.x == 0 && counterSpurroad > 3)
+                else if(_corner.x == 0 && counterSpurroad > 2)
                 {
                     counterSpurroad = 0;
                     ringStep = RingStep::Inside;
@@ -906,6 +911,11 @@ public:
                     track.pointsEdgeRight = track.predictEdgeRight(track.pointsEdgeLeft);                    
                 }
             }
+
+            if (track.garageEnable.x)
+            {
+                reset();
+            }
         }
 
         if (ringType == RingType::RingNone)
@@ -940,6 +950,10 @@ public:
             circle(Image, Point(pointBreakU.y, pointBreakU.x), 5, Scalar(255, 0, 255), -1); // 上补线点：粉色
             circle(Image, Point(pointBreakD.y, pointBreakD.x), 5, Scalar(226, 43, 138), -1); // 下补线点：紫色
         }
+        if (track.garageEnable.x)
+        {
+            line(Image, Point(0, track.garageEnable.y), Point(COLSIMAGE - 1, track.garageEnable.y), Scalar(211, 211, 211), 1);
+        }
         putText(Image, to_string(ringStep), Point(COLSIMAGE / 2 - 5, ROWSIMAGE - 40), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 155), 1, CV_AA);
         if(ringType == RingType::RingLeft)
         {
@@ -953,7 +967,6 @@ public:
                 FONT_HERSHEY_TRIPLEX, 0.3, Scalar(0, 0, 255), 1);
         putText(Image, to_string(track.validRowsLeft) + " " + to_string(track.stdevLeft), Point(20, ROWSIMAGE - 50),
                 FONT_HERSHEY_TRIPLEX, 0.3, Scalar(0, 0, 255), 1);
-
     }
 
 private:

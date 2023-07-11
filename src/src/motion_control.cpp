@@ -264,7 +264,6 @@ public:
 
     /**
      * @brief 基于角偏的变加速控制
-     * @param up_speed_enable 加速使能
      * @param control 小车控制类
      */
     void speedControl(ControlCenterCal control) 
@@ -519,11 +518,11 @@ public:
         /**********转弯撞线前馈计算**************/
         compensation_error = 0;
         // 左边与中线撞线的点
-        if((controlCenter.intersectionLeft.x < 195 && controlCenter.intersectionLeft.x > 110) && controlCenter.intersectionRight.x ==0)
-            compensation_error = (controlCenter.intersectionLeft.x - 110) * params.Line_compensation_coefficient;
+        if((controlCenter.intersectionLeft.x < 195 && controlCenter.intersectionLeft.x > 100) && controlCenter.intersectionRight.x ==0)
+            compensation_error = (controlCenter.intersectionLeft.x - 100) * params.Line_compensation_coefficient;
         // 右边与中线撞线的点
-        if((controlCenter.intersectionRight.x < 195 && controlCenter.intersectionRight.x > 110) && controlCenter.intersectionLeft.x ==0)
-            compensation_error = -(controlCenter.intersectionRight.x - 110) * params.Line_compensation_coefficient;
+        if((controlCenter.intersectionRight.x < 195 && controlCenter.intersectionRight.x > 100) && controlCenter.intersectionLeft.x ==0)
+            compensation_error = -(controlCenter.intersectionRight.x - 100) * params.Line_compensation_coefficient;
 
 
         /**********角偏控制**************/
@@ -532,6 +531,7 @@ public:
         // Angle_rad = atan(CenterLine_k);
         // 角偏积分项
         static float Angle_Iout = 0;
+        // Angle_Iout += params.Ki_down * CenterLine_k;
         if(enum_RoadType == 1)
         {
             Angle_Iout += params.Ki_down * CenterLine_k;
@@ -573,11 +573,20 @@ public:
         // 计算动态线偏P值
         params.turnP = abs(error) * abs(error) * params.runP3 + abs(error) * params.runP2 + params.runP1;
 
-        int pwmDiff = ((error + compensation_error) * params.turnP) + (error - errorLast) * params.turnD;
-        errorLast = error;
+        int pwmDiff = 0;
+        if(enum_RoadType == 1 || enum_RoadType == 4)
+        {
+            pwmDiff = (error * params.turnP) + (error - errorLast) * params.turnD;
+            errorLast = error;
+        }
+        else
+        {
+            pwmDiff = ((error + compensation_error) * params.turnP) + (error - errorLast) * params.turnD;
+            errorLast = error;
+        }
 
         // PWM转换
-        servoPwm = (uint16_t)(PWMSERVOMID + pwmDiff); 
+        servoPwm = (uint16_t)(PWMSERVOMID + pwmDiff);
     }
 
 

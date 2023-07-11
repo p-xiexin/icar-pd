@@ -36,13 +36,254 @@ public:
      */
     void reset(void)
     {
+        pointTop = POINT(ROWSIMAGE - 1, 0);
         _speed = 0.0f;
         counterRec = 0;
         counterSession = 0;
         counterFild = 0;
         farmlandStep = FarmlandStep::None;
     }
-    
+
+	/**
+	 * @brief 农田区域检测，在Ai线程运行
+	 *
+	 * @param predict AI检测结果
+	 */
+    bool farmdlandCheck(vector<PredictResult> predict)
+    {
+        if(counterFild < 30)
+        {
+            counterFild++;//屏蔽计数器
+            return false;
+        }
+        if(farmlandStep == FarmlandStep::None)
+        {
+			for (int i = 0; i < predict.size(); i++)
+			{
+				if (predict[i].label == LABEL_CORN && predict[i].y + predict[i].height / 2 > 30 && predict[i].score > 0.5) // 拖拉机标志检测
+				{
+					counterRec++;
+					break;
+				}
+			}
+            if (counterRec)
+            {
+                counterSession++;
+                if (counterRec > params.FarmlandCheck && counterSession < params.FarmlandCheck * 2)
+                {
+                    farmlandStep = FarmlandStep::Enable; // 农田区域使能
+                    counterRec = 0;
+                    counterSession = 0;
+                }
+                else if (counterSession >= params.FarmlandCheck * 2)
+                {
+                    counterRec = 0;
+                    counterSession = 0;
+                }
+            }
+        }
+    }
+
+    /**
+     * @brief 农田区域路径规划，在主线程运行
+     *
+     * @param track 赛道识别结果
+     * @param frame 摄像头图像
+     */
+    bool farmlandAvoid(TrackRecognition &track, cv::Mat frame)
+    {
+        switch(farmlandStep)
+        {
+        case FarmlandStep::Enable:
+        {
+            if (track.pointsEdgeLeft.size() < params.EnterLine && track.pointsEdgeRight.size() < params.EnterLine)
+            {
+                counterRec++;
+                if (counterRec > 1)
+                {
+                    counterSession = 0;
+                    counterRec = 0;
+                    farmlandStep = FarmlandStep::Enter;
+                }
+            }
+            else
+            {
+                if (track.pointsEdgeLeft.size() > 50)
+                {
+                    track.pointsEdgeLeft.resize(track.pointsEdgeLeft.size() * 0.7);
+                }
+                if (track.pointsEdgeRight.size() > 50)
+                {
+                    track.pointsEdgeRight.resize(track.pointsEdgeRight.size() * 0.7);
+                }
+            }
+            
+            break;
+        }
+        case FarmlandStep::Enter:
+        {
+            if (track.pointsEdgeLeft.size() < 80 && track.pointsEdgeRight.size() < 80)
+            {
+                counterSession = 0;
+                counterRec = 0;
+                farmlandStep = FarmlandStep::Cruise;
+            }
+            _imageGray = ConeEnrode(frame);
+            threshold(_imageGray, _imageBinary, 0, 255, THRESH_OTSU);
+
+            track.reset();
+            track.trackRecognition(_imageBinary, 0);
+            movingAverageFilter(track.pointsEdgeLeft, 10);
+            movingAverageFilter(track.pointsEdgeRight, 10);
+            line_extend(track.pointsEdgeLeft);
+            line_extend(track.pointsEdgeRight);
+            uint16_t size = MIN(track.pointsEdgeLeft.size(), track.pointsEdgeRight.size());
+            if(size > 160)
+            {
+                size = 160;
+                track.pointsEdgeRight.resize(size);
+                track.pointsEdgeLeft.resize(size);
+            }
+            for(int i = 0; i < size; i++)
+            {
+                uint16_t width = track.pointsEdgeRight[i].y - track.pointsEdgeLeft[i].y;
+                if(width > COLSIMAGE / 10)
+                    track.widthBlock.push_back(POINT(i, width));
+                else
+                {
+                    track.pointsEdgeRight.resize(i);
+                    track.pointsEdgeLeft.resize(i);
+                    break;
+                }
+            }
+            break;
+        }
+        case FarmlandStep::Cruise:
+        {
+            if ((track.pointsEdgeLeft.size() > 80 || track.pointsEdgeRight.size() > 80) && pointTop.x > ROWSIMAGE / 2 && pointTop.y
+                && (track.pointsEdgeLeft[10].x > COLSIMAGE / 2 || track.pointsEdgeRight[10].x > COLSIMAGE / 2))
+            {
+                counterRec++;
+                if(counterRec > 1)
+                {
+                    farmlandStep = FarmlandStep::None; // 出农田
+                    reset();
+                }
+            }
+            pointTop = POINT(ROWSIMAGE - 1, 0);
+            cv::Mat img_rgb = frame.clone();
+            cv::circle(img_rgb, cv::Point(0, ROWSIMAGE - track.rowCutBottom), 5, cv::Scalar(20, 200, 200), -1);
+            cv::circle(img_rgb, cv::Point(COLSIMAGE - 1, ROWSIMAGE - track.rowCutBottom), 5, cv::Scalar(20, 200, 200), -1);
+            // 设置锥桶颜色的RGB范围（黄色），提取掩膜
+            cv::Mat mask;
+            cv::Scalar lowerYellow(0, 100, 100);
+            cv::Scalar upperYellow(100, 255, 255);
+            cv::inRange(img_rgb, lowerYellow, upperYellow, mask);
+            // 进行形态学操作，去除噪声并提取锥桶区域的轮廓
+            cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
+            cv::morphologyEx(mask, mask, cv::MORPH_OPEN, kernel);
+            // 查找轮廓
+            std::vector<std::vector<cv::Point>> contours;
+            cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+            //分离蓝色通道
+            std::vector<cv::Mat> channels;
+            split(frame, channels);
+            cv::Mat blueChannel = channels[0];
+            // 遍历每个轮廓
+            for (size_t i = 0; i < contours.size(); ++i) 
+            {
+                bool lined = false;
+                // 遍历当前轮廓的点
+                for (size_t j = 0; j < contours[i].size(); ++j) 
+                {
+                    // 获取当前轮廓的当前点
+                    cv::Point currentPoint = contours[i][j];
+                    if(currentPoint.y < track.rowCutUp)
+                        continue;
+
+                    // 遍历其他轮廓
+                    for (size_t k = i; k < contours.size(); ++k)
+                    {
+                        // 跳过当前轮廓
+                        if (k == i) {
+                            continue;
+                        }
+
+                        // 遍历其他轮廓的点
+                        for (size_t l = 0; l < contours[k].size(); ++l) {
+                            // 获取其他轮廓的当前点
+                            cv::Point otherPoint = contours[k][l];
+                            if(otherPoint.y < track.rowCutUp)
+                                continue;
+
+                            // 计算两点之间的距离
+                            double distance = cv::norm(currentPoint - otherPoint);
+                            double distThreshold = std::max(currentPoint.y, otherPoint.y) * 0.5 + 
+                                                std::abs(currentPoint.x - otherPoint.x) * (std::min(currentPoint.y, otherPoint.y) / ROWSIMAGE);
+
+                            // 如果距离小于阈值，使用线段将两点连接起来
+                            if (distance < distThreshold) 
+                            {
+                                if(currentPoint.y < pointTop.x)
+                                    pointTop = POINT(currentPoint.y, currentPoint.x);
+                                if(otherPoint.y < pointTop.x)
+                                    pointTop = POINT(otherPoint.y, otherPoint.x);
+                                cv::line(blueChannel, currentPoint, otherPoint, cv::Scalar(20), 5);
+                                lined = true;
+                                break;
+                            }
+                        }
+                    }
+                    if(lined)
+                        break;
+                }
+            }
+            cv::Mat kernel_close = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(4, 4));//创建结构元
+            cv::Mat kernel_enrode = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(20, 20));
+            cv::morphologyEx(blueChannel, blueChannel, cv::MORPH_CLOSE, kernel_close, cv::Point(-1, -1));//闭运算
+            cv::morphologyEx(blueChannel, _imageGray, cv::MORPH_ERODE, kernel_enrode, cv::Point(-1, -1));//腐蚀运算
+            cv::threshold(_imageGray, _imageBinary, 0, 255, cv::THRESH_OTSU);
+
+            track.trackRecognition(_imageBinary, 0);
+            movingAverageFilter(track.pointsEdgeLeft, 10);
+            movingAverageFilter(track.pointsEdgeRight, 10);
+
+            if(pointTop.y && pointTop.x < ROWSIMAGE / 2)
+            {
+                uint16_t validrow = abs(pointTop.x - track.pointsEdgeLeft[0].x - 1);
+                if(validrow < track.pointsEdgeLeft.size())
+                track.pointsEdgeLeft.resize(validrow);
+                track.pointsEdgeRight.resize(validrow);
+            }
+
+            uint16_t counter = 0;
+            for(int i = 0; i < track.pointsEdgeLeft.size(); i++)
+            {
+                if(track.pointsEdgeLeft[i].y < 3 && track.pointsEdgeRight[i].y > COLSIMAGE - 3)
+                    counter++;
+            }
+            if(counter > ROWSIMAGE / 2)
+            {
+                track.pointsEdgeLeft = pointsEdgeLeftLast;
+                track.pointsEdgeRight = pointsEdgeRightLast;
+            }
+            else
+            {
+                pointsEdgeLeftLast = track.pointsEdgeLeft;
+                pointsEdgeRightLast = track.pointsEdgeRight;
+            }
+
+            break;
+        }
+        }
+
+        if (farmlandStep == FarmlandStep::None)
+            return false;
+        else
+            return true;
+    }
+
     /**
      * @brief 农田区域检测与路径规划
      *
@@ -296,14 +537,19 @@ public:
         line(image, Point(image.cols / 2, 0), Point(image.cols / 2, image.rows - 1), Scalar(255, 255, 255), 1);
 
         // 绘制锥桶坐标
-        for (int i = 0; i < pointEdgeDet.size(); i++)
-        {
-            // circle(image, Point(pointEdgeDet[i].y, pointEdgeDet[i].x), 4, Scalar(92, 92, 205), -1); // 锥桶坐标：红色
-            putText(image, to_string(i+1), Point(pointEdgeDet[i].y, pointEdgeDet[i].x), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 255), 1, CV_AA);
-        }
+        // for (int i = 0; i < pointEdgeDet.size(); i++)
+        // {
+        //     // circle(image, Point(pointEdgeDet[i].y, pointEdgeDet[i].x), 4, Scalar(92, 92, 205), -1); // 锥桶坐标：红色
+        //     putText(image, to_string(i+1), Point(pointEdgeDet[i].y, pointEdgeDet[i].x), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 255), 1, CV_AA);
+        // }
 
         circle(image, Point(pointCorn.y, pointCorn.x), 3, Scalar(8, 112, 247), -1); // 玉米坐标绘制：橙色
         circle(image, Point(pointAverage.y, pointAverage.x), 5, Scalar(226, 43, 138), -1); // 紫色
+        circle(image, Point(pointTop.y, pointTop.x), 5, Scalar(226, 43, 138), -1);
+
+		putText(image, to_string(counterRec),
+				Point(COLSIMAGE / 2 - 10, ROWSIMAGE - 20), cv::FONT_HERSHEY_TRIPLEX,
+				0.5, cv::Scalar(0, 0, 255), 1, CV_AA);
 
         // 赛道边缘
         for (int i = 0; i < track.pointsEdgeLeft.size(); i++)
@@ -330,8 +576,6 @@ public:
             break;
         }
         putText(image, state, Point(COLSIMAGE / 2 - 10, 20), cv::FONT_HERSHEY_TRIPLEX, 0.3, cv::Scalar(0, 255, 0), 1, CV_AA);
-
-        putText(image, to_string(indexDebug), Point(COLSIMAGE / 2 - 10, ROWSIMAGE - 20), cv::FONT_HERSHEY_TRIPLEX, 0.3, cv::Scalar(0, 0, 255), 1, CV_AA);
     }
 
 private:
@@ -448,6 +692,11 @@ private:
     uint16_t counterFild = 0;
     float _speed = 0.0f;
     int indexDebug = 0;
+
+    POINT pointTop = POINT(ROWSIMAGE - 1, 0);
+    vector<POINT> pointsEdgeLeftLast;  // 记录前一场左边缘点集
+    vector<POINT> pointsEdgeRightLast; // 记录前一场右边缘点集
+
     enum FarmlandStep
     {
         None = 0, // 未触发

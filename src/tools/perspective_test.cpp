@@ -97,6 +97,10 @@ int main(int argc, char *argv[])
             circle(remapImg, Point(perspectivePointsRight[i].y, perspectivePointsRight[i].x), 1,
                    Scalar(0, 255, 255), -1); // 黄色点
         }
+
+        //霍夫变换检测圆和直线
+
+
         // 绘制中心点集
         for (int i = 0; i < perspectivePointsCenter.size(); i++)
         {
@@ -107,7 +111,6 @@ int main(int argc, char *argv[])
                     Scalar(0, 0, 255), -1);
         }
         track.drawImage(frame); // 图像显示赛道线识别结果
-        cout << pointTemp.x << endl;
 
         imshow("frame", frame);
         imshow("remap", remapImg);
