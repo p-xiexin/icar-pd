@@ -52,7 +52,6 @@ int main(int argc, char *argv[])
         Mat imageBinary = imagePreprocess.imageBinaryzation(imgaeCorrect); // Gray
         track.trackRecognition(imageBinary, 0); // 赛道线识别
         controlCenterCal.controlCenterCal(track);
-        controlCenterCal.centerEdge = track.perspectiveMidFromLeft(3);
 
         Mat remapImg = Mat::zeros(Size(COLSIMAGEIPM, ROWSIMAGEIPM), CV_8UC3); // 初始化图像
         POINT pointTemp(90, 160);
@@ -78,6 +77,10 @@ int main(int argc, char *argv[])
             Point2d point2d = ipm.homography(Point2d(controlCenterCal.centerEdge[i].y, controlCenterCal.centerEdge[i].x)); // 透视变换
             perspectivePointsCenter.push_back(POINT(point2d.y, point2d.x));
         }
+
+        //逆透视单片巡线
+        perspectivePointsCenter = track.perspectiveMidFromRight(3);
+        controlCenterCal.centerEdge = track.line_perspectiveInv(perspectivePointsCenter);
 
         // 绘制4象限分割线
         line(remapImg, Point(0, pointTemp.x), Point(remapImg.cols, pointTemp.x), Scalar(255, 255, 255), 1);

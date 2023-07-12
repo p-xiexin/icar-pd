@@ -574,6 +574,9 @@ public:
         std::vector<POINT> perspectivePoints;
         for (int i = 0; i < pointsEdgeline.size(); i++)
         {
+            if(pointsEdgeline[i].y == 0 || pointsEdgeline[i].y == COLSIMAGE - 1)
+                continue;
+                
             cv::Point2d point2d = ipm.homography(Point2d(pointsEdgeline[i].y, pointsEdgeline[i].x)); // 透视变换
             perspectivePoints.push_back(POINT(point2d.y, point2d.x));
         }
@@ -594,12 +597,13 @@ public:
         {
             cv::Point2d point2d = ipm.homographyInv(Point2d(perspectivePoints[i].y, perspectivePoints[i].x)); // 透视变换
             POINT edgePoint = POINT(point2d.y, point2d.x);
-            if (edgePoint.x >= ROWSIMAGE)
-                edgePoint.x = ROWSIMAGE - 1;
+            // if (edgePoint.x >= ROWSIMAGE)
+            //     edgePoint.x = ROWSIMAGE - 1;
 
-            else if (edgePoint.x < 0)
-                edgePoint.x = 0;
-
+            // else if (edgePoint.x < 0)
+            //     edgePoint.x = 0;
+            if(edgePoint.x >= ROWSIMAGE || edgePoint.x < 0)
+                continue;
             else if (edgePoint.y >= COLSIMAGE)
                 edgePoint.y = COLSIMAGE - 1;
             else if (edgePoint.y < 0)
@@ -802,7 +806,7 @@ public:
             centerEdge.push_back(POINT(perspectiveLeft[i].x + offset * dy, perspectiveLeft[i].y - offset * dx));
         }
 
-        return line_perspectiveInv(centerEdge);
+        return centerEdge;
     }
 
 	/**
@@ -827,7 +831,7 @@ public:
             centerEdge.push_back(POINT(perspectiveRight[i].x - offset * dy, perspectiveRight[i].y + offset * dx));
         }
 
-        return line_perspectiveInv(centerEdge);
+        return centerEdge;
     }
 
 private:
