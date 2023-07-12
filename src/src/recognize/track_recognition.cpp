@@ -294,9 +294,9 @@ public:
                 }
                 else if (indexBlocks.size() == 1) // 只存在单个色块，正常情况，提取边缘信息
                 {
-                    if (endBlock[indexBlocks[0]] - startBlock[indexBlocks[0]] < COLSIMAGE / 10)
+                    if (endBlock[indexBlocks[0]] - startBlock[indexBlocks[0]] < ROWSIMAGE / 10)
                     {
-                        break;
+                        continue;
                     }
                     pointsEdgeLeft.emplace_back(row, startBlock[indexBlocks[0]]);
                     pointsEdgeRight.emplace_back(row, endBlock[indexBlocks[0]]);
@@ -566,6 +566,8 @@ public:
     /**
      * @brief 得到俯视域下的中线
      * @param edge 摄像机坐标系下的点集
+     * 
+     * @return 俯视域的点集
      */
     std::vector<POINT> line_perspective(std::vector<POINT> pointsEdgeline)
     {
@@ -578,6 +580,37 @@ public:
 
         return perspectivePoints;
     }
+
+    /**
+     * @brief 摄像机坐标系下的中线
+     * @param edge 俯视域下的点集
+     * 
+     * @return 摄像机坐标系下的点集
+     */
+    std::vector<POINT> line_perspectiveInv(std::vector<POINT> perspectivePoints)
+    {
+        std::vector<POINT> pointsEdgeline;
+        for (int i = 0; i < perspectivePoints.size(); i++)
+        {
+            cv::Point2d point2d = ipm.homographyInv(Point2d(perspectivePoints[i].y, perspectivePoints[i].x)); // 透视变换
+            POINT edgePoint = POINT(point2d.y, point2d.x);
+            if (edgePoint.x >= ROWSIMAGE)
+                edgePoint.x = ROWSIMAGE - 1;
+
+            else if (edgePoint.x < 0)
+                edgePoint.x = 0;
+
+            else if (edgePoint.y >= COLSIMAGE)
+                edgePoint.y = COLSIMAGE - 1;
+            else if (edgePoint.y < 0)
+                edgePoint.y = 0;
+
+            pointsEdgeline.push_back(edgePoint);
+        }
+
+        return pointsEdgeline;
+    }
+
 	/**
 	 * @brief 在俯视域由左边缘预测右边缘
 	 *
@@ -746,6 +779,57 @@ public:
 
 		return pointsEdgeLeft;
 	}
+
+	/**
+	 * @brief 在俯视域由左边缘预测中线
+	 *
+	 * @param size 计算切点曲率时开窗大小
+	 * @return vector<POINT>
+	 */
+    std::vector<POINT> perspectiveMidFromLeft(int size)
+    {
+        int offset = 60;
+        std::vector<POINT> centerEdge;
+        std::vector<POINT> perspectiveLeft = line_perspective(pointsEdgeLeft);
+        for(int i = 0; i < perspectiveLeft.size(); i++)
+        {
+            float dx = perspectiveLeft[inRange(perspectiveLeft, i+size)].x - perspectiveLeft[inRange(perspectiveLeft, i-size)].x;
+            float dy = perspectiveLeft[inRange(perspectiveLeft, i+size)].y - perspectiveLeft[inRange(perspectiveLeft, i-size)].y;
+            float dn = std::sqrt(dx * dx + dy * dy);
+            dx /= dn;
+            dy /= dn;
+
+            centerEdge.push_back(POINT(perspectiveLeft[i].x + offset * dy, perspectiveLeft[i].y - offset * dx));
+        }
+
+        return line_perspectiveInv(centerEdge);
+    }
+
+	/**
+	 * @brief 在俯视域由左边缘预测中线
+	 *
+	 * @param size 计算切点曲率时开窗大小
+	 * @return vector<POINT>
+	 */
+    std::vector<POINT> perspectiveMidFromRight(int size)
+    {
+        int offset = 60;
+        std::vector<POINT> centerEdge;
+        std::vector<POINT> perspectiveRight = line_perspective(pointsEdgeRight);
+        for(int i = 0; i < perspectiveRight.size(); i++)
+        {
+            float dx = perspectiveRight[inRange(perspectiveRight, i+size)].x - perspectiveRight[inRange(perspectiveRight, i-size)].x;
+            float dy = perspectiveRight[inRange(perspectiveRight, i+size)].y - perspectiveRight[inRange(perspectiveRight, i-size)].y;
+            float dn = std::sqrt(dx * dx + dy * dy);
+            dx /= dn;
+            dy /= dn;
+
+            centerEdge.push_back(POINT(perspectiveRight[i].x - offset * dy, perspectiveRight[i].y + offset * dx));
+        }
+
+        return line_perspectiveInv(centerEdge);
+    }
+
 private:
     Mat imagePath; // 赛道搜索图像
     /**

@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
         Mat imageBinary = imagePreprocess.imageBinaryzation(imgaeCorrect); // Gray
         track.trackRecognition(imageBinary, 0); // 赛道线识别
         controlCenterCal.controlCenterCal(track);
+        controlCenterCal.centerEdge = track.perspectiveMidFromLeft(3);
 
         Mat remapImg = Mat::zeros(Size(COLSIMAGEIPM, ROWSIMAGEIPM), CV_8UC3); // 初始化图像
         POINT pointTemp(90, 160);
@@ -110,7 +111,12 @@ int main(int argc, char *argv[])
             circle(remapImg, Point(perspectivePointsCenter[i].y, perspectivePointsCenter[i].x), 1, 
                     Scalar(0, 0, 255), -1);
         }
+
         track.drawImage(frame); // 图像显示赛道线识别结果
+        for (int i = 0; i < controlCenterCal.centerEdge.size(); i++)
+        {
+            circle(frame, Point(controlCenterCal.centerEdge[i].y, controlCenterCal.centerEdge[i].x), 1, Scalar(0, 0, 255), -1);
+        }
 
         imshow("frame", frame);
         imshow("remap", remapImg);
