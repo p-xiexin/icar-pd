@@ -266,7 +266,7 @@ public:
                             distance.push_back(widthGarage[indexGarage[i]] - widthGarage[indexGarage[i - 1]]);
                         }
                         double var = sigma(distance);
-                        if (var < 8.0) // 经验参数
+                        if (var < 8.0 && row > rowCutUp + COLSIMAGE / 10) // 经验参数
                         {
                             garageEnable.x = 1;                      // 车库标志使能
                             garageEnable.y = row; // 斑马线行号
@@ -795,7 +795,7 @@ public:
         int offset = 60;
         std::vector<POINT> centerEdge;
         std::vector<POINT> perspectiveLeft = line_perspective(pointsEdgeLeft);
-        for(int i = 0; i < perspectiveLeft.size(); i++)
+        for(int i = size; i < perspectiveLeft.size() - size; i++)
         {
             float dx = perspectiveLeft[inRange(perspectiveLeft, i+size)].x - perspectiveLeft[inRange(perspectiveLeft, i-size)].x;
             float dy = perspectiveLeft[inRange(perspectiveLeft, i+size)].y - perspectiveLeft[inRange(perspectiveLeft, i-size)].y;
@@ -820,7 +820,7 @@ public:
         int offset = 60;
         std::vector<POINT> centerEdge;
         std::vector<POINT> perspectiveRight = line_perspective(pointsEdgeRight);
-        for(int i = 0; i < perspectiveRight.size(); i++)
+        for(int i = size; i < perspectiveRight.size() - size; i++)
         {
             float dx = perspectiveRight[inRange(perspectiveRight, i+size)].x - perspectiveRight[inRange(perspectiveRight, i-size)].x;
             float dy = perspectiveRight[inRange(perspectiveRight, i+size)].y - perspectiveRight[inRange(perspectiveRight, i-size)].y;

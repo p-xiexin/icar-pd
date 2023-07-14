@@ -455,14 +455,14 @@ int main(int argc, char *argv[])
                     {
                         // motionController.speedController(controlCenterCal, motionController.k);
                         motionController.speedControl(controlCenterCal);
+                        // motionController.motorSpeed = motionController.params.speedLow;
                     }
 					break;
 				}
 			}
-            // motionController.motorSpeed = motionController.params.speedLow;
 
             // 串口通信，姿态与速度控制
-            serialInterface.set_control(motionController.motorSpeed, motionController.servoPwm);
+            serialInterface.set_control(-motionController.motorSpeed, motionController.servoPwm);
         }
         else
         {
@@ -541,12 +541,13 @@ int main(int argc, char *argv[])
 
             putText(imageTrack, "FPS: " + formatDoble2String(detFPS, 2), Point(20, 20), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1); // 车速
             putText(imageTrack, "PWM:" + formatDoble2String(motionController.servoPwm,2), Point(20,40),FONT_HERSHEY_PLAIN, 1, Scalar(0,0,255), 1);  //下发的pwm值
-            putText(imageTrack, "ERROR:" + formatDoble2String(motionController.error - motionController.compensation_error, 2), Point(20,60), FONT_HERSHEY_PLAIN, 1, Scalar(0,0,255), 1);
+            putText(imageTrack, "ERROR:" + formatDoble2String(motionController.error, 2), Point(20,60), FONT_HERSHEY_PLAIN, 1, Scalar(0,0,255), 1);
             putText(imageTrack, "K:" + formatDoble2String(motionController.CenterLine_k, 4), Point(20,80), FONT_HERSHEY_PLAIN, 1, Scalar(0,0,255), 1);
             putText(imageTrack, "Mid:" + formatDoble2String(motionController.Mid_line, 2), Point(20,100), FONT_HERSHEY_PLAIN, 1, Scalar(0,0,255), 1);
             putText(imageTrack, "Speed: " + formatDoble2String(motionController.motorSpeed, 2), Point(COLSIMAGE / 2 + 20, 20), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1);
             putText(imageTrack, controlCenterCal.style, Point(COLSIMAGE / 2 + 20, 40), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1); // 赛道类型
             putText(imageTrack, "CERROR: " + formatDoble2String(motionController.compensation_error, 2), Point(COLSIMAGE / 2 + 20, 60), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1);
+            putText(imageTrack, "PreSlope: " + formatDoble2String(motionController.Slope_previewPoint, 2), Point(COLSIMAGE / 2 + 20, 80), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1);
 
             line(imageTrack, Point(motionController.Mid_line, 0), Point(motionController.Mid_line, ROWSIMAGE - 1), Scalar(200, 200, 200), 1);
             line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_Up_set), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_Up_set), 

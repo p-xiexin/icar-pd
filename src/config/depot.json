@@ -1,11 +1,11 @@
 {
     "DepotCheck": 1.2,
     "DepotDir": 0,
-    "DangerClose": 145,
+    "DangerClose": 125,
     "ServoRow": 45,
     "ServoValue": 78,
     "DepotSpeed": 0.8,
-    "DelayCnt": 10,
+    "DelayCnt": 3,
     "BrakeCnt": 5,
     "record": [
         {

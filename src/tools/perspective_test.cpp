@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
             perspectivePointsCenter.push_back(POINT(point2d.y, point2d.x));
         }
 
-        //逆透视单片巡线
+        //逆透视单边巡线
         perspectivePointsCenter = track.perspectiveMidFromRight(3);
         controlCenterCal.centerEdge = track.line_perspectiveInv(perspectivePointsCenter);
 
@@ -102,8 +102,37 @@ int main(int argc, char *argv[])
                    Scalar(0, 255, 255), -1); // 黄色点
         }
 
-        //霍夫变换检测圆和直线
+        //霍夫变换检测圆
+        // Mat gray;
+        // cvtColor(remapImg, gray, COLOR_BGR2GRAY);
+        // medianBlur(gray, gray, 5);
 
+        // vector<Vec3f> circles;
+        // HoughCircles(gray, circles, HOUGH_GRADIENT, 1, gray.rows / 8, 200, 20, 0, 1000);
+
+        // for (size_t i = 0; i < circles.size(); i++)
+        // {
+        //     Vec3i c = circles[i];
+        //     Point center = Point(c[0], c[1]);
+        //     int radius = c[2];
+        //     circle(remapImg, center, radius, Scalar(0, 0, 255), 3);
+        // }
+        
+        // 绘制田字格：基准线
+        uint16_t rows = ROWSIMAGE / 30; // 16
+        uint16_t cols = COLSIMAGE / 32; // 20
+
+        for (size_t i = 1; i < rows; i++)
+        {
+            line(frame, Point(0, 30 * i), Point(frame.cols - 1, 30 * i), Scalar(211, 211, 211), 1);
+        }
+        for (size_t i = 1; i < cols; i++)
+        {
+            if (i == cols / 2)
+                line(frame, Point(32 * i, 0), Point(32 * i, frame.rows - 1), Scalar(0, 0, 255), 1);
+            else
+                line(frame, Point(32 * i, 0), Point(32 * i, frame.rows - 1), Scalar(211, 211, 211), 1);
+        }
 
         // 绘制中心点集
         for (int i = 0; i < perspectivePointsCenter.size(); i++)

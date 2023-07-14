@@ -233,6 +233,28 @@ public:
             style = "LEFT";
         }
 
+        // {//逆透视寻找中线
+        //     std::vector<POINT> perspectiveMid;//俯视域下的中线点集
+        //     std::vector<POINT> centerFrom_perspectiveMid;//相机坐标系中的中线点集
+        //     if(track.pointsEdgeLeft.size() > track.pointsEdgeRight.size() && abs(track.pointsEdgeLeft.size() - track.pointsEdgeRight.size()) > track.pointsEdgeLeft.size() / 2)
+        //     {
+        //         perspectiveMid = track.perspectiveMidFromLeft(3);
+        //     }
+        //     else if(track.pointsEdgeLeft.size() < track.pointsEdgeRight.size() && abs(track.pointsEdgeLeft.size() - track.pointsEdgeRight.size()) > track.pointsEdgeRight.size() / 2)
+        //     {
+        //         perspectiveMid = track.perspectiveMidFromRight(3);
+        //     }
+
+        //     centerFrom_perspectiveMid = track.line_perspectiveInv(perspectiveMid);//逆透视得到相机坐标系中线
+        //     if(centerFrom_perspectiveMid.size() > 10)
+        //     {
+        //         centerEdge.clear();
+        //         // centerEdge = bezier_curve_fitting(centerFrom_perspectiveMid);//根据中线点集重新拟合中线
+        //         centerEdge = centerFrom_perspectiveMid;
+        //         style += "Inv";
+        //     }
+        // }
+
         // 加权控制中心计算
         double controlNum = 0;
         double controlCenter_Calculate = 0.0;
@@ -575,7 +597,7 @@ private:
         v_center[3] = {(center_point[0].x + center_point[1].x) / 2,
                         (center_point[0].y + center_point[1].y) / 2};
 
-        centerEdge_func = Bezier(0.03, v_center);
+        centerEdge_func = Bezier(0.04, v_center);
 
         v_center[0] = {(center_point[0].x + center_point[1].x) / 2,
                         (center_point[0].y + center_point[1].y) / 2};
@@ -589,6 +611,55 @@ private:
         v_center[3] = {(pointsEdgeLeft[pointsEdgeLeft.size() - 1].x + pointsEdgeRight[pointsEdgeRight.size() - 1].x) / 2,
                         (pointsEdgeLeft[pointsEdgeLeft.size() - 1].y + pointsEdgeRight[pointsEdgeRight.size() - 1].y) / 2};
 
+        su_centerEdge = Bezier(0.04, v_center);
+
+        for(int i = 0; i < su_centerEdge.size(); i++)
+        {
+            centerEdge_func.push_back(su_centerEdge[i]);
+        }
+
+        //返回中心点集
+        return centerEdge_func;
+    }
+
+    /**
+     * @brief 双段三阶贝塞尔拟合中线
+     * @param pointsEdgeMid 赛道中线点集
+     * @return uint16_t
+     */
+    vector<POINT> bezier_curve_fitting(vector<POINT> pointsEdgeMid)
+    {
+        vector<POINT> su_centerEdge;        // 双阶贝塞尔曲中点计算点集
+        vector<POINT> centerEdge_func;      // 赛道中心点集
+
+        vector<POINT> v_center(4);          // 三阶贝塞尔曲线
+        vector<POINT> center_point(2);      // 中点寻找容器
+        POINT v_midpoint;                   // 分段贝塞尔的中点
+
+        //清空点集
+        su_centerEdge.clear();
+        centerEdge_func.clear();
+
+        //寻找拟合曲线的点集
+        v_center[0] = {pointsEdgeMid[0].x, pointsEdgeMid[0].y};
+        v_center[1] = {pointsEdgeMid[pointsEdgeMid.size() / 7].x, pointsEdgeMid[pointsEdgeMid.size() / 7].y};
+        v_center[2] = {pointsEdgeMid[pointsEdgeMid.size() * 2 / 7].x, pointsEdgeMid[pointsEdgeMid.size() * 2 / 7].y};
+
+        center_point[0] = {pointsEdgeMid[pointsEdgeMid.size() * 3 / 7].x, pointsEdgeMid[pointsEdgeMid.size() * 3 / 7].y};
+        center_point[1] = {pointsEdgeMid[pointsEdgeMid.size() * 4 / 7].x, pointsEdgeMid[pointsEdgeMid.size() * 4 / 7].y};
+
+        v_center[3] = {(center_point[0].x + center_point[1].x), (center_point[0].y + center_point[1].y)};
+
+        centerEdge_func = Bezier(0.03, v_center);
+
+        v_center[0] = {(center_point[0].x + center_point[1].x), (center_point[0].y + center_point[1].y)};
+
+        v_center[1] = {pointsEdgeMid[pointsEdgeMid.size() * 5 / 7].x, pointsEdgeMid[pointsEdgeMid.size() * 5 / 7].y};
+
+        v_center[2] = {pointsEdgeMid[pointsEdgeMid.size() * 6 / 7].x, pointsEdgeMid[pointsEdgeMid.size() * 6 / 7].y};
+
+        v_center[3] = {pointsEdgeMid[pointsEdgeMid.size() - 1].x, pointsEdgeMid[pointsEdgeMid.size() - 1].y};
+
         su_centerEdge = Bezier(0.03, v_center);
 
         for(int i = 0; i < su_centerEdge.size(); i++)
@@ -599,6 +670,7 @@ private:
         //返回中心点集
         return centerEdge_func;
     }
+
 
     /**
      * @brief 边缘有效行计算：左/右

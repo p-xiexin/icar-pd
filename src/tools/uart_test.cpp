@@ -30,8 +30,10 @@ int main()
         // cout << "Buzzer Count: ";
         // unsigned char n;
         // cin >> n;
-        float speed;
-        cin >> speed;
-		serialInterface.set_control(speed, 1500);
+        float speed = 0.0f;
+        uint16_t servo = 1500;
+        // cin >> speed;
+        cin >> servo;
+		serialInterface.set_control(speed, servo);
     }
 }

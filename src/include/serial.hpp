@@ -95,7 +95,7 @@ public:
                 //     _ctrl = false;
                 // }
                 _driver->carControl(speed, servo_pwm);
-                std::this_thread::sleep_for(std::chrono::milliseconds(8));
+                std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
             }
         });

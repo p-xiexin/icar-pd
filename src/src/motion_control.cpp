@@ -131,6 +131,7 @@ public:
     /**********角偏线偏串级相关参数定义**************/
     double      Angle_rad = 0.0;
     double      CenterLine_k = 0.0;
+    double      Slope_previewPoint = 0.0f;
     double      Mid_line = 160.0;               //角偏环输出
 
 
@@ -272,16 +273,22 @@ public:
             return;
         }
 
-        // 计算拟合函数的k值
-        // float speed_and_angle_k = abs(CenterLine_k) * params.speed_and_angle_k2 + params.speed_and_angle_k1;
+        Slope_previewPoint = perspectiveTangentSlope(control.centerEdge, control.centerEdge.size()*0.8, 3);
 
-        // 实际速度给定控制
-        // motorSpeed = params.speedHigh - speed_and_angle_k * abs(CenterLine_k);
+        double speed = 0.8f;
         double y_offset = ROWSIMAGE - control.centerEdge[0].x - params.rowCutBottom;
         double x_offset = abs(control.centerEdge[0].y - Mid_line);
         if(y_offset > 60)
             y_offset = 60;
-        motorSpeed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(abs(CenterLine_k)) - y_offset / 100 - x_offset / 100;
+
+        // speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(abs(CenterLine_k)) - y_offset / 100 - x_offset / 200;
+        speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(abs(CenterLine_k)) - params.speedHigh * 0.1 * atan(min(abs(Slope_previewPoint), 3.5)) - y_offset / 100 - x_offset / 200;
+
+        //加速限幅
+        if(speed - motorSpeed > 0.05f)
+            motorSpeed += 0.05f;
+        else 
+            motorSpeed = speed;
 
         // 最低速限制
         if(motorSpeed < 0.8)
@@ -527,7 +534,12 @@ public:
 
         /**********角偏控制**************/
         CenterLine_k = track.LeastSquare(line_perspective);
+        Slope_previewPoint = perspectiveTangentSlope(controlCenter.centerEdge, controlCenter.centerEdge.size()*0.8, 3);
+
         float centerline_in_this_function_k = CenterLine_k;
+        if((CenterLine_k >= 0 && Slope_previewPoint >= 0) || (CenterLine_k < 0 && Slope_previewPoint < 0))
+            centerline_in_this_function_k = Slope_previewPoint;
+
         // Angle_rad = atan(CenterLine_k);
         // 角偏积分项
         static float Angle_Iout = 0;
@@ -549,7 +561,6 @@ public:
         if(abs(CenterLine_k) <= params.Angle_target)
         {
             Angle_Iout *= 0.5;
-            centerline_in_this_function_k = 0;
         }
         // 动态中线输出值
         if(controlCenter.centerEdge.size() < params.Control_Up_set - params.Control_Down_set)
@@ -590,6 +601,37 @@ public:
     }
 
 
+private:
+	/**
+	 * @brief 在俯视域计算预瞄点的切线斜率
+	 *
+     * @param line 图像域下的中线
+	 * @param index 预瞄点的下标号
+	 * @param size 开窗大小
+	 * @return 斜率
+	 */
+    double perspectiveTangentSlope(std::vector<POINT> line, uint16_t index, int size)
+    {
+        if(line.size() < 5)
+            return 0;
+            
+		// End
+		Point2d endIpm = ipm.homography(
+			Point2d(line[inRange(line, index-size)].y, line[inRange(line, index-size)].x)); // 透视变换
+		POINT p1 = POINT(endIpm.y, endIpm.x);
+
+		// Start
+		Point2d startIpm = ipm.homography(
+			Point2d(line[inRange(line, index+size)].y, line[inRange(line, index+size)].x)); // 透视变换
+		POINT p0 = POINT(startIpm.y, startIpm.x);
+
+        float dx = p1.x - p0.x;
+        float dy = p1.y - p0.y;
+        if(dx == 0)
+            return 10.0;
+        else
+            return dy / dx;
+    }
 
     /**
      * @brief 加载配置参数Json

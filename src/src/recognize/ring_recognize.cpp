@@ -718,6 +718,12 @@ public:
                         track.pointsEdgeRight = pointsEdgeRightLast;
                         line(track.pointsEdgeRight, 0, track.pointsEdgeRight[track.pointsEdgeRight.size() - 1]);
                     }
+                    else if(track.pointsEdgeLeft[0].x < ROWSIMAGE - track.rowCutBottom - 30 ||  track.pointsEdgeRight[0].x < ROWSIMAGE - track.rowCutBottom - 30)
+                    {
+                        track.pointsEdgeLeft = pointsEdgeLeftLast;
+                        track.pointsEdgeRight = pointsEdgeRightLast;
+                        line(track.pointsEdgeRight, 0, track.pointsEdgeRight[track.pointsEdgeRight.size() - 1]);
+                    }
                     else
                     {
                         // track.pointsEdgeLeft.resize(0);
@@ -777,6 +783,12 @@ public:
                 else
                 {
                     if(track.pointsEdgeLeft.size() < 100 && track.pointsEdgeRight.size() < 100)
+                    {
+                        track.pointsEdgeLeft = pointsEdgeLeftLast;
+                        track.pointsEdgeRight = pointsEdgeRightLast;
+                        line(track.pointsEdgeLeft, 0, track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1]);
+                    }
+                    else if(track.pointsEdgeLeft[0].x < ROWSIMAGE - track.rowCutBottom - 30 ||  track.pointsEdgeRight[0].x < ROWSIMAGE - track.rowCutBottom - 30)
                     {
                         track.pointsEdgeLeft = pointsEdgeLeftLast;
                         track.pointsEdgeRight = pointsEdgeRightLast;
