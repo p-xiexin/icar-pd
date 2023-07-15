@@ -33,7 +33,7 @@ int main()
         float speed = 0.0f;
         uint16_t servo = 1500;
         // cin >> speed;
-        cin >> servo;
+        cin >> speed >> servo;
 		serialInterface.set_control(speed, servo);
     }
 }

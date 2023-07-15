@@ -274,16 +274,21 @@ public:
                     track.pointsEdgeLeft = track.predictEdgeLeft(track.pointsEdgeRight);
                 }
 
-                // else
-                // {
-                //     for(int i = 0; i < track.pointsEdgeLeft.size() / 2; i++)
-                //     {
-                //         if(track.pointsEdgeLeft[i].y < 5)
-                //             counterSpurroad++;
-                //     }
-                //     if(counterSpurroad > 30)
-                //         ringStep = RingStep::Entering;
-                // }             
+                {
+                    uint16_t edgecounter = 0;
+                    for(int i = 0; i < track.pointsEdgeLeft.size(); i++)
+                    {
+                        if(track.pointsEdgeLeft[i].y < 5)
+                            edgecounter++;
+                        else
+                            edgecounter = 0;
+                    }
+                    if(edgecounter > track.pointsEdgeLeft.size() / 2)
+                    {
+                        ringStep = RingStep::Entering;
+                        counterSpurroad = 0;
+                    }
+                }             
             }
             else if(ringType == RingType::RingRight)
             {
@@ -312,16 +317,21 @@ public:
                     track.pointsEdgeRight = track.predictEdgeRight(track.pointsEdgeLeft);
                 }
                 
-                // else
-                // {
-                //     for(int i = 0; i < track.pointsEdgeRight.size() / 2; i++)
-                //     {
-                //         if(track.pointsEdgeRight[i].y > COLSIMAGE - 5)
-                //             counterSpurroad++;
-                //     }
-                //     if(counterSpurroad > 30)
-                //         ringStep = RingStep::Entering;
-                // }             
+                {
+                    uint16_t edgecounter = 0;
+                    for(int i = 0; i < track.pointsEdgeRight.size(); i++)
+                    {
+                        if(track.pointsEdgeRight[i].y > COLSIMAGE - 5)
+                            edgecounter++;
+                        else
+                            edgecounter = 0;
+                    }
+                    if(edgecounter > track.pointsEdgeRight.size() / 2)
+                    {
+                        ringStep = RingStep::Entering;
+                        counterSpurroad = 0;
+                    }
+                }             
             }
 
         }
@@ -686,7 +696,8 @@ public:
                 }
                 if(rowBreakRight)
                 {
-                    counterSpurroad++;
+                    // if(track.pointsEdgeRight[rowBreakRight].y > COLSIMAGE / 2 - 30)
+                        counterSpurroad++; 
 
                     pointBreakD = track.pointsEdgeRight[rowBreakRight];
                     pointBreakU = track.pointsEdgeLeft[rowBreakLeft];
@@ -756,7 +767,8 @@ public:
                 }
                 if(rowBreakLeft)
                 {
-                    counterSpurroad++;
+                    // if(track.pointsEdgeLeft[rowBreakLeft].y < COLSIMAGE / 2 + 30)
+                        counterSpurroad++;
 
                     pointBreakU = track.pointsEdgeRight[rowBreakRight];
                     pointBreakD = track.pointsEdgeLeft[rowBreakLeft];

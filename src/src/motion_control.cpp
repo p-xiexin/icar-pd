@@ -282,7 +282,7 @@ public:
             y_offset = 60;
 
         // speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(abs(CenterLine_k)) - y_offset / 100 - x_offset / 200;
-        speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(abs(CenterLine_k)) - params.speedHigh * 0.1 * atan(min(abs(Slope_previewPoint), 3.5)) - y_offset / 100 - x_offset / 200;
+        speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(abs(CenterLine_k)) - params.speedHigh * 0.1 * atan(min(abs(Slope_previewPoint), 4.0)) - x_offset / 200;
 
         //加速限幅
         if(speed - motorSpeed > 0.05f)
@@ -539,6 +539,9 @@ public:
         float centerline_in_this_function_k = CenterLine_k;
         if((CenterLine_k >= 0 && Slope_previewPoint >= 0) || (CenterLine_k < 0 && Slope_previewPoint < 0))
             centerline_in_this_function_k = Slope_previewPoint;
+        
+        if(CenterLine_k < params.Angle_target / 2)
+            centerline_in_this_function_k = 0;
 
         // Angle_rad = atan(CenterLine_k);
         // 角偏积分项
@@ -575,6 +578,8 @@ public:
 
         /**********线偏控制**************/
         error = Line_offset_mid - Mid_line;
+        if(abs(error) < 5)
+            error = 0;
         static float errorLast = 0;
 
         // 限幅计算
