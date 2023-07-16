@@ -1,7 +1,7 @@
 {
     "FarmlandCheck": 2,
-    "Speed": 0.8,
-    "SpeedScale": 0.6,
+    "Speed": 1.0,
+    "SpeedScale": 1.4,
     "CloseWidth" : 4,
     "CloseHeigth" : 4,
     "EnrodeWidth" : 100,

@@ -178,15 +178,15 @@ int main(int argc, char *argv[])
         if (controlCenterCal.style != "STRIGHT") AI_enable = false;
         if (/*roadType == 6 || */roadType == 9) AI_enable = true;
         else if (roadType == 1) AI_enable = false;
-        if(roadType) detection.Startdetect = false;
+        if(roadType && roadType != RoadType::CrossHandle) detection.Startdetect = false;
         else detection.Startdetect = true;
         // AI_enable = false; 
-        if (AI_enable)
-        {
-            ai_results = detection.getLastFrame();
-            frame = ai_results->rgb_frame;
-        }
-        else
+        // if (AI_enable)
+        // {
+        //     ai_results = detection.getLastFrame();
+        //     frame = ai_results->rgb_frame;
+        // }
+        // else
         {
             ai_results = std::make_shared<DetectionResult>();
         }
@@ -249,7 +249,8 @@ int main(int argc, char *argv[])
 		{
 			if (roadType == RoadType::FarmlandHandle || roadType == RoadType::BaseHandle)
 			{
-				if (farmlandAvoidance.farmlandAvoid(trackRecognition, ai_results->predictor_results, imgaeCorrect))
+				// if (farmlandAvoidance.farmlandAvoid(trackRecognition, ai_results->predictor_results, imgaeCorrect))
+				if (farmlandAvoidance.farmlandAvoid(trackRecognition, imgaeCorrect))
 				{
 					if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
 						serialInterface.buzzerSound(1);	  // OK

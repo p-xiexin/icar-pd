@@ -530,6 +530,9 @@ public:
         // 右边与中线撞线的点
         if((controlCenter.intersectionRight.x < 195 && controlCenter.intersectionRight.x > 100) && controlCenter.intersectionLeft.x ==0)
             compensation_error = -(controlCenter.intersectionRight.x - 100) * params.Line_compensation_coefficient;
+        
+        if(enum_RoadType == 9)
+            compensation_error *= 2;
 
 
         /**********角偏控制**************/
@@ -538,9 +541,9 @@ public:
 
         float centerline_in_this_function_k = CenterLine_k;
         if((CenterLine_k >= 0 && Slope_previewPoint >= 0) || (CenterLine_k < 0 && Slope_previewPoint < 0))
-            centerline_in_this_function_k = Slope_previewPoint;
+            centerline_in_this_function_k = abs(Slope_previewPoint) > abs(CenterLine_k) ? Slope_previewPoint : CenterLine_k;
         
-        if(CenterLine_k < params.Angle_target / 2)
+        if(abs(CenterLine_k) < params.Angle_target / 2)
             centerline_in_this_function_k = 0;
 
         // Angle_rad = atan(CenterLine_k);
@@ -549,7 +552,7 @@ public:
         // Angle_Iout += params.Ki_down * CenterLine_k;
         if(enum_RoadType == 1)
         {
-            Angle_Iout += params.Ki_down * CenterLine_k;
+            Angle_Iout += params.Ki_down * centerline_in_this_function_k;
         }
         else 
         {

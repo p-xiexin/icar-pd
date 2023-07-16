@@ -60,7 +60,7 @@ public:
         {
 			for (int i = 0; i < predict.size(); i++)
 			{
-				if (predict[i].label == LABEL_CORN && predict[i].y + predict[i].height / 2 > 30 && predict[i].score > 0.5) // 拖拉机标志检测
+				if (predict[i].label == LABEL_CORN && predict[i].y + predict[i].height / 2 > 60 && predict[i].score > 0.5) // 拖拉机标志检测
 				{
 					counterRec++;
 					break;
@@ -68,18 +68,18 @@ public:
 			}
             if (counterRec)
             {
-                counterSession++;
-                if (counterRec > params.FarmlandCheck && counterSession < params.FarmlandCheck * 2)
+                if (counterRec > params.FarmlandCheck && counterSession < params.FarmlandCheck * 2 + 1)
                 {
                     farmlandStep = FarmlandStep::Enable; // 农田区域使能
                     counterRec = 0;
                     counterSession = 0;
                 }
-                else if (counterSession >= params.FarmlandCheck * 2)
+                else if (counterSession >= params.FarmlandCheck * 2 + 1)
                 {
                     counterRec = 0;
                     counterSession = 0;
                 }
+                counterSession++;
             }
         }
     }
@@ -116,6 +116,8 @@ public:
                 {
                     track.pointsEdgeRight.resize(track.pointsEdgeRight.size() * 0.7);
                 }
+                pointsEdgeLeftLast = track.pointsEdgeLeft;
+                pointsEdgeRightLast = track.pointsEdgeRight;
             }
             
             break;
@@ -160,16 +162,6 @@ public:
         }
         case FarmlandStep::Cruise:
         {
-            if ((track.pointsEdgeLeft.size() > 80 || track.pointsEdgeRight.size() > 80) && pointTop.x > ROWSIMAGE / 2 && pointTop.y
-                && (track.pointsEdgeLeft[10].x > COLSIMAGE / 2 || track.pointsEdgeRight[10].x > COLSIMAGE / 2))
-            {
-                counterRec++;
-                if(counterRec > 1)
-                {
-                    farmlandStep = FarmlandStep::None; // 出农田
-                    reset();
-                }
-            }
             pointTop = POINT(ROWSIMAGE - 1, 0);
             cv::Mat img_rgb = frame.clone();
             cv::circle(img_rgb, cv::Point(0, ROWSIMAGE - track.rowCutBottom), 5, cv::Scalar(20, 200, 200), -1);
@@ -185,6 +177,17 @@ public:
             // 查找轮廓
             std::vector<std::vector<cv::Point>> contours;
             cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+            if ((track.pointsEdgeLeft.size() > 80 || track.pointsEdgeRight.size() > 80) && contours.size() <= 3
+                && (track.pointsEdgeLeft[10].x > COLSIMAGE / 2 || track.pointsEdgeRight[10].x > COLSIMAGE / 2))
+            {
+                counterRec++;
+                if(counterRec > 1)
+                {
+                    farmlandStep = FarmlandStep::None; // 出农田
+                    reset();
+                }
+            }
 
             //分离蓝色通道
             std::vector<cv::Mat> channels;
@@ -219,8 +222,10 @@ public:
 
                             // 计算两点之间的距离
                             double distance = cv::norm(currentPoint - otherPoint);
-                            double distThreshold = std::max(currentPoint.y, otherPoint.y) * 0.5 + 
-                                                std::abs(currentPoint.x - otherPoint.x) * (std::min(currentPoint.y, otherPoint.y) / ROWSIMAGE);
+                            double distThreshold = std::max(currentPoint.y, otherPoint.y) * 0.6 + 
+                                                std::abs(currentPoint.x - otherPoint.x) * (std::max(currentPoint.y, otherPoint.y) / ROWSIMAGE);
+                            if(distThreshold < 50)
+                                distThreshold = 50;
 
                             // 如果距离小于阈值，使用线段将两点连接起来
                             if (distance < distThreshold) 
@@ -229,7 +234,7 @@ public:
                                     pointTop = POINT(currentPoint.y, currentPoint.x);
                                 if(otherPoint.y < pointTop.x)
                                     pointTop = POINT(otherPoint.y, otherPoint.x);
-                                cv::line(blueChannel, currentPoint, otherPoint, cv::Scalar(20), 5);
+                                cv::line(blueChannel, currentPoint, otherPoint, cv::Scalar(30), 5);
                                 lined = true;
                                 break;
                             }
@@ -240,21 +245,24 @@ public:
                 }
             }
             cv::Mat kernel_close = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(4, 4));//创建结构元
-            cv::Mat kernel_enrode = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(20, 20));
-            cv::morphologyEx(blueChannel, blueChannel, cv::MORPH_CLOSE, kernel_close, cv::Point(-1, -1));//闭运算
+            cv::Mat kernel_enrode = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(40, 40));
+            // cv::morphologyEx(blueChannel, blueChannel, cv::MORPH_CLOSE, kernel_close, cv::Point(-1, -1));//闭运算
             cv::morphologyEx(blueChannel, _imageGray, cv::MORPH_ERODE, kernel_enrode, cv::Point(-1, -1));//腐蚀运算
             cv::threshold(_imageGray, _imageBinary, 0, 255, cv::THRESH_OTSU);
 
+            track.reset();
             track.trackRecognition(_imageBinary, 0);
-            movingAverageFilter(track.pointsEdgeLeft, 10);
-            movingAverageFilter(track.pointsEdgeRight, 10);
+            movingAverageFilter(track.pointsEdgeLeft, 5);
+            movingAverageFilter(track.pointsEdgeRight, 5);
 
             if(pointTop.y && pointTop.x < ROWSIMAGE / 2)
             {
                 uint16_t validrow = abs(pointTop.x - track.pointsEdgeLeft[0].x - 1);
                 if(validrow < track.pointsEdgeLeft.size())
-                track.pointsEdgeLeft.resize(validrow);
-                track.pointsEdgeRight.resize(validrow);
+                {
+                    track.pointsEdgeLeft.resize(validrow);
+                    track.pointsEdgeRight.resize(validrow);
+                }
             }
 
             uint16_t counter = 0;
@@ -263,7 +271,7 @@ public:
                 if(track.pointsEdgeLeft[i].y < 3 && track.pointsEdgeRight[i].y > COLSIMAGE - 3)
                     counter++;
             }
-            if(counter > ROWSIMAGE / 2)
+            if(counter > track.pointsEdgeLeft.size() / 2)
             {
                 track.pointsEdgeLeft = pointsEdgeLeftLast;
                 track.pointsEdgeRight = pointsEdgeRightLast;
@@ -307,26 +315,27 @@ public:
             //     counterRec++;
 			for (int i = 0; i < predict.size(); i++)
 			{
-				if (predict[i].label == LABEL_CORN && predict[i].y + predict[i].height / 2 > 30 && predict[i].score > 0.5) // 拖拉机标志检测
+				if (predict[i].label == LABEL_CORN && predict[i].y + predict[i].height / 2 > 60)
 				{
 					counterRec++;
+                    std::cout << counterRec << "\t" << counterSession << std::endl;
 					break;
 				}
 			}
             if (counterRec)
             {
-                counterSession++;
-                if (counterRec > params.FarmlandCheck && counterSession < params.FarmlandCheck * 2)
+                if (counterRec > params.FarmlandCheck && counterSession < params.FarmlandCheck + 3)
                 {
                     farmlandStep = FarmlandStep::Enable; // 农田区域使能
                     counterRec = 0;
                     counterSession = 0;
                 }
-                else if (counterSession >= params.FarmlandCheck * 2)
+                else if (counterSession >= params.FarmlandCheck + 3)
                 {
                     counterRec = 0;
                     counterSession = 0;
                 }
+                counterSession++;
             }
             break;
         }

@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
                             if(otherPoint.y < pointTop.x)
                                 pointTop = POINT(otherPoint.y, otherPoint.x);
                             cv::line(resultImage, currentPoint, otherPoint, cv::Scalar(0, 255, 0), 5);
-                            cv::line(blueChannel, currentPoint, otherPoint, cv::Scalar(20), 5);
+                            cv::line(blueChannel, currentPoint, otherPoint, cv::Scalar(60), 5);
                             lined = true;
                             break;
                         }
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 		cv::Mat imageBinary, imageEnrode;
 
         cv::Mat kernel_close = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));//创建结构元
-		cv::Mat kernel_enrode = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(10, 10));
+		cv::Mat kernel_enrode = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(40, 40));
 		cv::morphologyEx(blueChannel, blueChannel, cv::MORPH_CLOSE, kernel_close, cv::Point(-1, -1));//闭运算
 		cv::morphologyEx(blueChannel, imageEnrode, cv::MORPH_ERODE, kernel_enrode, cv::Point(-1, -1));//腐蚀运算
 		cv::threshold(imageEnrode, imageBinary, 0, 255, cv::THRESH_OTSU);

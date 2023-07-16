@@ -91,9 +91,8 @@ public:
 	 */
 	void depotDetection(vector<PredictResult> predict)
 	{
-		if(counterImmunity < 30)
+		if(counterImmunity < 80)
 		{
-			counterImmunity++;
 			return;
 		}
 
@@ -103,7 +102,7 @@ public:
 		{
 			for (int i = 0; i < predict.size(); i++)
 			{
-				if (predict[i].label == LABEL_TRACTOR && predict[i].y + predict[i].height / 2 > 30 && predict[i].score > 0.62) // 拖拉机标志检测
+				if (predict[i].label == LABEL_TRACTOR && predict[i].y + predict[i].height / 2 > 30) // 拖拉机标志检测
 				{
 					counterRec++;
 					break;
@@ -156,6 +155,12 @@ public:
 	 */
 	bool depotDetection(TrackRecognition &track, cv::Mat img_rgb)
 	{
+		if(counterImmunity < 80)
+		{
+			counterImmunity++;
+			return false;
+		}
+
 		_pointNearCone = POINT(0, 0);
 		_distance = 0;
 		pointEdgeDet.clear();
@@ -167,7 +172,7 @@ public:
 		case DepotStep::DepotEnable: //[02] 维修厂使能
 		{
 			counterExit++;
-			if (counterExit > 150) {
+			if (counterExit > 100) {
 				reset();
 				return false;
 			}
@@ -256,7 +261,7 @@ public:
 		case DepotStep::DepotStop: //[05] 停车使能
 		{
 			counterRec++;
-			if (counterRec > 100) // 停车：40场 = 2s
+			if (counterRec > 50) // 停车：40场 = 2s
 			{
 				depotStep = DepotStep::DepotExit; // 出站使能
 				counterRec = params.BrakeCnt;
@@ -270,13 +275,8 @@ public:
 		{
 			if (pathsEdgeLeft.size() < 1 || pathsEdgeRight.size() < 1)
 			{
-				if(counterRec == 0)
-				{
-					depotStep = DepotStep::DepotNone; // 出厂完成
-					reset();
-				}
-				else
-					counterRec--;
+				depotStep = DepotStep::DepotNone; // 出厂完成
+				reset();
 			}
 			else
 			{

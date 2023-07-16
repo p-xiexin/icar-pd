@@ -491,9 +491,9 @@ public:
             }
         }
 
-        // return repaired;
-        if(crossroadType != CrossroadType::None)
-            return true;
+        return repaired;
+        // if(crossroadType != CrossroadType::None)
+        //     return true;
     }
 
     /**

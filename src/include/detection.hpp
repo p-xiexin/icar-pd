@@ -70,23 +70,24 @@ public:
                 lock.unlock();
 
                 //ai推理
-                auto feeds = _predictor->preprocess(result->rgb_frame, {320, 320});
-                _predictor->run(*feeds);
-                _predictor->render();
 
                 if(Startdetect)
                 {
+                    auto feeds = _predictor->preprocess(result->rgb_frame, {320, 320});
+                    _predictor->run(*feeds);
+                    _predictor->render();
+                    
                     bridgeDetection.bridgeCheck(_predictor->results);
                     slowZoneDetection.slowZoneCheck(_predictor->results);
                     depotDetection.depotDetection(_predictor->results);
-                    // farmlandAvoidance.farmdlandCheck(_predictor->results);
+                    farmlandAvoidance.farmdlandCheck(_predictor->results);
                 }
 
                 bool flag = false;
                 for(int i = 0; i < _predictor->results.size(); i++)
                 {
                     std::string label_name = _predictor->results[i].label;
-                    if((/*label_name == "tractor" || */label_name == "corn") && _predictor->results[i].score > 0.52
+                    if((label_name == "tractor" || label_name == "corn") && _predictor->results[i].score > 0.52
                         && _predictor->results[i].y + _predictor->results[i].height / 2 > 20)
                     {
                         flag = true;

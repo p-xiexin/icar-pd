@@ -296,7 +296,7 @@ public:
                 {
                     if (endBlock[indexBlocks[0]] - startBlock[indexBlocks[0]] < ROWSIMAGE / 10)
                     {
-                        continue;
+                        break;;
                     }
                     pointsEdgeLeft.emplace_back(row, startBlock[indexBlocks[0]]);
                     pointsEdgeRight.emplace_back(row, endBlock[indexBlocks[0]]);
