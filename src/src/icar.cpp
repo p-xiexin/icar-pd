@@ -98,7 +98,6 @@ int main(int argc, char *argv[])
     }
     serialInterface.Start();
     captureInterface.Start();
-    detection.Start();
 
     signal(SIGINT, callbackSignal); // 程序退出信号
 
@@ -149,6 +148,7 @@ int main(int argc, char *argv[])
         serialInterface.set_control(0, PWMSERVOMID); // 智能车停止运动|建立下位机通信
         waitKey(1000);
     }
+    detection.Start();
     cout << "--------- System start!!! -------" << endl;
 
     while (1)
@@ -210,15 +210,17 @@ int main(int argc, char *argv[])
 				// 进行斑马线检测，检测到斑马线，清空其他状态机
 				if (garageRecognition.garage_contral(trackRecognition))
 				{
-					bridgeDetection.reset(); // 桥梁
-					depotDetection.reset();	 // 维修
-					farmlandAvoidance.reset();	// 农田区域
-					slowZoneDetection.reset();	  // 慢行区
-					crossroadRecognition.reset(); // 十字道路
-					ringRecognition.reset(); // 环岛
-
 					if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
+                    {
 						serialInterface.buzzerSound(1);	  // OK
+                        
+                        // bridgeDetection.reset(); // 桥梁
+                        // depotDetection.reset();	 // 维修
+                        // farmlandAvoidance.reset();	// 农田区域
+                        // slowZoneDetection.reset();	  // 慢行区
+                        crossroadRecognition.reset(); // 十字道路
+                        ringRecognition.reset(); // 环岛
+                    }
 
 					roadType = RoadType::GarageHandle;
 				}
@@ -573,9 +575,12 @@ int main(int argc, char *argv[])
 void callbackSignal(int signum)
 {
     serialInterface.set_control(0, PWMSERVOMID); // 智能车停止运动
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));//延时20ms确保停止信号发出
+
     detection.Stop();
     captureInterface.Stop();
     serialInterface.Stop();
+
     cout << "====System Exit!!!  -->  CarStopping! " << signum << endl;
     exit(signum);
 }

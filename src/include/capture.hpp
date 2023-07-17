@@ -32,11 +32,14 @@ public:
     void Stop()
     {
         _loop = false;
-        _thread->join();
+        if(_thread->joinable())
+            _thread->join();
         if(_cap->isOpened())
         {
             _cap->release();
         }
+
+        std::cout << "camera exit" << std::endl;
     }
 
     void run()
@@ -84,7 +87,7 @@ public:
     {
         cv::Mat frame;
         std::unique_lock<std::mutex> lock(_mutex);
-        while(_frame == nullptr)
+        while(_frame == nullptr)//这种方法有问题，但因为调用时机，巧合地避免了
         {
             cond_.wait(lock);
         }

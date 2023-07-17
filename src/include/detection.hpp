@@ -45,7 +45,9 @@ public:
     void Stop()
     {
         _loop = false;
-        _thread->join();
+        if(_thread->joinable())
+            _thread->join();
+        std::cout << "ai exit" << std::endl;
     }
 
     bool AI_Enable()
@@ -61,13 +63,27 @@ public:
                 std::shared_ptr<DetectionResult> result = std::make_shared<DetectionResult>();
 
                 std::unique_lock<std::mutex> lock(_mutex);
-                while(_frame == nullptr)
+                // while(_frame == nullptr)
+                // {
+                //     cond_.wait(lock);
+                // }
+                while (_frame == nullptr)
                 {
-                    cond_.wait(lock);
+                    // 设置超时时间
+                    if (cond_.wait_for(lock, std::chrono::seconds(1)) == std::cv_status::timeout) {
+                        // 超时处理逻辑
+                        std::cout << "ai wait for frame time out" << std::endl;
+                        break;
+                    }
                 }
-                result->rgb_frame = _frame->clone();
-                _frame = nullptr;
-                lock.unlock();
+                if(_frame != nullptr)
+                {
+                    result->rgb_frame = _frame->clone();
+                    _frame = nullptr;
+                    lock.unlock();
+                }
+                else 
+                    continue;
 
                 //ai推理
 

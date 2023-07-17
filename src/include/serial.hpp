@@ -73,6 +73,8 @@ public:
             _thread_recv->join();
         if (_driver)
             _driver->close();
+
+        std::cout << "serial exit" << std::endl;
     }
 
 

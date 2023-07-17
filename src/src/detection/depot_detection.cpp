@@ -82,6 +82,9 @@ public:
 		counterImmunity = 0;
 		_speed = 0.0f;
 		_slowdown = false;
+		pathsEdgeLeft.clear(); // 记录进厂轨迹
+		pathsEdgeRight.clear();
+
 	}
 
 	/**
