@@ -60,7 +60,7 @@ public:
         {
 			for (int i = 0; i < predict.size(); i++)
 			{
-				if (predict[i].label == LABEL_CORN && predict[i].y + predict[i].height / 2 > 60 && predict[i].score > 0.5) // 拖拉机标志检测
+				if (predict[i].label == LABEL_CORN) // 拖拉机标志检测
 				{
 					counterRec++;
 					break;
@@ -94,6 +94,21 @@ public:
     {
         switch(farmlandStep)
         {
+        case FarmlandStep::None:
+        {
+            if(track.pointsEdgeLeft.size() < ROWSIMAGE / 2 && track.pointsEdgeRight.size() < ROWSIMAGE / 2
+                && track.widthBlock[track.widthBlock.size() - 1].y <= COLSIMAGE / 10 + 10)
+            {
+                double k_left = 0, k_right = 0;
+                k_left = perspectiveTangentSlope(track.pointsEdgeLeft, inRange(track.pointsEdgeLeft, track.pointsEdgeLeft.size() * 0.8), 2);
+                k_right = perspectiveTangentSlope(track.pointsEdgeRight, inRange(track.pointsEdgeRight, track.pointsEdgeRight.size() * 0.8), 2);
+                if( (abs(k_left) > 7 && abs(k_right) < 3) || (abs(k_left) < 3) && abs(k_right) > 7)
+                {
+                    //farmlandStep = FarmlandStep::Enable;
+                }
+            }
+            break;
+        }
         case FarmlandStep::Enable:
         {
             if (track.pointsEdgeLeft.size() < params.EnterLine && track.pointsEdgeRight.size() < params.EnterLine)
@@ -220,10 +235,16 @@ public:
                             if(otherPoint.y < track.rowCutUp)
                                 continue;
 
+                            if(abs(currentPoint.y - otherPoint.y) > 100 || abs(currentPoint.x - otherPoint.x) > 120)
+                                continue;
+
                             // 计算两点之间的距离
                             double distance = cv::norm(currentPoint - otherPoint);
-                            double distThreshold = std::max(currentPoint.y, otherPoint.y) * 0.6 + 
-                                                std::abs(currentPoint.x - otherPoint.x) * (std::max(currentPoint.y, otherPoint.y) / ROWSIMAGE);
+                            double x_dist, y_dist, distThreshold;
+                            x_dist = std::max(currentPoint.y, otherPoint.y) * 0.6;
+                            y_dist = std::abs(currentPoint.x - otherPoint.x) * (std::max(std::max(currentPoint.y, otherPoint.y), 80) / ROWSIMAGE);
+                            distThreshold = x_dist + y_dist;
+
                             if(distThreshold < 50)
                                 distThreshold = 50;
 
@@ -244,7 +265,7 @@ public:
                         break;
                 }
             }
-            cv::Mat kernel_close = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(4, 4));//创建结构元
+            cv::Mat kernel_close = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));//创建结构元
             cv::Mat kernel_enrode = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(40, 40));
             // cv::morphologyEx(blueChannel, blueChannel, cv::MORPH_CLOSE, kernel_close, cv::Point(-1, -1));//闭运算
             cv::morphologyEx(blueChannel, _imageGray, cv::MORPH_ERODE, kernel_enrode, cv::Point(-1, -1));//腐蚀运算
@@ -265,21 +286,42 @@ public:
                 }
             }
 
-            uint16_t counter = 0;
+            // uint16_t counter = 0;
+            // for(int i = 0; i < track.pointsEdgeLeft.size(); i++)
+            // {
+            //     if(track.pointsEdgeLeft[i].y < 3 && track.pointsEdgeRight[i].y > COLSIMAGE - 3)
+            //         counter++;
+            // }
+            // if(counter > track.pointsEdgeLeft.size() / 2)
+            // {
+            //     track.pointsEdgeLeft = pointsEdgeLeftLast;
+            //     track.pointsEdgeRight = pointsEdgeRightLast;
+            // }
+            // else
+            // {
+            //     pointsEdgeLeftLast = track.pointsEdgeLeft;
+            //     pointsEdgeRightLast = track.pointsEdgeRight;
+            // }
+
+            uint16_t edge_counter = 0;
             for(int i = 0; i < track.pointsEdgeLeft.size(); i++)
             {
-                if(track.pointsEdgeLeft[i].y < 3 && track.pointsEdgeRight[i].y > COLSIMAGE - 3)
-                    counter++;
+                if(track.pointsEdgeLeft[i].y < 3)
+                    edge_counter++;
             }
-            if(counter > track.pointsEdgeLeft.size() / 2)
+            if(edge_counter > track.pointsEdgeLeft.size() * 0.7)
             {
-                track.pointsEdgeLeft = pointsEdgeLeftLast;
-                track.pointsEdgeRight = pointsEdgeRightLast;
+                track.pointsEdgeLeft.resize(5);
             }
-            else
+            edge_counter = 0;
+            for(int i = 0; i < track.pointsEdgeRight.size(); i++)
             {
-                pointsEdgeLeftLast = track.pointsEdgeLeft;
-                pointsEdgeRightLast = track.pointsEdgeRight;
+                if(track.pointsEdgeRight[i].y > COLSIMAGE - 3)
+                    edge_counter++;
+            }
+            if(edge_counter > track.pointsEdgeRight.size() * 0.7)
+            {
+                track.pointsEdgeRight.resize(5);
             }
 
             break;
@@ -518,7 +560,7 @@ public:
         }
         case FarmlandStep::Cruise:
         {
-            _speed += 0.08f;
+            _speed += 0.05f;
             if(_speed > params.Speed * params.SpeedScale)
                 _speed = params.Speed * params.SpeedScale; 
             break;
@@ -588,6 +630,37 @@ public:
     }
 
 private:
+    /**
+	 * @brief 在俯视域计算预瞄点的切线斜率
+	 *
+     * @param line 图像域下的中线
+	 * @param index 预瞄点的下标号
+	 * @param size 开窗大小
+	 * @return 斜率
+	 */
+    double perspectiveTangentSlope(std::vector<POINT> line, uint16_t index, int size)
+    {
+        if(line.size() < 5)
+            return 0;
+            
+		// End
+		Point2d endIpm = ipm.homography(
+			Point2d(line[inRange(line, index-size)].y, line[inRange(line, index-size)].x)); // 透视变换
+		POINT p1 = POINT(endIpm.y, endIpm.x);
+
+		// Start
+		Point2d startIpm = ipm.homography(
+			Point2d(line[inRange(line, index+size)].y, line[inRange(line, index+size)].x)); // 透视变换
+		POINT p0 = POINT(startIpm.y, startIpm.x);
+
+        float dx = p1.x - p0.x;
+        float dy = p1.y - p0.y;
+        if(dx == 0)
+            return 10.0;
+        else
+            return dy / dx;
+    }
+
     /**
      * @brief 玉米坐标检测
      *
