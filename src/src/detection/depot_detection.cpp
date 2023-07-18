@@ -105,7 +105,7 @@ public:
 		{
 			for (int i = 0; i < predict.size(); i++)
 			{
-				if (predict[i].label == LABEL_TRACTOR && predict[i].y + predict[i].height / 2 > 30) // 拖拉机标志检测
+				if (predict[i].label == LABEL_TRACTOR && predict[i].y + predict[i].height / 2 > 60) // 拖拉机标志检测
 				{
 					counterRec++;
 					break;
