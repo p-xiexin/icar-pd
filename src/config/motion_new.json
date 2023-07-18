@@ -1,16 +1,16 @@
 {
-    "speedLow": 1.8,
-    "speedHigh": 1.8,
-    "speedAI": 1.2,
+    "speedLow": 2.0,
+    "speedHigh": 2.55,
+    "speedAI": 1.6,
     "speedCorners": 1.5,
     "speedcoiled": 1.4,
 
     "speed_and_angle_k1": 0.04,
     "speed_and_angle_k2": 3.8,
 
-    "runP1": 1.28,
-    "runP2": 0.0164,
-    "runP3": 0.000028,
+    "runP1": 1.36,
+    "runP2": 0.0286,
+    "runP3": 0.0000328,
     "turnP": 3.5,
     "turnD": 6.4,
 
@@ -19,15 +19,20 @@
     "Kd": 1.2,
     "Kv": 0,
 
-    "Angle_Kp": 3.2,
+    "Angle_Kp": 3.7,
     "Angle_Ki": 0.0,
     "dynamic_Mid_low": 145,
     "dynamic_Mid_high": 175,
     "Angle_target": 0.45,
 
+    "K_K_limit": 0.2,
+    "K_foreword": 0.7,
+
     "Control_Mid": 160,
-    "Control_Down_set": 20,
+    "Control_Down_set": 15,
     "Control_Up_set": 185,
+    "Control_foreword_down": 150,
+    "Control_foreword_up": 190,
     "ki_down_out_max": 2.0,
     "Kp_dowm": 0.0,
     "Ki_down": 0.0,
@@ -76,10 +81,16 @@
             "#dynamic_Mid_low": "动态中线最小值",
             "#dynamic_Mid_high": "动态中线最大值",
             "#Angle_target": "角偏目标值范围",
-             
+
+            "#K_K_limit": "前馈转弯控制系数死区",           
+            "#K_foreword": "大转弯控制系数",
+            
             "#Control_Mid": "控制中线",
             "#Control_Down_set": "图像近处点界限",
             "#Control_Up_set": "图像远处点界限",
+            "#Control_foreword_down": "图像前瞻近处点界限",
+            "#Control_foreword_up": "图像前瞻远处点界限", 
+
             "#ki_down_out_max": "近处点积分项限幅",
             "#Kp_dowm": "近处点pi控制kp",
             "#Ki_down": "近处点pi控制ki",

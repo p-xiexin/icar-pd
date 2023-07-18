@@ -560,7 +560,7 @@ public:
         }
         case FarmlandStep::Cruise:
         {
-            _speed += 0.05f;
+            _speed += 0.02f;
             if(_speed > params.Speed * params.SpeedScale)
                 _speed = params.Speed * params.SpeedScale; 
             break;

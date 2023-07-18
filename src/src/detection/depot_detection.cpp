@@ -264,7 +264,7 @@ public:
 		case DepotStep::DepotStop: //[05] 停车使能
 		{
 			counterRec++;
-			if (counterRec > 50) // 停车：40场 = 2s
+			if (counterRec > 25) // 停车：40场 = 2s
 			{
 				depotStep = DepotStep::DepotExit; // 出站使能
 				counterRec = params.BrakeCnt;
@@ -276,7 +276,8 @@ public:
 
 		case DepotStep::DepotExit: //[06] 出站使能
 		{
-			if (pathsEdgeLeft.size() < 1 || pathsEdgeRight.size() < 1)
+			if ((pathsEdgeLeft.size() < 1 || pathsEdgeRight.size() < 1)
+				|| (track.pointsEdgeLeft.size() > 160 && track.pointsEdgeRight.size() > 160) && track.widthBlock[10].y > COLSIMAGE / 2)
 			{
 				depotStep = DepotStep::DepotNone; // 出厂完成
 				reset();
@@ -453,7 +454,7 @@ public:
 		case DepotStep::DepotStop: //[05] 停车使能
 		{
 			counterRec++;
-			if (counterRec > 30) // 停车：40场 = 2s
+			if (counterRec > 15) // 停车：40场 = 2s
 			{
 				depotStep = DepotStep::DepotExit; // 出站使能
 				counterRec = params.BrakeCnt;

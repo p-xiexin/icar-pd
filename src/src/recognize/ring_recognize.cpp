@@ -858,7 +858,8 @@ public:
 
             if(ringType == RingType::RingLeft)
             {
-                if(rowBreakRight < ROWSIMAGE / 4 || track.pointsEdgeLeft.size() > 140)
+                if((rowBreakRight < ROWSIMAGE / 4 || track.pointsEdgeLeft.size() > 140)
+                    && track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].y < COLSIMAGE / 2)
                 {
                     ringStep = RingStep::Finish;
                 }
@@ -874,7 +875,8 @@ public:
             }
             else if(ringType == RingType::RingRight)
             {
-                if(rowBreakLeft < ROWSIMAGE / 4 || track.pointsEdgeRight.size() > 140)
+                if((rowBreakLeft < ROWSIMAGE / 4 || track.pointsEdgeRight.size() > 140)
+                    && track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].y > COLSIMAGE / 2)
                 {
                     ringStep = RingStep::Finish;
                 }

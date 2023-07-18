@@ -63,9 +63,14 @@ public:
         int   dynamic_Mid_high = 180;
         float Angle_target = 0.1;
 
+        float K_K_limit = 0.0;              // 前馈控制斜率死区
+        float K_foreword = 0.0;             // 前馈控制系数
+
         int Control_Mid = 160;              // 控制中线
         int Control_Down_set = 20;          // 图像近处点界限
         int Control_Up_set = 190;           // 图像远处点界限
+        int Control_foreword_down = 160;    // 前瞻下限
+        int Control_foreword_up = 190;      // 前瞻上限
         float ki_down_out_max;              // 近处点积分项限幅
         float Kp_dowm = 1.0;                // 近处点pi控制kp
         float Ki_down = 0.1;                // 近处点pi控制ki
@@ -92,7 +97,8 @@ public:
             runP1, runP2, runP3, turnP, turnD,Control_Mid, Control_Down_set, Control_Up_set, ki_down_out_max, Kp_dowm, 
             Ki_down, Line_compensation_coefficient, Kp, Ki, Kd, Kv, Angle_Kp, Angle_Ki, dynamic_Mid_low, dynamic_Mid_high, 
             Angle_target, rowCutUp, rowCutBottom,  Debug, Button, SaveImage, CloseLoop, GarageEnable, RingEnable, CrossEnable, 
-            StopEnable, BridgeEnable, SlowzoneEnable, DepotEnable, FarmlandEnable, pathModel); // 添加构造函数
+            StopEnable, BridgeEnable, SlowzoneEnable, DepotEnable, FarmlandEnable, pathModel, K_foreword, Control_foreword_up,
+            Control_foreword_down, K_K_limit); // 添加构造函数
     };
 
 
@@ -108,11 +114,9 @@ public:
     float       compensation_error = 0;         // 线偏前馈
     float       error = 0;                      // 线偏
     float       motorSpeed  = 1.0;              // 发送给电机的速度
-    float       Line_offset_down;               // 近处点线偏 
     float       Line_offset_mid;                // 打角区域线偏 
     float       Line_offset_up;                 // 远处前瞻点线偏
     float       servoPWM_compensate = 0;        // 近处点前馈
-    int         line_down_Num = 0;              // 近处点个数
     int         line_Mid_Num = 0;               // 控制打角点个数
     int         line_Up_Num = 0;                // 远处点个数
 
@@ -269,30 +273,29 @@ public:
      */
     void speedControl(ControlCenterCal control) 
     {
-        if(control.centerEdge.size() < 1){
+        if(control.centerEdge_yh.size() < 1){
             return;
         }
 
-        Slope_previewPoint = perspectiveTangentSlope(control.centerEdge, control.centerEdge.size()*0.8, 3);
+        Slope_previewPoint = perspectiveTangentSlope(control.centerEdge_yh, control.centerEdge_yh.size()*0.8, 3);
 
         double speed = 0.8f;
-        double y_offset = ROWSIMAGE - control.centerEdge[0].x - params.rowCutBottom;
-        double x_offset = abs(control.centerEdge[0].y - Mid_line);
+        double y_offset = ROWSIMAGE - control.centerEdge_yh[0].x - params.rowCutBottom;
+        double x_offset = abs(control.centerEdge_yh[0].y - Mid_line);
         if(y_offset > 60)
             y_offset = 60;
 
         // speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(abs(CenterLine_k)) - y_offset / 100 - x_offset / 200;
         speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(abs(CenterLine_k)) - params.speedHigh * 0.1 * atan(min(abs(Slope_previewPoint), 4.0)) - x_offset / 200;
+        // 最低速限制
+        if(speed < 0.8)
+            speed = 0.8;
 
         //加速限幅
         if(speed - motorSpeed > 0.05f)
             motorSpeed += 0.05f;
         else 
             motorSpeed = speed;
-
-        // 最低速限制
-        if(motorSpeed < 0.8)
-            motorSpeed = 0.8;
     }
 
 
@@ -472,38 +475,34 @@ public:
     void Angle_Controller(ControlCenterCal controlCenter, TrackRecognition track, int enum_RoadType = 0)
     {
         /**********线偏均值计算**************/
-        Line_offset_down = 0;
+        Line_offset_mid = 0;
         Line_offset_up = 0;
         vector<POINT> line_perspective = track.line_perspective(controlCenter.centerEdge);  //得到俯视域的中线，算斜率
         // 计算中线给定段的平均值
         for(int i=0;i<controlCenter.centerEdge.size();i++)
         {
-            if(controlCenter.centerEdge[i].x > (ROWSIMAGE - params.Control_Down_set))
-            {
-                Line_offset_down += controlCenter.centerEdge[i].y;
-                line_down_Num++;
-            }
-            else if(controlCenter.centerEdge[i].x <= (ROWSIMAGE - params.Control_Down_set) && controlCenter.centerEdge[i].x > (ROWSIMAGE - params.Control_Up_set))
-            {
-                Line_offset_mid += controlCenter.centerEdge[i].y;
-                line_Mid_Num++;
-            }
-            else if(controlCenter.centerEdge[i].x <= (ROWSIMAGE - params.Control_Up_set))
+            if(controlCenter.centerEdge[i].x <= (ROWSIMAGE - params.Control_foreword_down) && controlCenter.centerEdge[i].x > (ROWSIMAGE - params.Control_foreword_up))
             {
                 Line_offset_up += controlCenter.centerEdge[i].y;
                 line_Up_Num++;
+            }
+
+            if(controlCenter.centerEdge[i].x <= (ROWSIMAGE - params.Control_Down_set) && controlCenter.centerEdge[i].x > (ROWSIMAGE - params.Control_Up_set))
+            {
+                Line_offset_mid += controlCenter.centerEdge[i].y;
+                line_Mid_Num++;
             }
         }
 
 
         /**********线偏值具体计算**************/
-        if(line_down_Num != 0)
+        if(line_Up_Num != 0)
         {
-            Line_offset_down = Line_offset_down / line_down_Num;
-            line_down_Num = 0;
+            Line_offset_up = Line_offset_up / line_Up_Num;
+            line_Up_Num = 0;
         }
         else
-            Line_offset_down = COLSIMAGE / 2;
+            Line_offset_up = COLSIMAGE / 2;
         
         if(line_Mid_Num != 0)
         {
@@ -512,14 +511,6 @@ public:
         }
         else
             Line_offset_mid = COLSIMAGE / 2;
-
-        if(line_Up_Num != 0)
-        {
-            Line_offset_up = Line_offset_up / line_Up_Num;
-            line_Up_Num = 0;
-        }
-        else
-            Line_offset_up = COLSIMAGE / 2;
 
 
         /**********转弯撞线前馈计算**************/
@@ -537,7 +528,7 @@ public:
 
         /**********角偏控制**************/
         CenterLine_k = track.LeastSquare(line_perspective);
-        Slope_previewPoint = perspectiveTangentSlope(controlCenter.centerEdge, controlCenter.centerEdge.size()*0.8, 3);
+        Slope_previewPoint = perspectiveTangentSlope(controlCenter.centerEdge_yh, controlCenter.centerEdge_yh.size()*0.8, 3);
 
         float centerline_in_this_function_k = CenterLine_k;
         if((CenterLine_k >= 0 && Slope_previewPoint >= 0) || (CenterLine_k < 0 && Slope_previewPoint < 0))
@@ -580,7 +571,8 @@ public:
         }
 
         /**********线偏控制**************/
-        error = Line_offset_mid - Mid_line;
+        error = Line_offset_mid - Mid_line;                                                                 // 主要控制打角的线偏error值
+        int error_foreword = Line_offset_up - Mid_line;                                                     // 前瞻的线偏error值
         if(abs(error) < 5)
             error = 0;
         static float errorLast = 0;
@@ -593,14 +585,27 @@ public:
         params.turnP = abs(error) * abs(error) * params.runP3 + abs(error) * params.runP2 + params.runP1;
 
         int pwmDiff = 0;
-        if(enum_RoadType == 1 || enum_RoadType == 4)
+        if(enum_RoadType == 4)
         {
             pwmDiff = (error * params.turnP) + (error - errorLast) * params.turnD;
+            errorLast = error;
+        }
+        else if(enum_RoadType == 1)
+        {
+            pwmDiff = (error * params.turnP) + (error - errorLast) * params.turnD;
+
+            /**********加入路径规划，大转角**********/
+            if(abs(centerline_in_this_function_k) > params.K_K_limit)
+                pwmDiff = pwmDiff - error_foreword * params.K_foreword; 
             errorLast = error;
         }
         else
         {
             pwmDiff = ((error + compensation_error) * params.turnP) + (error - errorLast) * params.turnD;
+
+            /**********加入路径规划，大转角**********/
+            if(abs(centerline_in_this_function_k) > params.K_K_limit)
+                pwmDiff = pwmDiff - error_foreword * params.K_foreword; 
             errorLast = error;
         }
 

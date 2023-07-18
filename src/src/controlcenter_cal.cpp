@@ -27,6 +27,7 @@ class ControlCenterCal
 public:
     int controlCenter;           // 智能车控制中心（0~320）
     vector<POINT> centerEdge;    // 赛道中心点集
+    vector<POINT> centerEdge_yh; // 赛道中心点集,用于优化速度控制
     POINT intersectionLeft;      // 左边线与中线的交点
     POINT intersectionRight;     // 右边线与中线的交点
     uint16_t validRowsLeft = 0;  // 边缘有效行数（左）
@@ -62,21 +63,23 @@ public:
         intersectionLeft = searchLeftIntersection(track.pointsEdgeLeft);
         intersectionRight = searchRightIntersection(track.pointsEdgeRight);
 
-        // 连续弯道判断
-        if (track.stdevLeft > 280 && track.stdevRight < 210)            // 右转连续
-        {
-            // 有效边缘行获取
-            //coiled_validRowsCal_right(track.pointsEdgeLeft, track.pointsEdgeRight);
-            // 赛道类型，定义为右急转弯
-            style = "RIGHTCC";
-        }
-        else if(track.stdevRight > 280 && track.stdevLeft < 210)        // 左转连续
-        {
-            // 有效边缘行获取
-            //coiled_validRowsCal_left(track.pointsEdgeLeft, track.pointsEdgeRight);
-            // 赛道类型，定义为左急转弯
-            style = "LEFTCC";
-        }
+        // // 连续弯道判断
+        // if (track.stdevLeft > 280 && track.stdevRight < 210)            // 右转连续
+        // {
+        //     // 有效边缘行获取
+        //     //coiled_validRowsCal_right(track.pointsEdgeLeft, track.pointsEdgeRight);
+        //     // 赛道类型，定义为右急转弯
+        //     style = "RIGHTCC";
+        // }
+        // else if(track.stdevRight > 280 && track.stdevLeft < 210)        // 左转连续
+        // {
+        //     // 有效边缘行获取
+        //     //coiled_validRowsCal_left(track.pointsEdgeLeft, track.pointsEdgeRight);
+        //     // 赛道类型，定义为左急转弯
+        //     style = "LEFTCC";
+        // }
+        /******使用近处点斜率和远处点斜率判断是否连续弯道*******/
+
 
         // 边缘有效行优化，左边方差大右边方差小；或者左边小右边大，就是转弯。将边缘没用的边线优化
         if ((track.stdevLeft < 60 && track.stdevRight > 60) || (track.stdevLeft > 60 && track.stdevRight < 60))
@@ -108,53 +111,11 @@ public:
         // 通过双边缘有效点的差来判断赛道类型，使用双段三阶贝塞尔拟合中线
         if (track.pointsEdgeLeft.size() > 45 && track.pointsEdgeRight.size() > 45) 
         {
-            if(style == "RIGHTCC" || style == "LEFTCC")
-            {
-                //中线拟合去掉上面1/4行，处理左边线
-                if(track.pointsEdgeLeft.size() > 0)
-                {
-                    if(track.pointsEdgeLeft[track.pointsEdgeLeft.size() - 1].x <= ROWSIMAGE / 3)
-                    {
-                        int cnt = track.pointsEdgeLeft.size() - 1;
-                        // 去除图片上面固定行的点集
-                        for(int i = track.pointsEdgeLeft.size() - 1; track.pointsEdgeLeft[i].x <= ROWSIMAGE / 3; i--)
-                        {
-                            cnt--;
-                        }
-                        if(cnt <= 0)
-                            cnt = 0;
-                        track.pointsEdgeLeft.resize(cnt);
-                    }
-                }
+            //中线曲线拟合
+            centerEdge = bezier_curve_fitting(track.pointsEdgeLeft, track.pointsEdgeRight);
 
-                //中线拟合去掉上面1/4行，处理右边线
-                if(track.pointsEdgeRight.size() > 0)
-                {
-                    if(track.pointsEdgeRight[track.pointsEdgeRight.size() - 1].x <= ROWSIMAGE / 3)
-                    {
-                        int cnt = track.pointsEdgeRight.size() - 1;
-                        // 去除图片上面固定行的点集
-                        for(int i = track.pointsEdgeRight.size() - 1; track.pointsEdgeRight[i].x <= ROWSIMAGE / 3; i--)
-                        {
-                            cnt--;
-                        }
-                        if(cnt <= 0)
-                            cnt = 0;
-                        track.pointsEdgeRight.resize(cnt);
-                    }
-                }
-
-                //中线曲线拟合
-                centerEdge = bezier_curve_fitting(track.pointsEdgeLeft, track.pointsEdgeRight);
-            }
-            else
-            {
-                //中线曲线拟合
-                centerEdge = bezier_curve_fitting(track.pointsEdgeLeft, track.pointsEdgeRight);
-
-                //类型判断为直线
-                style = "STRIGHT";
-            }
+            //类型判断为直线
+            style = "STRIGHT";
         }
         else if (track.pointsEdgeLeft.size() > 4 && track.pointsEdgeRight.size() == 0) // 左单边
         {
@@ -255,38 +216,53 @@ public:
         //     }
         // }
 
+        // 拷贝一份中线由于优化控制
+        centerEdge_yh = centerEdge;
+
+        // /******根据中线斜率来对连续弯道进行判断******/
+        // // 1.先进行斜率的计算
+        // double line_k_up, line_k_down;
+        // if(centerEdge.size() > 5)
+        // line_k_down = perspectiveTangentSlope(centerEdge, 5, 2);
+        // if(centerEdge.size() > 5)
+        //     line_k_up = perspectiveTangentSlope(centerEdge, centerEdge.size() - 5, 2);
+
+        // // 2.通过斜率判断是否连续弯道，以及连续弯道方向
+        // if(line_k_up < 0 && line_k_down > 0) 
+        //     style = "LEFTCC";                  // 左连续转弯
+        // else if(line_k_up > 0 && line_k_down < 0) 
+        //     style = "RIGHTCC";                 // 右连续转弯
+
+        // // 3.通过转弯类型来处理中线
+        // if(style == "RIGHTCC")
+        // {
+        //     // 寻找拐点
+        //     int num_point = right_search_value(centerEdge);
+        //     // 去除拐点以上的点
+        //     if(num_point != 0)
+        //     {
+        //         if(centerEdge[num_point].x < 220)
+        //             centerEdge.resize(num_point);
+        //     }
+        // }
+        // else if(style == "LEFTCC")
+        // {
+        //     // 寻找拐点
+        //     int num_point = left_search_value(centerEdge);
+        //     // 去除拐点以上的点
+        //     if(num_point != 0)
+        //     {
+        //         if(centerEdge[num_point].x < 220)
+        //             centerEdge.resize(num_point);
+        //     }
+        // }
+
+
         // 加权控制中心计算
         double controlNum = 0;
         double controlCenter_Calculate = 0.0;
         for (auto p : centerEdge)
         {
-            // //传统分割区域，经验参数权限比重控制
-            // if (p.x < ROWSIMAGE / 5)
-            // {
-            //     controlNum += (p.x * 0.34);
-            //     controlCenter_Calculate += p.y * (p.x * 0.34);
-            // }
-            // else if(p.x < ROWSIMAGE * 2 / 5 && p.x >= ROWSIMAGE / 5)
-            // {
-            //     controlNum += (0.5 * p.x - 9.6);
-            //     controlCenter_Calculate += p.y * (0.5 * p.x - 9.6);
-            // }
-            // else if(p.x < ROWSIMAGE * 3 / 5 && p.x >= ROWSIMAGE * 2 / 5)
-            // {
-            //     controlNum += (0.68 * p.x - 10);
-            //     controlCenter_Calculate += p.y * (0.68 * p.x - 10);
-            // }
-            // else if(p.x < ROWSIMAGE * 4 / 5 && p.x >= ROWSIMAGE * 3 / 5)
-            // {
-            //     controlNum += (300 - p.x);
-            //     controlCenter_Calculate += p.y * (300 - p.x);
-            // }
-            // else if(p.x < ROWSIMAGE && p.x >= ROWSIMAGE * 4 / 5)
-            // {
-            //     controlNum += (150 - p.x * 0.8);
-            //     controlCenter_Calculate += p.y * (150 - p.x * 0.8);
-            // }
-
             //经验参数曲线拟合权限控制法,加上经验比例参数->计算量比较大，而且效果一般
             if (p.x < ROWSIMAGE / 5)
             {
@@ -387,7 +363,6 @@ public:
     }
 
 private:
-
     /**
      * @brief  控制函数曲线拟合
      * @param  _highly_control_point 最高权限控制点
@@ -847,5 +822,110 @@ private:
         }
 
         return Intersection;
+    }
+
+
+    /**
+     * @brief 搜索左连续弯道极值点
+     * @param pointsEdgeRight 中线
+     * @return uint16_t
+     */
+    uint16_t left_search_value(vector<POINT> pointsEdgeRight)
+    {
+        uint16_t rowBreakRight = 0;
+        uint16_t counter = 0;
+
+        if(pointsEdgeRight.size() == 0)
+        {
+            return 0;
+        }
+
+        // 寻找右边最大点
+        for (int i = 0; i < pointsEdgeRight.size() - 1; i++) 
+        {
+            if (pointsEdgeRight[i].y <= pointsEdgeRight[rowBreakRight].y)
+            {
+                rowBreakRight = i;
+                counter = 0;
+            }
+            // 突变点计数
+            else
+            {
+                counter++;
+                if (counter > 5)
+                    return rowBreakRight;
+            }
+        }
+        // 没有搜寻到，返回0
+        return rowBreakRight;
+    }
+
+
+    /**
+     * @brief 搜索右连续弯道极值点
+     * @param pointsEdgeLeft 中线
+     * @return uint16_t
+     */
+    uint16_t right_search_value(vector<POINT> pointsEdgeLeft)
+    {
+        uint16_t rowBreakLeft = 0;
+        uint16_t counter = 0;
+
+        if(pointsEdgeLeft.size() == 0)
+        {
+            return 0;
+        }
+        
+        // 寻找左边最大点
+        for (int i = 0; i < pointsEdgeLeft.size() - 1; i++)
+        {
+            if (pointsEdgeLeft[i].y >= pointsEdgeLeft[rowBreakLeft].y)
+            {
+                rowBreakLeft = i;
+                counter = 0;
+            }
+            // 突变点计数
+            else
+            {
+                counter++;
+                if (counter > 5)
+                    return rowBreakLeft;
+            }
+        }
+
+        // 没有搜寻到
+        return rowBreakLeft;
+    }
+
+
+private:
+    /**
+	 * @brief 在俯视域计算预瞄点的切线斜率
+     * @param line 图像域下的中线
+	 * @param index 预瞄点的下标号
+	 * @param size 开窗大小
+	 * @return 斜率
+	 */
+    double perspectiveTangentSlope(std::vector<POINT> line, uint16_t index, int size)
+    {
+        if(line.size() < 5)
+            return 0;
+            
+		// End
+		Point2d endIpm = ipm.homography(
+			Point2d(line[inRange(line, index-size)].y, line[inRange(line, index-size)].x)); // 透视变换
+		POINT p1 = POINT(endIpm.y, endIpm.x);
+
+		// Start
+		Point2d startIpm = ipm.homography(
+			Point2d(line[inRange(line, index+size)].y, line[inRange(line, index+size)].x)); // 透视变换
+		POINT p0 = POINT(startIpm.y, startIpm.x);
+
+        float dx = p1.x - p0.x;
+        float dy = p1.y - p0.y;
+        if(dx == 0)
+            return 10.0;
+        else
+            return dy / dx;
     }
 };

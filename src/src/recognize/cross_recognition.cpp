@@ -160,7 +160,7 @@ public:
                         repaired = true; // 补线成功
                     }
                 }
-                else if(rowBreakRightDown > 60)
+                else if(rowBreakRightDown > 100)
                 {
                     track.pointsEdgeLeft.resize(rowBreakRightDown);
                     track.pointsEdgeRight.resize(rowBreakRightDown);
@@ -297,7 +297,7 @@ public:
                         repaired = true; // 补线成功
                     }
                 }
-                else if(rowBreakLeftDown > 60)
+                else if(rowBreakLeftDown > 100)
                 {
                     track.pointsEdgeLeft.resize(rowBreakLeftDown);
                     track.pointsEdgeRight.resize(rowBreakLeftDown);

@@ -48,6 +48,7 @@ private:
         uint16_t    disGarageEntry = 0;     // 入库开始补线的行数
         uint16_t    stop_line = 0;          // 入库停车行数
         int         brakePicNum = 0;        // 刹车帧数
+        int         first_PicNum = 0;       // 第一次经过车库补线帧数，直至斑马线消失
         float       speed_nor = 0;          // 刚检测到库，不减速
         float       speed_in = 0;           // 减速入库
         float       speed_out = 0;          // 出库速度
@@ -55,7 +56,7 @@ private:
         float       speed_readyend = 0;     // 准备入库的速度
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
             Params, garage_run, corner_lines, slowdown_condition, disGarageEntry, stop_line, 
-            brakePicNum, speed_nor, speed_in, speed_out, shield_counter, speed_readyend); // 添加构造函数
+            brakePicNum, first_PicNum, speed_nor, speed_in, speed_out, shield_counter, speed_readyend); // 添加构造函数
     };
 
 
@@ -715,7 +716,7 @@ private:
             // {
             //     continue;
             // }
-            if (pointsEdgeRight[i].y <= pointsEdgeRight[rowBreakRight].y || (abs(pointsEdgeRight[i].y - pointsEdgeRight[rowBreakRight].y) < 3))
+            if (pointsEdgeRight[i].y <= pointsEdgeRight[rowBreakRight].y || (abs(pointsEdgeRight[i].y - pointsEdgeRight[rowBreakRight].y) < 10))
             {
                 rowBreakRight = i;
                 counter = 0;
@@ -755,7 +756,7 @@ private:
             // {
             //     continue;
             // }
-            if (pointsEdgeLeft[i].y >= pointsEdgeLeft[rowBreakLeft].y || (abs(pointsEdgeLeft[i].y - pointsEdgeLeft[rowBreakLeft].y) < 3))
+            if (pointsEdgeLeft[i].y >= pointsEdgeLeft[rowBreakLeft].y || (abs(pointsEdgeLeft[i].y - pointsEdgeLeft[rowBreakLeft].y) < 10))
             {
                 rowBreakLeft = i;
                 counter = 0;
@@ -1204,9 +1205,9 @@ public:
                     track.pointsEdgeRight = track.predictEdgeRight(track.pointsEdgeLeft);
             }
 
-            // 计数器计数，如果有12帧图片，则出库完成，进入空闲状态机，并且开启屏蔽
+            // 计数器计数，如果有9帧图片，则出库完成，进入空闲状态机，并且开启屏蔽
             counterExit++;
-            if (counterExit >= 12)
+            if (counterExit >= params.first_PicNum)
             {
                 Garage_screen = true;
                 garage_scre_num = params.shield_counter;
@@ -1597,24 +1598,11 @@ public:
         }
 		_crosswalk = crosswalk;
 
-        // // 定义标志位
-        // static bool if_speed_control = false;
         // 开始减速，准备入库
         if (crosswalk.x > params.slowdown_condition)
         {
-            // if_speed_control = true;
-            // speed_ku = -0.1;
             speed_ku = params.speed_in;
         }
-        // if(if_speed_control)
-        // {
-        //     speed_ku += 0.2;
-        //     if(speed_ku >= params.speed_in)
-        //     {
-        //         if_speed_control = false;
-        //         speed_ku = params.speed_in;
-        //     }
-        // }
 
         // 如果到大一定的行数，开始入库，进行入库补线
         if (crosswalk.x > params.disGarageEntry)

@@ -194,8 +194,12 @@ int main(int argc, char *argv[])
 
         /*2.图像预处理*/
         // Mat imgaeCorrect = imagePreprocess.imageCorrection(frame);         // RGB
-        Mat imgaeCorrect = frame.clone();                                          // RGB
-        Mat imageBinary = imagePreprocess.imageBinaryzation(imgaeCorrect); // Gray
+        Mat imgaeCorrect = frame.clone();                                     // RGB
+        Mat imageBinary;
+        if(AI_enable || roadType == RoadType::DepotHandle || roadType == RoadType::FarmlandHandle)
+            imageBinary = imagePreprocess.imageBinaryzation(imgaeCorrect, false); // Gray
+        else
+            imageBinary = imagePreprocess.imageBinaryzation(imgaeCorrect); // Gray
 
         /*3.基础赛道识别*/
         trackRecognition.trackRecognition(imageBinary, 0); // 赛道线识别
@@ -452,7 +456,9 @@ int main(int argc, char *argv[])
 					// 智能车变速度控制
 					if(AI_enable)
 					{
-                        motionController.motorSpeed = motionController.params.speedAI;
+                        motionController.motorSpeed -= 0.1f;
+                        if(motionController.motorSpeed < motionController.params.speedAI)
+                            motionController.motorSpeed = motionController.params.speedAI;
 					}
                     else
                     {
@@ -553,8 +559,9 @@ int main(int argc, char *argv[])
             putText(imageTrack, "PreSlope: " + formatDoble2String(motionController.Slope_previewPoint, 2), Point(COLSIMAGE / 2 + 20, 80), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1);
 
             line(imageTrack, Point(motionController.Mid_line, 0), Point(motionController.Mid_line, ROWSIMAGE - 1), Scalar(200, 200, 200), 1);
-            line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_Up_set), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_Up_set), 
-                    Scalar(200, 200, 200), 1);
+            line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_Up_set), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_Up_set), Scalar(200, 200, 200), 1);
+            line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_foreword_down), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_foreword_down), Scalar(255, 0, 0), 1);
+            line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_foreword_up), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_foreword_up), Scalar(255, 0, 0), 1);
             savePicture(imageTrack, roadType, AI_enable);
 		}
     }
