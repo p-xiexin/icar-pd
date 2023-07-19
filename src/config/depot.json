@@ -1,9 +1,9 @@
 {
-    "DepotCheck": 1,
+    "DepotCheck": 0,
     "DepotDir": 1,
-    "DangerClose": 125,
-    "ServoRow": 60,
-    "ServoValue": 90,
+    "DangerClose": 138,
+    "ServoRow": 55,
+    "ServoValue": 95,
     "DepotSpeed": 0.8,
     "DelayCnt": 3,
     "BrakeCnt": 3,

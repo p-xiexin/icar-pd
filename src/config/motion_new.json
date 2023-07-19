@@ -1,16 +1,16 @@
 {
     "speedLow": 2.0,
-    "speedHigh": 2.55,
-    "speedAI": 1.6,
+    "speedHigh": 2.6,
+    "speedAI": 1.8,
     "speedCorners": 1.5,
     "speedcoiled": 1.4,
 
     "speed_and_angle_k1": 0.04,
     "speed_and_angle_k2": 3.8,
 
-    "runP1": 1.36,
-    "runP2": 0.0286,
-    "runP3": 0.0000328,
+    "runP1": 1.38,
+    "runP2": 0.0295,
+    "runP3": 0.0000348,
     "turnP": 3.5,
     "turnD": 6.4,
 
@@ -26,7 +26,7 @@
     "Angle_target": 0.45,
 
     "K_K_limit": 0.2,
-    "K_foreword": 0.7,
+    "K_foreword": 0.6,
 
     "Control_Mid": 160,
     "Control_Down_set": 15,

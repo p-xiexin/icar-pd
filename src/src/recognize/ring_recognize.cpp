@@ -356,7 +356,7 @@ public:
                 else if(track.spurroad.size() == 1)
                 {
                     //寻找岔路行对应边线下标
-                    if(track.spurroad[0].y > 70)
+                    if(track.spurroad[0].y > 70 && track.spurroad[0].x < COLSIMAGE / 2)
                     {
                         _corner = track.spurroad[0];
                         spurroad_item = abs(_corner.x - track.pointsEdgeLeft[0].x);
@@ -377,7 +377,7 @@ public:
                 {
                     for(int i = 0; i < track.spurroad.size(); i++)
                     {
-                        if(track.spurroad[i].x > _corner.x)
+                        if(track.spurroad[i].x > _corner.x && track.spurroad[i].y > 70 && track.spurroad[i].x < COLSIMAGE / 2)
                         {
                             _corner = track.spurroad[i];
                         }
@@ -520,7 +520,7 @@ public:
                 }
                 else if(track.spurroad.size() == 1)
                 {
-                    if(track.spurroad[0].y < COLSIMAGE - 70)
+                    if(track.spurroad[0].y < COLSIMAGE - 70 && track.spurroad[0].x < COLSIMAGE / 2)
                     {
                         //寻找岔路行对应边线下标
                         _corner = track.spurroad[0];
@@ -541,7 +541,7 @@ public:
                 {
                     for(int i = 0; i < track.spurroad.size(); i++)
                     {
-                        if(track.spurroad[i].x > _corner.x)
+                        if(track.spurroad[i].x > _corner.x && track.spurroad[i].y < COLSIMAGE - 70 && track.spurroad[i].x < COLSIMAGE / 2)
                         {
                             _corner = track.spurroad[i];
                         }
