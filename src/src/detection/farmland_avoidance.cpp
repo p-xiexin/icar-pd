@@ -267,7 +267,7 @@ public:
             }
             cv::Mat kernel_close = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));//创建结构元
             cv::Mat kernel_enrode = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(40, 40));
-            // cv::morphologyEx(blueChannel, blueChannel, cv::MORPH_CLOSE, kernel_close, cv::Point(-1, -1));//闭运算
+            cv::morphologyEx(blueChannel, blueChannel, cv::MORPH_CLOSE, kernel_close, cv::Point(-1, -1));//闭运算
             cv::morphologyEx(blueChannel, _imageGray, cv::MORPH_ERODE, kernel_enrode, cv::Point(-1, -1));//腐蚀运算
             cv::threshold(_imageGray, _imageBinary, 0, 255, cv::THRESH_OTSU);
 
@@ -322,6 +322,12 @@ public:
             if(edge_counter > track.pointsEdgeRight.size() * 0.7)
             {
                 track.pointsEdgeRight.resize(5);
+            }
+
+            if(track.pointsEdgeLeft.size() < 6 && track.pointsEdgeRight.size() < 6)
+            {
+                track.pointsEdgeLeft.resize(3);
+                track.pointsEdgeRight.resize(3);
             }
 
             break;

@@ -73,7 +73,7 @@ public:
             counterShield = 0;
             return false;
         }
-        if (counterShield < 30)
+        if (counterShield < 15)
         {
             counterShield++;
             return false;
