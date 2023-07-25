@@ -53,6 +53,7 @@
     "SlowzoneEnable": true,
     "DepotEnable": true,
     "FarmlandEnable": true,
+    "GranaryEnable": true,
     "pathModel": "../res/model/yolov3_mobilenet_v1_0714",
     "record": [
         {
@@ -111,6 +112,7 @@
             "#SlowzoneEnable": "慢行区检测使能",
             "#DepotEnable": "修车厂使能",
             "#FarmlandEnable": "农田区域检测",
+            "#GranaryEnable": "粮仓区域检测",
             "#pathModel": "模型文件路径"
         }
     ]

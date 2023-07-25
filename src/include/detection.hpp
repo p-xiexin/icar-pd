@@ -11,11 +11,13 @@
 #include "../src/detection/slowzone_detection.cpp"
 #include "../src/detection/depot_detection.cpp"
 #include "../src/detection/farmland_avoidance.cpp"
+#include "../src/detection/granary_detection.cpp"
 
 BridgeDetection bridgeDetection;
 SlowZoneDetection slowZoneDetection;
 DepotDetection depotDetection;             // 车辆维修区检测
 FarmlandAvoidance farmlandAvoidance;       // 农田断路区检测
+GranaryDetection granaryDetection;
 
 struct DetectionResult
 {
@@ -97,6 +99,7 @@ public:
                     slowZoneDetection.slowZoneCheck(_predictor->results);
                     depotDetection.depotDetection(_predictor->results);
                     farmlandAvoidance.farmdlandCheck(_predictor->results);
+                    granaryDetection.granaryCheck(_predictor->results);
                 }
 
                 bool flag = false;

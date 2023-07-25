@@ -1,7 +1,7 @@
 #include "../include/uart.hpp"
 #include <iostream>
 #include "../include/serial.hpp"
-#include "motion_controller.cpp"
+#include "motion_control.cpp"
 
 using namespace std;
 

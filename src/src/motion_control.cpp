@@ -91,13 +91,14 @@ public:
         bool SlowzoneEnable = false;
         bool DepotEnable = false;
         bool FarmlandEnable = false;
+        bool GranaryEnable = false;
         string pathModel = "res/model/yolov3_mobilenet_v1";
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
             Params, speedLow, speedHigh, speedAI, speedCorners, speedcoiled, speed_and_angle_k1, speed_and_angle_k2, 
             runP1, runP2, runP3, turnP, turnD,Control_Mid, Control_Down_set, Control_Up_set, ki_down_out_max, Kp_dowm, 
             Ki_down, Line_compensation_coefficient, Kp, Ki, Kd, Kv, Angle_Kp, Angle_Ki, dynamic_Mid_low, dynamic_Mid_high, 
             Angle_target, rowCutUp, rowCutBottom,  Debug, Button, SaveImage, CloseLoop, GarageEnable, RingEnable, CrossEnable, 
-            StopEnable, BridgeEnable, SlowzoneEnable, DepotEnable, FarmlandEnable, pathModel, K_foreword, Control_foreword_up,
+            StopEnable, BridgeEnable, SlowzoneEnable, DepotEnable, FarmlandEnable, GranaryEnable, pathModel, K_foreword, Control_foreword_up,
             Control_foreword_down, K_K_limit); // 添加构造函数
     };
 
