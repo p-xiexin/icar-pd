@@ -1,6 +1,6 @@
 {
-    "speedLow": 2.0,
-    "speedHigh": 2.6,
+    "speedLow": 1.8,
+    "speedHigh": 2.0,
     "speedAI": 1.6,
     "speedCorners": 1.5,
     "speedcoiled": 1.4,
@@ -8,18 +8,18 @@
     "speed_and_angle_k1": 0.04,
     "speed_and_angle_k2": 3.8,
 
-    "runP1": 1.38,
-    "runP2": 0.0295,
-    "runP3": 0.0000348,
+    "runP1": 2.95,
+    "runP2": 0.008,
+    "runP3": 0.00000,
     "turnP": 3.5,
-    "turnD": 6.4,
+    "turnD": 8.0,
 
-    "Kp": 12000,
+    "Kp": 12500,
     "Ki": 200,
-    "Kd": 1.2,
-    "Kv": 0,
+    "Kd": 2,
+    "Kv": 50,
 
-    "Angle_Kp": 3.7,
+    "Angle_Kp": 3.9,
     "Angle_Ki": 0.0,
     "dynamic_Mid_low": 145,
     "dynamic_Mid_high": 175,
@@ -83,9 +83,9 @@
             "#dynamic_Mid_high": "动态中线最大值",
             "#Angle_target": "角偏目标值范围",
 
-            "#K_K_limit": "前馈转弯控制系数死区",           
+            "#K_K_limit": "前馈转弯控制系数死区",
             "#K_foreword": "大转弯控制系数",
-            
+
             "#Control_Mid": "控制中线",
             "#Control_Down_set": "图像近处点界限",
             "#Control_Up_set": "图像远处点界限",

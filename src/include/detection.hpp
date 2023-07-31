@@ -106,7 +106,7 @@ public:
                 for(int i = 0; i < _predictor->results.size(); i++)
                 {
                     std::string label_name = _predictor->results[i].label;
-                    if((label_name == "tractor" || label_name == "corn") && _predictor->results[i].score > 0.52
+                    if((label_name == "tractor" || label_name == "corn" || label_name == "granary") && _predictor->results[i].score > 0.52
                         && _predictor->results[i].y + _predictor->results[i].height / 2 > 20)
                     {
                         flag = true;

@@ -189,7 +189,7 @@ public:
 			counterSession++;//刚进入维修区，延时等待知道能看到所有锥桶
 			
 			_coneRects = searchCones(img_rgb);
-			searchCones(_coneRects);
+			searchCones(_coneRects, track.rowCutUp);
 
 			if(depotType == DepotType::DepotLeft)
 				_pointNearCone = searchNearestCone(track.pointsEdgeLeft, pointEdgeDet);		 // 搜索右下锥桶
@@ -214,7 +214,7 @@ public:
 		case DepotStep::DepotEnter: //[03] 进站使能
 		{
 			_coneRects = searchCones(img_rgb);
-			searchCones(_coneRects);
+			searchCones(_coneRects, track.rowCutUp);
 			_distance = 0;
 			_pointNearCone = searchClosestCone(pointEdgeDet);
 			if(_distance < params.DangerClose && _distance > 0)
@@ -736,16 +736,18 @@ private:
 	/**
 	 * @brief 从视觉结果中检索锥桶坐标集合
 	 *
-	 * @param predict AI检测结果
+	 * @param predict 检测结果
+	 * @param rowCutUp 滤除掉图片最上方部分的色块
 	 * @return vector<POINT>
 	 */
-	void searchCones(vector<Rect> predict)
+	void searchCones(vector<Rect> predict, uint16_t rowCutUp)
 	{
 		pointEdgeDet.clear();
 		for (int i = 0; i < predict.size(); i++)
 		{
-			pointEdgeDet.push_back(POINT(predict[i].y + predict[i].height / 2,
-											predict[i].x + predict[i].width / 2));
+			if(predict[i].y + predict[i].height / 2 > rowCutUp)
+				pointEdgeDet.push_back(POINT(predict[i].y + predict[i].height / 2,
+												predict[i].x + predict[i].width / 2));
 		}
 	}
 	/**

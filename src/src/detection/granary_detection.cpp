@@ -96,8 +96,12 @@ public:
      * @param track
      * @param frame
      */
-    bool granaryDetection(TrackRecognition& track, cv::Mat frame)
+    bool granaryDetection(TrackRecognition& track, cv::Mat img_rgb)
     {
+        _pointNearCone = POINT(0, 0);
+        pointEdgeDet.clear();
+        _coneRects.clear();
+
         switch(granaryStep)
         {
         case GranaryStep::Enable:
@@ -107,6 +111,9 @@ public:
 				reset();
 				return false;
 			}
+
+            _coneRects = searchCones(img_rgb);
+			searchCones(_coneRects);
 
             break;
         }
@@ -128,6 +135,13 @@ public:
         //{
         //   circle(image, Point(pointEdgeDet[i].y, pointEdgeDet[i].x), 2, Scalar(92, 92, 205), -1); // 锥桶坐标：红色
         //}
+        
+        // 绘制锥桶坐标
+		for (int i = 0; i < pointEdgeDet.size(); i++)
+		{
+            putText(image, to_string(i+1), Point(pointEdgeDet[i].y, pointEdgeDet[i].x), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 255), 1, CV_AA);
+		}
+
 
         // 赛道边缘
         for (int i = 0; i < track.pointsEdgeLeft.size(); i++)
@@ -190,6 +204,41 @@ private:
         return granarys;
     }
 
+	/**
+	 * @brief 从AI检测结果中检索锥桶坐标集合
+	 *
+	 * @param predict AI检测结果
+	 * @return vector<POINT>
+	 */
+	void searchCones(vector<PredictResult> predict)
+	{
+		pointEdgeDet.clear();
+		for (int i = 0; i < predict.size(); i++)
+		{
+			if (predict[i].label == LABEL_CONE) // 锥桶检测
+			{
+				pointEdgeDet.push_back(POINT(predict[i].y + predict[i].height / 2,
+											 predict[i].x + predict[i].width / 2));
+			}
+		}
+	}
+
+	/**
+	 * @brief 从视觉结果中检索锥桶坐标集合
+	 *
+	 * @param predict AI检测结果
+	 * @return vector<POINT>
+	 */
+	void searchCones(vector<Rect> predict)
+	{
+		pointEdgeDet.clear();
+		for (int i = 0; i < predict.size(); i++)
+		{
+			pointEdgeDet.push_back(POINT(predict[i].y + predict[i].height / 2,
+											predict[i].x + predict[i].width / 2));
+		}
+	}
+
     /**
      * @brief 加载配置参数Json
      */
@@ -216,12 +265,55 @@ private:
             exit(-1);
         }
     }
+
+	//传统视觉识别锥桶
+	std::vector<cv::Rect> searchCones(cv::Mat img_rgb)
+	{
+		std::vector<cv::Rect> coneRects;
+		// 设置锥桶颜色的RGB范围（黄色）
+		cv::Scalar lowerYellow(0, 100, 100);
+		cv::Scalar upperYellow(100, 255, 255);
+
+		// 在RGB图像中根据颜色范围提取锥桶区域
+		cv::Mat mask;
+		cv::inRange(img_rgb, lowerYellow, upperYellow, mask);
+
+		// 进行形态学操作，去除噪声并提取锥桶区域的轮廓
+		cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
+		cv::morphologyEx(mask, mask, cv::MORPH_OPEN, kernel);
+
+		std::vector<std::vector<cv::Point>> contours;
+		cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+		// 查找最大轮廓
+		size_t maxContourIndex = 0;
+		double maxContourArea = 0.0;
+		for (size_t i = 0; i < contours.size(); ++i)
+		{
+			double contourArea = cv::contourArea(contours[i]);
+			if (contourArea > maxContourArea)
+			{
+				maxContourArea = contourArea;
+				maxContourIndex = i;
+			}
+		}
+
+		// 绘制正方形框选中锥桶区域
+		for (const auto& contour : contours)
+		{
+			cv::Rect boundingRect = cv::boundingRect(contour);
+			coneRects.push_back(boundingRect);
+		}	
+		return coneRects;
+	}
+
 private:
     POINT _pointNearCone;
     std::vector<POINT> pointEdgeDet;        // AI元素检测边缘点集
+	std::vector<cv::Rect> _coneRects;       // 传统视觉识别锥桶的方框点集
     std::vector<POINT> lastPointsEdgeLeft;  // 记录上一场边缘点集（丢失边）
     std::vector<POINT> lastPointsEdgeRight; // 记录上一场边缘点集（丢失边）
-    bool exitTwoEnable = false;        // 二号出口使能标志
+    bool exitTwoEnable = false;             // 二号出口使能标志
 
     enum GranaryStep
     {

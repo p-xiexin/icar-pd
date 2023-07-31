@@ -274,7 +274,10 @@ int main(int argc, char *argv[])
                     }
                 }
                 else
+                {
                     roadType = RoadType::BaseHandle;
+                    AI_enable = false;
+                }
             }
         }
 
@@ -298,7 +301,10 @@ int main(int argc, char *argv[])
                     }
                 }
                 else
+                {
                     roadType = RoadType::BaseHandle;
+                    AI_enable = false;
+                }
             }
         }
 
@@ -322,7 +328,10 @@ int main(int argc, char *argv[])
                     }
                 }
                 else
+                {
                     roadType = RoadType::BaseHandle;
+                    AI_enable = false;
+                }
             }
         }
 
