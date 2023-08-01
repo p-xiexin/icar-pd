@@ -188,7 +188,7 @@ public:
 			}
 			counterSession++;//刚进入维修区，延时等待知道能看到所有锥桶
 			
-			_coneRects = searchCones(img_rgb);
+			_coneRects = detectCones(img_rgb);
 			searchCones(_coneRects, track.rowCutUp);
 
 			if(depotType == DepotType::DepotLeft)
@@ -213,7 +213,7 @@ public:
 		}
 		case DepotStep::DepotEnter: //[03] 进站使能
 		{
-			_coneRects = searchCones(img_rgb);
+			_coneRects = detectCones(img_rgb);
 			searchCones(_coneRects, track.rowCutUp);
 			_distance = 0;
 			_pointNearCone = searchClosestCone(pointEdgeDet);
@@ -740,7 +740,7 @@ private:
 	 * @param rowCutUp 滤除掉图片最上方部分的色块
 	 * @return vector<POINT>
 	 */
-	void searchCones(vector<Rect> predict, uint16_t rowCutUp)
+	void searchCones(vector<Rect> predict, uint16_t rowCutUp = 0)
 	{
 		pointEdgeDet.clear();
 		for (int i = 0; i < predict.size(); i++)
@@ -943,7 +943,7 @@ private:
 	}
 
 	//传统视觉识别锥桶
-	std::vector<cv::Rect> searchCones(cv::Mat img_rgb)
+	std::vector<cv::Rect> detectCones(cv::Mat img_rgb)
 	{
 		std::vector<cv::Rect> coneRects;
 		// 设置锥桶颜色的RGB范围（黄色）
