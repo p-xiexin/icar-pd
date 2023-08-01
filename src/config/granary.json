@@ -1,8 +1,10 @@
 {
     "GranaryCheck": 2,
+    "ServoRow": 58,
     "record": [
         {
-            "#GranaryCheck": "农田区域确认帧数"
+            "#GranaryCheck": "农田区域确认帧数",
+            "#ServoRow": "入粮仓区域打角行，越小打角越早"
         }
     ]
 }

@@ -41,7 +41,7 @@
     "rowCutUp": 40,
     "rowCutBottom": 10,
 
-    "Debug": false,
+    "Debug": true,
     "Button": false,
     "SaveImage": true,
     "CloseLoop": true,
