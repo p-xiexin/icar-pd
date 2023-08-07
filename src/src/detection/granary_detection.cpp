@@ -101,6 +101,7 @@ public:
         _pointNearCone = POINT(0, 0);
         pointEdgeDet.clear();
         _coneRects.clear();
+        _bezier_input.clear();
 
         switch(granaryStep)
         {
@@ -114,36 +115,160 @@ public:
 
             _coneRects = detectCones(img_rgb);
 			searchCones(_coneRects, track.rowCutUp);
-            _pointNearCone = searchNearestCone(track.pointsEdgeLeft, pointEdgeDet); // 搜索左下锥桶
+            _pointNearCone = searchNearestCone(track.pointsEdgeLeft, pointEdgeDet); // 搜索右下锥桶
 
 			if (_pointNearCone.x > params.ServoRow && _pointNearCone.x < params.ServoRow + ROWSIMAGE / 3
 				&& _pointNearCone.y != 0) // 当车辆开始靠近右边锥桶：准备入库
             {
                 counterRec++;
-				if (counterRec > 2)
+				if (counterRec > 1)
 				{
-					// granaryStep = GranaryStep::Enter; // 进站使能
+					granaryStep = GranaryStep::Enter; // 进站使能
 					counterRec = 0;
 					counterSession = 0;
 				}
             }
-            // else if (_pointNearCone.x > 0.1 && _pointNearCone.x < ROWSIMAGE * 0.4)
-            // {
-            //     slowDown = true; // 进站减速
-            // }
+            else if (_pointNearCone.x > 0.1 * ROWSIMAGE && _pointNearCone.x < ROWSIMAGE * 0.4)
+            {
+                slowDown = true; // 进站减速
+            }
 
             break;
         }
         case GranaryStep::Enter:
         {
+            _coneRects = detectCones(img_rgb);
+            searchCones(_coneRects, track.rowCutUp);
 			if (track.pointsEdgeLeft.size() > ROWSIMAGE / 2) // 第一阶段：当赛道边缘存在时
             {
+                _pointNearCone = searchNearestCone(track.pointsEdgeLeft, pointEdgeDet); // 搜索右下锥桶(图像右上方)
 
+                if(_pointNearCone.x > 0)
+                {
+					POINT startPoint = POINT((_pointNearCone.x + ROWSIMAGE) / 2, (_pointNearCone.y + COLSIMAGE) / 2); // 线起点：右
+					POINT midPoint = _pointNearCone; // 补线中点
+					double k = 0, b = 0;
+					k = (float)(midPoint.y - startPoint.y) / (float)(midPoint.x - startPoint.x);
+					b = midPoint.y - k * midPoint.x;
+					if (b < 0)
+						b = 0;
+					else if (b >= COLSIMAGE)
+						b = COLSIMAGE - 1;
+					POINT endPoint = POINT(0, b);	 // 补线终点：左
+
+					vector<POINT> input = {startPoint, midPoint, endPoint};
+					vector<POINT> repair = Bezier(0.02, input);
+                    _bezier_input = input;
+					track.pointsEdgeRight = repair;
+					track.pointsEdgeLeft.clear();
+
+					for (int i = 0; i < repair.size(); i++)
+					{
+						track.pointsEdgeLeft.push_back(POINT(repair[i].x, 0));
+					}
+                }
             }
 			else // 第二阶段：检查右下锥桶坐标满足巡航条件
             {
+				POINT coneRightDown = searchRightDownCone(pointEdgeDet); // 右下方锥桶
+				_pointNearCone = coneRightDown;
+				counterSession++;
+				if ((coneRightDown.x > ROWSIMAGE / 3 && coneRightDown.y > COLSIMAGE - 80) || counterSession > params.DelayCnt)
+				{
+					counterRec++;
+					if (counterRec > 1)
+					{
+						granaryStep = GranaryStep::Cruise; // 巡航使能
+						counterRec = 0;
+						counterSession = 0;
+					}
+				}
+				if (coneRightDown.x > 0) // 进站补线
+				{
+					POINT startPoint = POINT((coneRightDown.x + ROWSIMAGE) / 2, (coneRightDown.y + COLSIMAGE) / 2); // 线起点：右
+					POINT midPoint = coneRightDown; // 补线中点
+					double k = 0, b = 0;
+					k = (float)(midPoint.y - startPoint.y) / (float)(midPoint.x - startPoint.x);
+					b = midPoint.y - k * midPoint.x;
+					if (b < 0)
+						b = 0;
+					else if (b >= COLSIMAGE)
+						b = COLSIMAGE - 1;
+					POINT endPoint = POINT(0, b);	// 补线终点：左
 
+					vector<POINT> input = {startPoint, midPoint, endPoint};
+					vector<POINT> repair = Bezier(0.02, input);
+                    _bezier_input = input;
+					track.pointsEdgeRight = repair;
+					track.pointsEdgeLeft.clear();
+
+					for (int i = 0; i < repair.size(); i++)
+					{
+						track.pointsEdgeLeft.push_back(POINT(repair[i].x, 0));
+					}
+				}
             }
+            break;
+        }
+        case GranaryStep::Cruise:
+        {
+            _coneRects = detectCones(img_rgb);
+            searchCones(_coneRects, track.rowCutUp);
+			vector<POINT> conesLeft = searchLeftCone(pointEdgeDet); // 搜索左方锥桶
+
+			if (conesLeft.size() >= 2)
+			{
+				int indexMin = 0;
+				int indexMax = 0;
+				for (int i = 0; i < conesLeft.size(); i++)
+				{
+					if (conesLeft[i].x > conesLeft[indexMax].x)
+						indexMax = i;
+					if (conesLeft[i].x < conesLeft[indexMin].x)
+						indexMin = i;
+				}
+
+				if (indexMin != indexMax) // 开始补线
+				{
+					double k = 0, b = 0;
+					k = (float)(conesLeft[indexMax].y - conesLeft[indexMin].y) /
+						(float)(conesLeft[indexMax].x - conesLeft[indexMin].x);
+					b = conesLeft[indexMax].y - k * conesLeft[indexMax].x;
+
+					if (k != 0 && b != 0)
+					{
+						POINT startPoint = POINT(-b / k, 0); // 补线起点：左
+						POINT endPoint = POINT(0, b);		 // 补线终点：右
+						POINT midPoint = POINT((startPoint.x + endPoint.x) * 0.5,
+								  (startPoint.y + endPoint.y) * 0.5); // 补线中点
+						vector<POINT> input = {startPoint, midPoint, endPoint};
+                        _bezier_input = input;
+						vector<POINT> repair = Bezier(0.02, input);
+
+						track.pointsEdgeRight = track.predictEdgeRight(repair); // 俯视域预测右边缘
+
+						if (repair.size() > 10) // 左边缘切行，提升右拐能力
+						{
+							int index = repair.size() * 0.2;
+							track.pointsEdgeLeft.clear();
+							for (int i = index; i < repair.size(); i++)
+							{
+								track.pointsEdgeLeft.push_back(repair[i]);
+							}
+						}
+						else
+							track.pointsEdgeLeft = repair;
+
+						lastPointsEdgeLeft = track.pointsEdgeLeft;
+					}
+				}
+			}
+			else if (pointEdgeDet.size() > 3) // 左边锥桶太少，总锥桶数量足够，判断还在粮仓区域内，使用上一帧的数据
+			{
+				track.pointsEdgeLeft = lastPointsEdgeLeft;
+				track.pointsEdgeRight = track.predictEdgeRight(track.pointsEdgeLeft); // 俯视域预测右边缘
+			}
+            
             break;
         }
         case GranaryStep::Exit:
@@ -166,14 +291,20 @@ public:
     void drawImage(TrackRecognition track, Mat &image)
     {
         // 绘制锥桶坐标
-        //for (int i = 0; i < pointEdgeDet.size(); i++)
-        //{
-        //   circle(image, Point(pointEdgeDet[i].y, pointEdgeDet[i].x), 2, Scalar(92, 92, 205), -1); // 锥桶坐标：红色
-        //}
+        for (int i = 0; i < pointEdgeDet.size(); i++)
+        {
+            cv::circle(image, cv::Point(pointEdgeDet[i].y, pointEdgeDet[i].x), 5, Scalar(200, 200, 200), -1); 
+        }
 		// for (int i = 0; i < pointEdgeDet.size(); i++)
 		// {
         //     putText(image, to_string(i+1), Point(pointEdgeDet[i].y, pointEdgeDet[i].x), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 255), 1, CV_AA);
 		// }
+
+        // for(const auto& rect : _coneRects)
+        // {
+        //     // cv::rectangle(image, rect, cv::Scalar(0, 255, 0), 2);
+        //     circle(image, Point(rect.x + rect.width / 2, rect.y + rect.height / 2), 5, Scalar(200, 200, 200), -1);
+        // }
 
 
         // 赛道边缘
@@ -213,8 +344,14 @@ public:
         putText(image, state, Point(COLSIMAGE / 2 - 40, 20), cv::FONT_HERSHEY_TRIPLEX, 0.4, cv::Scalar(0, 255, 0), 1, CV_AA);
         putText(image, to_string(granaryStep), Point(COLSIMAGE / 2, ROWSIMAGE - 20), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 255), 1, CV_AA);
 
+        for(int i = 0; i < _bezier_input.size(); i++)
+        {
+            circle(image, Point(_bezier_input[i].y, _bezier_input[i].x), 5, Scalar(0, 0, 255), 1);
+        }
         if (_pointNearCone.x > 0)
+        {
             circle(image, Point(_pointNearCone.y, _pointNearCone.x), 4, Scalar(226, 43, 138), -1);//紫色
+        }
     }
 
 private:
@@ -332,6 +469,54 @@ private:
 		return point;
 	}
 
+	/**
+	 * @brief 搜索右下方的锥桶坐标
+	 *
+	 * @param pointsCone
+	 * @return POINT
+	 */
+	POINT searchRightDownCone(vector<POINT> pointsCone)
+	{
+		POINT point(0, 0);
+
+		if (pointsCone.size() <= 0)
+			return point;
+
+		for (int i = 0; i < pointsCone.size(); i++)
+		{
+			if (pointsCone[i].y > COLSIMAGE / 2 && pointsCone[i].x > point.x)
+			{
+				point = pointsCone[i];
+			}
+		}
+
+		return point;
+	}
+
+	/**
+	 * @brief 搜索左方的锥桶坐标
+	 *
+	 * @param pointsCone
+	 * @return vector<POINT>
+	 */
+	vector<POINT> searchLeftCone(vector<POINT> pointsCone)
+	{
+		vector<POINT> points;
+
+		if (pointsCone.size() <= 0)
+			return points;
+
+		for (int i = 0; i < pointsCone.size(); i++)
+		{
+			if (pointsCone[i].y < COLSIMAGE / 2)
+			{
+				points.push_back(pointsCone[i]);
+			}
+		}
+
+		return points;
+	}
+
 	//传统视觉识别锥桶
 	std::vector<cv::Rect> detectCones(cv::Mat img_rgb)
 	{
@@ -373,12 +558,23 @@ private:
 		return coneRects;
 	}
 
+	/**
+	 * @brief 获取维修区速度规划
+	 *
+	 */
+	// float get_speed()
+	// {
+	// 	;
+	// }
+
+
 private:
     POINT _pointNearCone;
     std::vector<POINT> pointEdgeDet;        // 锥桶检测边缘点集
 	std::vector<cv::Rect> _coneRects;       // 传统视觉识别锥桶的方框点集
     std::vector<POINT> lastPointsEdgeLeft;  // 记录上一场边缘点集（丢失边）
     std::vector<POINT> lastPointsEdgeRight; // 记录上一场边缘点集（丢失边）
+    std::vector<POINT> _bezier_input;
     bool exitTwoEnable = false;             // 二号出口使能标志
     bool slowDown = false;                  // 减速使能
 
@@ -414,7 +610,8 @@ private:
     {
         uint16_t GranaryCheck = 3;
         uint16_t ServoRow = 50;
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Params, GranaryCheck, ServoRow); // 添加构造函数
+        uint16_t DelayCnt = 20;
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Params, GranaryCheck, ServoRow, DelayCnt); // 添加构造函数
     };
     Params params;
 };
