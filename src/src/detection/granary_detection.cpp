@@ -216,8 +216,8 @@ public:
             searchCones(_coneRects, track.rowCutUp);
 			vector<POINT> conesLeft = searchLeftCone(pointEdgeDet); // 搜索左方锥桶
 
-			if (track.pointsEdgeLeft.size() > ROWSIMAGE / 6 &&
-				track.pointsEdgeRight.size() > ROWSIMAGE / 6)
+			if (track.pointsEdgeLeft.size() > ROWSIMAGE / 5 &&
+				track.pointsEdgeRight.size() > ROWSIMAGE / 5)
 			{
 				slowDown = true; // 出站减速
 				counterRec++;
@@ -293,11 +293,13 @@ public:
 				
 			}
 
-			// // 出口检测 1号出口
+			// 出口检测 1号出口
+			POINT coneRightDown = searchRightDownCone(pointEdgeDet); // 右下方锥桶
+			_pointNearCone = coneRightDown;
 			// if (granaryType == GranaryType::ExitTwo) 
 			// {
 			// 	counterSession++;
-			// 	POINT coneRightDown = searchRightDownCone(pointsCone); // 右下方锥桶
+				
 			// 	if ((coneRightDown.x < ROWSIMAGE / 2 && counterSession > 12) ||
 			// 		counterSession > 30) // 右下方锥桶检测完毕
 			// 	{
@@ -435,7 +437,7 @@ public:
         }
         if (_pointNearCone.x > 0)
         {
-			putText(image, to_string(_pointNearCone.x), Point(COLSIMAGE / 2, 40),
+			putText(image, "Nearest: " + to_string(_pointNearCone.x), Point(COLSIMAGE / 2 - 20, 40),
 					cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 255, 0), 1,
 					CV_AA); // 显示锥桶距离
             circle(image, Point(_pointNearCone.y, _pointNearCone.x), 4, Scalar(226, 43, 138), -1);//紫色
