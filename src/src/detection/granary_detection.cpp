@@ -252,29 +252,30 @@ public:
 
 					if (k != 0 && b != 0)
 					{
-						// POINT startPoint = POINT(-b / k, 0); // 补线起点：左
-						POINT startPoint = POINT((-b / k + ROWSIMAGE) / 2, 0); // 补线起点：左
+						POINT startPoint = POINT(-b / k, 0); // 补线起点：左
+						// POINT startPoint = POINT((-b / k + ROWSIMAGE) / 2, 0); // 补线起点：左
 						// POINT startPoint = POINT(ROWSIMAGE - 40, 0); // 补线起点：左
 						
 						POINT endPoint = POINT(0, b);		 // 补线终点：右
-						POINT midPoint = POINT((startPoint.x + endPoint.x) * 0.5,
-								  (startPoint.y + endPoint.y) * 0.5); // 补线中点
+						POINT midPoint = POINT((startPoint.x + endPoint.x) * 0.5, (startPoint.y + endPoint.y) * 0.5); // 补线中点
+						startPoint = POINT((-b / k) * (1 - params.ReverseScale) + ROWSIMAGE * params.ReverseScale, 0); //补线起点修正
+
 						vector<POINT> input = {startPoint, midPoint, endPoint};
                         _bezier_input = input;
 						vector<POINT> repair = Bezier(0.02, input);
 
-						track.pointsEdgeRight = track.predictEdgeRight(repair); // 俯视域预测右边缘
+						track.pointsEdgeRight = track.predictEdgeRight(repair, true, params.ConeWidth); // 俯视域预测右边缘
 
-						if (repair.size() > 10) // 左边缘切行，提升右拐能力
-						{
-							int index = repair.size() * 0.2;
-							track.pointsEdgeLeft.clear();
-							for (int i = index; i < repair.size(); i++)
-							{
-								track.pointsEdgeLeft.push_back(repair[i]);
-							}
-						}
-						else
+						// if (repair.size() > 10) // 左边缘切行，提升右拐能力
+						// {
+						// 	int index = repair.size() * 0.2;
+						// 	track.pointsEdgeLeft.clear();
+						// 	for (int i = index; i < repair.size(); i++)
+						// 	{
+						// 		track.pointsEdgeLeft.push_back(repair[i]);
+						// 	}
+						// }
+						// else
 							track.pointsEdgeLeft = repair;
 
 						lastPointsEdgeLeft = track.pointsEdgeLeft;
@@ -284,7 +285,12 @@ public:
 			else if (pointEdgeDet.size() > 3) // 左边锥桶太少，总锥桶数量足够，判断还在粮仓区域内，使用上一帧的数据
 			{
 				track.pointsEdgeLeft = lastPointsEdgeLeft;
-				track.pointsEdgeRight = track.predictEdgeRight(track.pointsEdgeLeft); // 俯视域预测右边缘
+				track.pointsEdgeRight = track.predictEdgeRight(track.pointsEdgeLeft, true, params.ConeWidth); // 俯视域预测右边缘
+			}
+			else
+			{
+				// 添加异常处理函数
+				
 			}
 
 			// // 出口检测 1号出口
@@ -309,8 +315,8 @@ public:
             searchCones(_coneRects, track.rowCutUp);
 			POINT coneLeftUp = searchRightUpCone(pointEdgeDet); // 搜索右上方的锥桶用于补线
 
-			if (track.pointsEdgeLeft.size() > ROWSIMAGE / 4 &&
-				track.pointsEdgeRight.size() > ROWSIMAGE / 4 &&
+			if (track.pointsEdgeLeft.size() > ROWSIMAGE / 2 &&
+				track.pointsEdgeRight.size() > ROWSIMAGE / 2 &&
 				pointEdgeDet.size() < 3)
 			{
 				granaryStep = GranaryStep::None; // 出站结束
@@ -707,8 +713,10 @@ private:
         uint16_t GranaryCheck = 3;
         uint16_t ServoEnter = 50;
         uint16_t ServoCruise = 70;
+		float ReverseScale = 0.5;
         uint16_t DelayCnt = 20;
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Params, GranaryCheck, ServoEnter, ServoCruise, DelayCnt); // 添加构造函数
+		uint16_t ConeWidth = 180;
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Params, GranaryCheck, ServoEnter, ServoCruise, ReverseScale, DelayCnt, ConeWidth); // 添加构造函数
     };
     Params params;
 };
