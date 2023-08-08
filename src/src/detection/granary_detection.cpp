@@ -54,7 +54,7 @@ public:
      */
     void granaryCheck(std::vector<PredictResult> predict)
     {
-        if(counterShield < 30)
+        if(counterShield < 15)
         {
             counterShield++;
             return;
@@ -117,7 +117,7 @@ public:
 			searchCones(_coneRects, track.rowCutUp);
             _pointNearCone = searchNearestCone(track.pointsEdgeLeft, pointEdgeDet); // 搜索右下锥桶
 
-			if (_pointNearCone.x > params.ServoRow && _pointNearCone.x < params.ServoRow + ROWSIMAGE / 3
+			if (_pointNearCone.x > params.ServoEnter && _pointNearCone.x < params.ServoEnter + ROWSIMAGE / 3
 				&& _pointNearCone.y != 0) // 当车辆开始靠近右边锥桶：准备入库
             {
                 counterRec++;
@@ -128,7 +128,7 @@ public:
 					counterSession = 0;
 				}
             }
-            else if (_pointNearCone.x > 0.1 * ROWSIMAGE && _pointNearCone.x < ROWSIMAGE * 0.4)
+            else if (_pointNearCone.x > params.ServoEnter && _pointNearCone.x < params.ServoEnter + ROWSIMAGE / 3)
             {
                 slowDown = true; // 进站减速
             }
@@ -173,7 +173,7 @@ public:
 				POINT coneRightDown = searchRightDownCone(pointEdgeDet); // 右下方锥桶
 				_pointNearCone = coneRightDown;
 				counterSession++;
-				if ((coneRightDown.x > ROWSIMAGE / 3 && coneRightDown.y > COLSIMAGE - 80) || counterSession > params.DelayCnt)
+				if ((coneRightDown.x > params.ServoCruise && coneRightDown.y > COLSIMAGE - 80)/* || counterSession > params.DelayCnt*/)
 				{
 					counterRec++;
 					if (counterRec > 1)
@@ -216,6 +216,21 @@ public:
             searchCones(_coneRects, track.rowCutUp);
 			vector<POINT> conesLeft = searchLeftCone(pointEdgeDet); // 搜索左方锥桶
 
+			if (track.pointsEdgeLeft.size() > ROWSIMAGE / 6 &&
+				track.pointsEdgeRight.size() > ROWSIMAGE / 6)
+			{
+				slowDown = true; // 出站减速
+				counterRec++;
+				if (counterRec >= 2)
+				{
+					granaryStep = GranaryStep::Exit; // 出站使能
+					counterRec = 0;
+					counterSession = 0;
+				}
+			}
+			else
+				counterRec = 0;
+
 			if (conesLeft.size() >= 2)
 			{
 				int indexMin = 0;
@@ -237,7 +252,10 @@ public:
 
 					if (k != 0 && b != 0)
 					{
-						POINT startPoint = POINT(-b / k, 0); // 补线起点：左
+						// POINT startPoint = POINT(-b / k, 0); // 补线起点：左
+						POINT startPoint = POINT((-b / k + ROWSIMAGE) / 2, 0); // 补线起点：左
+						// POINT startPoint = POINT(ROWSIMAGE - 40, 0); // 补线起点：左
+						
 						POINT endPoint = POINT(0, b);		 // 补线终点：右
 						POINT midPoint = POINT((startPoint.x + endPoint.x) * 0.5,
 								  (startPoint.y + endPoint.y) * 0.5); // 补线中点
@@ -268,12 +286,65 @@ public:
 				track.pointsEdgeLeft = lastPointsEdgeLeft;
 				track.pointsEdgeRight = track.predictEdgeRight(track.pointsEdgeLeft); // 俯视域预测右边缘
 			}
+
+			// // 出口检测 1号出口
+			// if (granaryType == GranaryType::ExitTwo) 
+			// {
+			// 	counterSession++;
+			// 	POINT coneRightDown = searchRightDownCone(pointsCone); // 右下方锥桶
+			// 	if ((coneRightDown.x < ROWSIMAGE / 2 && counterSession > 12) ||
+			// 		counterSession > 30) // 右下方锥桶检测完毕
+			// 	{
+			// 		granaryStep = GranaryStep::Exit; // 出站使能
+			// 		counterRec = 0;
+			// 		counterSession = 0;
+			// 	}
+			// }
             
             break;
         }
         case GranaryStep::Exit:
         {
-            
+			_coneRects = detectCones(img_rgb);
+            searchCones(_coneRects, track.rowCutUp);
+			POINT coneLeftUp = searchRightUpCone(pointEdgeDet); // 搜索右上方的锥桶用于补线
+
+			if (track.pointsEdgeLeft.size() > ROWSIMAGE / 4 &&
+				track.pointsEdgeRight.size() > ROWSIMAGE / 4 &&
+				pointEdgeDet.size() < 3)
+			{
+				granaryStep = GranaryStep::None; // 出站结束
+				counterRec = 0;
+				counterSession = 0;
+			}
+			else
+			{
+				if (coneLeftUp.x > 0)
+				{
+					POINT p1 = POINT(ROWSIMAGE - 10, coneLeftUp.y / 2);
+					POINT p2 = POINT((coneLeftUp.x + ROWSIMAGE) / 2, coneLeftUp.y / 2);
+					POINT p3 = coneLeftUp;
+					POINT p4 = POINT(coneLeftUp.x / 2, (coneLeftUp.y + COLSIMAGE) / 2);
+					vector<POINT> input = {p1, p2, p3, p4};
+					vector<POINT> repair = Bezier(0.02, input);
+
+					_bezier_input = input;
+					track.pointsEdgeLeft = repair;
+					lastPointsEdgeLeft = repair;
+					track.pointsEdgeRight.clear();
+					for (int i = 0; i < repair.size(); i++)
+					{
+						track.pointsEdgeRight.push_back(POINT(repair[i].x, COLSIMAGE - 1));
+					}
+					lastPointsEdgeRight = track.pointsEdgeRight;
+				}
+				else
+				{
+					track.pointsEdgeLeft = lastPointsEdgeLeft;
+					track.pointsEdgeRight = lastPointsEdgeRight;
+				}
+			}
+
             break;
         }
         }
@@ -283,6 +354,15 @@ public:
         else
             return true;
     }
+
+	/**
+	 * @brief 获取粮仓区速度规划
+	 *
+	 */
+	float get_speed()
+	{
+		return 0.8f;
+	}
 
     /**
      * @brief 识别结果图像绘制
@@ -343,13 +423,15 @@ public:
 
         putText(image, state, Point(COLSIMAGE / 2 - 40, 20), cv::FONT_HERSHEY_TRIPLEX, 0.4, cv::Scalar(0, 255, 0), 1, CV_AA);
         putText(image, to_string(granaryStep), Point(COLSIMAGE / 2, ROWSIMAGE - 20), cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 0, 255), 1, CV_AA);
-
         for(int i = 0; i < _bezier_input.size(); i++)
         {
             circle(image, Point(_bezier_input[i].y, _bezier_input[i].x), 5, Scalar(0, 0, 255), 1);
         }
         if (_pointNearCone.x > 0)
         {
+			putText(image, to_string(_pointNearCone.x), Point(COLSIMAGE / 2, 40),
+					cv::FONT_HERSHEY_TRIPLEX, 0.5, cv::Scalar(0, 255, 0), 1,
+					CV_AA); // 显示锥桶距离
             circle(image, Point(_pointNearCone.y, _pointNearCone.x), 4, Scalar(226, 43, 138), -1);//紫色
         }
     }
@@ -517,6 +599,30 @@ private:
 		return points;
 	}
 
+	/**
+	 * @brief 搜索左右方的锥桶坐标
+	 *
+	 * @param pointsCone
+	 * @return vector<POINT>
+	 */
+	POINT searchRightUpCone(vector<POINT> pointsCone)
+	{
+		POINT point(0, 0);
+
+		if (pointsCone.size() <= 0)
+			return point;
+
+		for (int i = 0; i < pointsCone.size(); i++)
+		{
+			if (pointsCone[i].y > point.y && pointsCone[i].x < ROWSIMAGE * 0.8)
+			{
+				point = pointsCone[i];
+			}
+		}
+
+		return point;
+	}
+
 	//传统视觉识别锥桶
 	std::vector<cv::Rect> detectCones(cv::Mat img_rgb)
 	{
@@ -557,16 +663,6 @@ private:
 		}	
 		return coneRects;
 	}
-
-	/**
-	 * @brief 获取维修区速度规划
-	 *
-	 */
-	// float get_speed()
-	// {
-	// 	;
-	// }
-
 
 private:
     POINT _pointNearCone;
@@ -609,9 +705,10 @@ private:
     struct Params
     {
         uint16_t GranaryCheck = 3;
-        uint16_t ServoRow = 50;
+        uint16_t ServoEnter = 50;
+        uint16_t ServoCruise = 70;
         uint16_t DelayCnt = 20;
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Params, GranaryCheck, ServoRow, DelayCnt); // 添加构造函数
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Params, GranaryCheck, ServoEnter, ServoCruise, DelayCnt); // 添加构造函数
     };
     Params params;
 };
