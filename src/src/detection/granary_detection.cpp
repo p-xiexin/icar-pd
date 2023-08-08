@@ -60,13 +60,14 @@ public:
             return;
         }
 
-        if(granaryType == GranaryType::ExitNone && granaryStep == GranaryStep::None)
+		std::vector<POINT> granarys = searchGranary(predict);
+		if(granarys.size() > 1)
+			numGranary++;
+
+        if(granaryStep == GranaryStep::None)
         {
-            std::vector<POINT> granarys = searchGranary(predict);
             if(granarys.size() > 0)
                 counterRec++;
-            if(granarys.size() > 1)
-                numGranary++;
 
             if(counterRec)
             {
@@ -76,10 +77,10 @@ public:
                     counterRec = 0;
                     counterSession = 0;
                     granaryStep = GranaryStep::Enable;
-                    if(numGranary > params.GranaryCheck / 2)
-                        granaryType = GranaryType::ExitTwo;
-                    else
-                        granaryType = GranaryType::ExitOne;
+                    // if(numGranary > params.GranaryCheck / 2)
+                    //     granaryType = GranaryType::ExitTwo;
+                    // else
+                    //     granaryType = GranaryType::ExitOne;
                 }
                 else if(counterSession >= params.GranaryCheck * 2 + 1)
                 {
@@ -88,6 +89,13 @@ public:
                 }
             }
         }
+		else if(granaryStep == GranaryStep::Enable && granarys.size() == 0) // 维持一段时间，知道粮仓标志消失
+		{
+			if(numGranary > params.GranaryCheck / 2)
+				granaryType = GranaryType::ExitTwo;
+			else
+				granaryType = GranaryType::ExitOne;
+		}
     }
 
     /**
@@ -107,6 +115,9 @@ public:
         {
         case GranaryStep::Enable:
         {
+			if(granaryType == GranaryType::ExitNone)
+				return false;
+
 			// counterExit++;
 			// if (counterExit > 100) {
 			// 	reset();
@@ -117,7 +128,7 @@ public:
 			searchCones(_coneRects, track.rowCutUp);
             _pointNearCone = searchNearestCone(track.pointsEdgeLeft, pointEdgeDet); // 搜索右下锥桶
 
-			if (_pointNearCone.x > params.ServoEnter && _pointNearCone.x < params.ServoEnter + ROWSIMAGE / 3
+			if (_pointNearCone.x > params.ServoEnter && _pointNearCone.x < params.ServoEnter + ROWSIMAGE / 6
 				&& _pointNearCone.y != 0) // 当车辆开始靠近右边锥桶：准备入库
             {
                 counterRec++;
@@ -139,7 +150,7 @@ public:
         {
             _coneRects = detectCones(img_rgb);
             searchCones(_coneRects, track.rowCutUp);
-			if (track.pointsEdgeLeft.size() > ROWSIMAGE / 2) // 第一阶段：当赛道边缘存在时
+			if (track.pointsEdgeLeft.size() > COLSIMAGE / 2) // 第一阶段：当赛道边缘存在时
             {
                 _pointNearCone = searchNearestCone(track.pointsEdgeLeft, pointEdgeDet); // 搜索右下锥桶(图像右上方)
 

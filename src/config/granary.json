@@ -1,10 +1,10 @@
 {
     "GranaryCheck": 2,
-    "ServoEnter": 72,
-    "ServoCruise": 130,
+    "ServoEnter": 74,
+    "ServoCruise": 170,
     "ReverseScale": 0,
     "DelayCnt": 20,
-    "ConeWidth": 175,
+    "ConeWidth": 170,
     "record": [
         {
             "#GranaryCheck": "农田区域确认帧数",
