@@ -102,12 +102,24 @@ public:
 		{
 			if(granarys.size() == 0)
 			{
-				if(numGranary > params.GranaryCheck / 2)
-					granaryType = GranaryType::ExitTwo;
-				else
-					granaryType = GranaryType::ExitOne;
+				counterSession++;
+				// if(numGranary > params.GranaryCheck / 2)
+				// 	granaryType = GranaryType::ExitTwo;
+				// else
+				// 	granaryType = GranaryType::ExitOne;
 			}
-			else if(granarys[0].x > params.ServoEnter + ROWSIMAGE / 6)
+			else if(granarys[0].x > params.ServoEnter + ROWSIMAGE / 6 + 10)
+			{
+				counterSession++;
+				// if(numGranary > params.GranaryCheck / 2)
+				// 	granaryType = GranaryType::ExitTwo;
+				// else
+				// 	granaryType = GranaryType::ExitOne;
+			}
+			else 
+				counterSession = 0;
+
+			if(counterSession > 1)
 			{
 				if(numGranary > params.GranaryCheck / 2)
 					granaryType = GranaryType::ExitTwo;
@@ -326,18 +338,18 @@ public:
 			// 出口检测 1号出口
 			POINT coneRightDown = searchRightDownCone(pointEdgeDet); // 右下方锥桶
 			_pointNearCone = coneRightDown;
-			// if (granaryType == GranaryType::ExitTwo) 
-			// {
-			// 	counterSession++;
+			if (granaryType == GranaryType::ExitOne) 
+			{
+				counterSession++;
 				
-			// 	if ((coneRightDown.x < ROWSIMAGE / 2 && counterSession > 12) ||
-			// 		counterSession > 30) // 右下方锥桶检测完毕
-			// 	{
-			// 		granaryStep = GranaryStep::Exit; // 出站使能
-			// 		counterRec = 0;
-			// 		counterSession = 0;
-			// 	}
-			// }
+				if ((coneRightDown.x > params.ServoExitOne && coneRightDown.x < params.ServoExitOne + ROWSIMAGE / 6
+					&& counterSession > params.DelayCnt)) // 右下方锥桶检测完毕
+				{
+					granaryStep = GranaryStep::Exit; // 出站使能
+					counterRec = 0;
+					counterSession = 0;
+				}
+			}
             
             break;
         }
@@ -630,7 +642,7 @@ private:
 
 		for (int i = 0; i < pointsCone.size(); i++)
 		{
-			if (pointsCone[i].y > COLSIMAGE / 2 && pointsCone[i].x > point.x)
+			if (pointsCone[i].y > COLSIMAGE / 2 && pointsCone[i].x < ROWSIMAGE - 40 && pointsCone[i].x > point.x)
 			{
 				point = pointsCone[i];
 			}
@@ -762,11 +774,12 @@ private:
     {
         uint16_t GranaryCheck = 3;
         uint16_t ServoEnter = 50;
-        uint16_t ServoCruise = 70;
+        uint16_t ServoCruise = 150;
+		uint16_t ServoExitOne = 70;
 		float ReverseScale = 0.5;
         uint16_t DelayCnt = 20;
 		uint16_t ConeWidth = 180;
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Params, GranaryCheck, ServoEnter, ServoCruise, ReverseScale, DelayCnt, ConeWidth); // 添加构造函数
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Params, GranaryCheck, ServoEnter, ServoCruise, ServoExitOne, ReverseScale, DelayCnt, ConeWidth); // 添加构造函数
     };
     Params params;
 };
