@@ -84,8 +84,6 @@ public:
             _driver->carControl(0, 1500);
             while(_loop)
             {
-                float speed = _speed;
-                uint16_t servo_pwm = _servo_pwm;
                 if(_sound)
                 {
                     _driver->buzzerSound(_sound);
@@ -93,10 +91,10 @@ public:
                 }
                 // if(_ctrl)
                 // {
-                //     _driver->carControl(speed, servo_pwm);
+                //     _driver->carControl(_speed, _servo_pwm);
                 //     _ctrl = false;
                 // }
-                _driver->carControl(speed, servo_pwm);
+                _driver->carControl(_speed, _servo_pwm);
                 std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
             }

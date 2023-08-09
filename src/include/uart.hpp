@@ -88,6 +88,28 @@ private:
     return 0;
   }
 
+  	int send(const std::vector<unsigned char>& data)
+	{
+		try
+		{
+			_serial_port->Write(data);
+		}
+		catch (const std::runtime_error&)
+		{
+			std::cerr << "The Write() runtime_error." << std::endl;
+			return -2;
+		}
+		catch (const NotOpen&)
+		{
+			std::cerr << "Port Not Open ..." << std::endl;
+			return -1;
+		}
+
+		_serial_port->DrainWriteBuffer(); // 非阻塞模式下不需要等待缓冲区耗尽
+
+		return 0;
+	}
+
 public:
   // 定义构造函数
   Driver(const std::string &port_name, BaudRate bps)
@@ -163,7 +185,7 @@ public:
       Bint32_Union Kp_Union;
       Bint32_Union Ki_Union;
       Bint32_Union Kd_Union;
-      unsigned char sendBuff[20];
+      std::vector<unsigned char> sendBuff(20);
       unsigned char check = 0;
 
       Kp_Union.Float = Kp;
@@ -199,11 +221,12 @@ public:
       }
       sendBuff[19] = check;
 
-      // 循环发送数据
-      for (int i = 0; i < 20; i++)
-      {
-        send(sendBuff[i]);
-      }
+      send(sendBuff);
+      // // 循环发送数据
+      // for (int i = 0; i < 20; i++)
+      // {
+      //   send(sendBuff[i]);
+      // }
         
     }
     else
@@ -226,7 +249,7 @@ public:
     {
       Bint32_Union bint32_Union;
       Bint16_Union bint16_Union;
-      unsigned char sendBuff[12];
+      std::vector<unsigned char> sendBuff(12);
       unsigned char check = 0;
 
       bint32_Union.Float = speed;
@@ -254,12 +277,13 @@ public:
         check += sendBuff[i];
       }
       sendBuff[9] = check;
+      send(sendBuff);
 
-      // 循环发送数据
-      for (size_t i = 0; i < 10; i++)
-      {
-        send(sendBuff[i]);
-      }
+      // // 循环发送数据
+      // for (size_t i = 0; i < 10; i++)
+      // {
+      //   send(sendBuff[i]);
+      // }
       
     }
     else
@@ -282,7 +306,7 @@ public:
   {
     if (isOpen)
     {
-      unsigned char sendBuff[7];
+      std::vector<unsigned char> sendBuff(7);;
       unsigned char check = 0;
 
       sendBuff[0] = 0x42;  // 帧头
@@ -296,11 +320,13 @@ public:
       }
       sendBuff[4] = check;
 
-      // 循环发送数据
-      for (size_t i = 0; i < 7; i++)
-      {
-        send(sendBuff[i]);
-      }
+      send(sendBuff);
+
+      // // 循环发送数据
+      // for (size_t i = 0; i < 7; i++)
+      // {
+      //   send(sendBuff[i]);
+      // }
     }
     else
     {
