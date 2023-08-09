@@ -101,6 +101,11 @@ public:
                     farmlandAvoidance.farmdlandCheck(_predictor->results);
                     granaryDetection.granaryCheck(_predictor->results);
                 }
+                else
+                {
+                    _Cnt = 0;
+                    AI_Captured = false;
+                }
 
                 bool flag = false;
                 for(int i = 0; i < _predictor->results.size(); i++)

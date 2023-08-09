@@ -41,6 +41,7 @@ public:
         counterRec = 0;
         counterSession = 0;
         counterFild = 0;
+        counterExit = 0;
         farmlandStep = FarmlandStep::None;
     }
 
@@ -111,6 +112,12 @@ public:
         }
         case FarmlandStep::Enable:
         {
+			counterExit++;
+			if (counterExit > 60) {
+				reset();
+				return false;
+			}
+
             if (track.pointsEdgeLeft.size() < params.EnterLine && track.pointsEdgeRight.size() < params.EnterLine)
             {
                 counterRec++;
@@ -235,7 +242,7 @@ public:
                             if(otherPoint.y < track.rowCutUp)
                                 continue;
 
-                            if(abs(currentPoint.y - otherPoint.y) > 100 || abs(currentPoint.x - otherPoint.x) > 120)
+                            if(abs(currentPoint.y - otherPoint.y) > 100 || abs(currentPoint.x - otherPoint.x) > 100)
                                 continue;
 
                             // 计算两点之间的距离
@@ -555,24 +562,26 @@ public:
         }
     }
 
-    float get_speed()
+    float get_speed(float motionSpeed)
     {
         switch(farmlandStep)
         {
         case FarmlandStep::Enable:
         {
-            _speed = params.Speed; 
+            // motionSpeed -= 0.05f;
+            // if(motionSpeed < params.Speed)
+                motionSpeed = params.Speed; 
             break;
         }
         case FarmlandStep::Cruise:
         {
-            _speed += 0.02f;
-            if(_speed > params.Speed * params.SpeedScale)
-                _speed = params.Speed * params.SpeedScale; 
+            motionSpeed += 0.02f;
+            if(motionSpeed > params.Speed * params.SpeedScale)
+                motionSpeed = params.Speed * params.SpeedScale; 
             break;
         }
         }
-        return _speed;
+        return motionSpeed;
     }
 
 
@@ -778,6 +787,7 @@ private:
     uint16_t counterSession = 0;       // 图像场次计数器
     uint16_t counterRec = 0;           // 农田区标志检测计数器
     uint16_t counterFild = 0;
+	uint16_t counterExit = 0;	       // 农田区域异常识别计数器
     float _speed = 0.0f;
     int indexDebug = 0;
 

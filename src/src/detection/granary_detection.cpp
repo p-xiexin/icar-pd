@@ -102,25 +102,32 @@ public:
 		{
 			if(granarys.size() == 0)
 			{
-				counterSession++;
+				counterExit++;
+				if(counterRec)
+					counterSession++;
 				// if(numGranary > params.GranaryCheck / 2)
 				// 	granaryType = GranaryType::ExitTwo;
 				// else
 				// 	granaryType = GranaryType::ExitOne;
 			}
-			else if(granarys[0].x > params.ServoEnter + ROWSIMAGE / 6 + 10)
+			else if(granarys[0].x > params.ServoEnter + ROWSIMAGE / 6)
 			{
-				counterSession++;
+				counterRec++;
 				// if(numGranary > params.GranaryCheck / 2)
 				// 	granaryType = GranaryType::ExitTwo;
 				// else
 				// 	granaryType = GranaryType::ExitOne;
 			}
-			else 
+			else {
 				counterSession = 0;
+				counterExit = 0;
+			}
 
-			if(counterSession > 1)
+			if(counterSession > 1 || counterExit > 3)
 			{
+				counterRec = 0;
+				counterSession = 0;
+				counterExit = 0;
 				if(numGranary > params.GranaryCheck / 2)
 					granaryType = GranaryType::ExitTwo;
 				else
@@ -146,14 +153,15 @@ public:
         {
         case GranaryStep::Enable:
         {
+
 			if(granaryType == GranaryType::ExitNone)
 				return true;
 
-			// counterExit++;
-			// if (counterExit > 100) {
-			// 	reset();
-			// 	return false;
-			// }
+			counterExit++;
+			if (counterExit > 100) {
+				reset();
+				return false;
+			}
 
             _coneRects = detectCones(img_rgb);
 			searchCones(_coneRects, track.rowCutUp);
@@ -358,14 +366,13 @@ public:
 			_coneRects = detectCones(img_rgb);
             searchCones(_coneRects, track.rowCutUp);
 			POINT coneLeftUp = searchRightUpCone(pointEdgeDet); // 搜索右上方的锥桶用于补线
+			_pointNearCone = coneLeftUp;
 
 			if (track.pointsEdgeLeft.size() > ROWSIMAGE / 2 &&
 				track.pointsEdgeRight.size() > ROWSIMAGE / 2 &&
 				pointEdgeDet.size() < 3)
 			{
-				granaryStep = GranaryStep::None; // 出站结束
-				counterRec = 0;
-				counterSession = 0;
+				reset();
 			}
 			else
 			{
@@ -415,25 +422,25 @@ public:
 		{
 		case GranaryStep::Enable:
 		{
-			motionSpeed -= 0.1f;
-			if(motionSpeed < 0.8f)
-				motionSpeed = 0.8f;
+			motionSpeed -= 0.05f;
+			if(motionSpeed < params.GranarySpeed)
+				motionSpeed = params.GranarySpeed;
 			
 			break;
 		}
 		case GranaryStep::Enter:
 		{
-			motionSpeed = 0.8f;
+			motionSpeed = params.GranarySpeed;
 			break;
 		}
 		case GranaryStep::Cruise:
 		{
-			motionSpeed = 0.8f;
+			motionSpeed = params.GranarySpeed;
 			break;
 		}
 		case GranaryStep::Exit:
 		{
-			motionSpeed = 0.8f;
+			motionSpeed = params.GranarySpeed;
 			break;
 		}
 		}
@@ -773,13 +780,14 @@ private:
     struct Params
     {
         uint16_t GranaryCheck = 3;
+		float GranarySpeed = 0.8;
         uint16_t ServoEnter = 50;
         uint16_t ServoCruise = 150;
 		uint16_t ServoExitOne = 70;
 		float ReverseScale = 0.5;
         uint16_t DelayCnt = 20;
 		uint16_t ConeWidth = 180;
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Params, GranaryCheck, ServoEnter, ServoCruise, ServoExitOne, ReverseScale, DelayCnt, ConeWidth); // 添加构造函数
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Params, GranaryCheck, GranarySpeed, ServoEnter, ServoCruise, ServoExitOne, ReverseScale, DelayCnt, ConeWidth); // 添加构造函数
     };
     Params params;
 };

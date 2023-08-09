@@ -490,7 +490,7 @@ int main(int argc, char *argv[])
             }
             case RoadType::FarmlandHandle:
             {
-                motionController.motorSpeed = farmlandAvoidance.get_speed();
+                motionController.motorSpeed = farmlandAvoidance.get_speed(motionController.motorSpeed);
                 break;
             }
             case RoadType::GranaryHandle:
