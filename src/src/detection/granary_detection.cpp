@@ -98,12 +98,22 @@ public:
                 }
             }
         }
-		else if(granaryStep == GranaryStep::Enable && granarys.size() == 0) // 维持一段时间，知道粮仓标志消失
+		else if(granaryStep == GranaryStep::Enable) // 维持一段时间，知道粮仓标志消失
 		{
-			if(numGranary > params.GranaryCheck / 2)
-				granaryType = GranaryType::ExitTwo;
-			else
-				granaryType = GranaryType::ExitOne;
+			if(granarys.size() == 0)
+			{
+				if(numGranary > params.GranaryCheck / 2)
+					granaryType = GranaryType::ExitTwo;
+				else
+					granaryType = GranaryType::ExitOne;
+			}
+			else if(granarys[0].x > params.ServoEnter + ROWSIMAGE / 6)
+			{
+				if(numGranary > params.GranaryCheck / 2)
+					granaryType = GranaryType::ExitTwo;
+				else
+					granaryType = GranaryType::ExitOne;
+			}
 		}
     }
 
@@ -415,8 +425,7 @@ public:
 			break;
 		}
 		}
-		// return motionSpeed;
-		return 0.8f;
+		return motionSpeed;
 	}
 
     /**

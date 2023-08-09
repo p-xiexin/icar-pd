@@ -621,9 +621,9 @@ public:
 	 * @param pointsEdgeLeft
 	 * @return vector<POINT>
 	 */
-	vector<POINT> predictEdgeRight(vector<POINT> pointsEdgeLeft, bool bezier = true)
+	vector<POINT> predictEdgeRight(vector<POINT> pointsEdgeLeft, bool bezier = true, int offset = 120)
 	{
-		int offset = 120; // 右边缘平移尺度
+		// int offset = 120; // 右边缘平移尺度
 		vector<POINT> pointsEdgeRight;
 		if (pointsEdgeLeft.size() < 3)
 			return pointsEdgeRight;
@@ -705,9 +705,9 @@ public:
 	 * @param pointsEdgeRight
 	 * @return vector<POINT>
 	 */
-	vector<POINT> predictEdgeLeft(vector<POINT> pointsEdgeRight, bool bezier = true)
+	vector<POINT> predictEdgeLeft(vector<POINT> pointsEdgeRight, bool bezier = true, int offset = 120)
 	{
-		int offset = 120; // 右边缘平移尺度
+		// int offset = 120; // 右边缘平移尺度
 		vector<POINT> pointsEdgeLeft;
 		if (pointsEdgeRight.size() < 3)
 			return pointsEdgeLeft;
