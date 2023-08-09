@@ -24,6 +24,15 @@ using namespace std;
 class GranaryDetection
 {
 public:
+    enum GranaryType
+    {
+        ExitNone = 0, // 未触发
+        ExitOne,  // 一号出口
+        ExitTwo   // 二号出口
+    };
+    GranaryType granaryType = GranaryType::ExitNone;
+
+public:
     GranaryDetection()
     {
         loadParams();
@@ -116,7 +125,7 @@ public:
         case GranaryStep::Enable:
         {
 			if(granaryType == GranaryType::ExitNone)
-				return false;
+				return true;
 
 			// counterExit++;
 			// if (counterExit > 100) {
@@ -378,8 +387,35 @@ public:
 	 * @brief 获取粮仓区速度规划
 	 *
 	 */
-	float get_speed()
+	float get_speed(float motionSpeed)
 	{
+		switch(granaryStep)
+		{
+		case GranaryStep::Enable:
+		{
+			motionSpeed -= 0.1f;
+			if(motionSpeed < 0.8f)
+				motionSpeed = 0.8f;
+			
+			break;
+		}
+		case GranaryStep::Enter:
+		{
+			motionSpeed = 0.8f;
+			break;
+		}
+		case GranaryStep::Cruise:
+		{
+			motionSpeed = 0.8f;
+			break;
+		}
+		case GranaryStep::Exit:
+		{
+			motionSpeed = 0.8f;
+			break;
+		}
+		}
+		// return motionSpeed;
 		return 0.8f;
 	}
 
@@ -702,15 +738,7 @@ private:
         Exit      // 粮仓出站
     };
 
-    enum GranaryType
-    {
-        ExitNone = 0, // 未触发
-        ExitOne,  // 一号出口
-        ExitTwo   // 二号出口
-    };
-
     GranaryStep granaryStep = GranaryStep::None;
-    GranaryType granaryType = GranaryType::ExitNone;
     uint16_t counterSession = 0; // 图像场次计数器
     uint16_t counterRec = 0;     // 粮仓标志检测计数器
     uint16_t counterShield = 0;  // 粮仓屏蔽计数器

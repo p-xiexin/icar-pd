@@ -174,16 +174,19 @@ int main(int argc, char *argv[])
         /*1.AI推理*/
         bool AI_enable = detection.AI_Enable();
         std::shared_ptr<DetectionResult> ai_results = nullptr;
-        if (controlCenterCal.style != "STRIGHT")
-            AI_enable = false;
-        if (/*roadType == 6 || */ roadType == 9)
-            AI_enable = true;
-        else if (roadType == 1)
-            AI_enable = false;
-        if (roadType && roadType != RoadType::CrossHandle)
+        // if (controlCenterCal.style != "STRIGHT")
+        //     AI_enable = false;
+        // if (/*roadType == 6 || */ roadType == 9)
+        //     AI_enable = true;
+        // else if (roadType == 1)
+        //     AI_enable = false;
+        if(roadType == RoadType::GranaryHandle && granaryDetection.granaryType == 0)
+            detection.Startdetect = true;
+        else if (roadType && roadType != RoadType::CrossHandle)
             detection.Startdetect = false;
         else
             detection.Startdetect = true;
+
         // AI_enable = false;
         // if (AI_enable)
         // {
@@ -275,8 +278,11 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    roadType = RoadType::BaseHandle;
-                    AI_enable = false;
+                    if(roadType != RoadType::BaseHandle)
+                    {
+                        roadType = RoadType::BaseHandle;
+                        AI_enable = false;
+                    }
                 }
             }
         }
@@ -302,8 +308,11 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    roadType = RoadType::BaseHandle;
-                    AI_enable = false;
+                    if(roadType != RoadType::BaseHandle)
+                    {
+                        roadType = RoadType::BaseHandle;
+                        AI_enable = false;
+                    }
                 }
             }
         }
@@ -329,8 +338,11 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    roadType = RoadType::BaseHandle;
-                    AI_enable = false;
+                    if(roadType != RoadType::BaseHandle)
+                    {
+                        roadType = RoadType::BaseHandle;
+                        AI_enable = false;
+                    }
                 }
             }
         }
@@ -481,6 +493,11 @@ int main(int argc, char *argv[])
                 motionController.motorSpeed = farmlandAvoidance.get_speed();
                 break;
             }
+            case RoadType::GranaryHandle:
+            {
+                motionController.motorSpeed = granaryDetection.get_speed(motionController.motorSpeed);
+                break;
+            }
             // case RoadType::RingHandle:
             // {
             // 	motionController.motorSpeed = motionController.params.speedLow;
@@ -506,6 +523,7 @@ int main(int argc, char *argv[])
             }
 
             // 串口通信，姿态与速度控制
+            // motionController.motorSpeed = 0.8f;
             serialInterface.set_control(-motionController.motorSpeed, motionController.servoPwm);
         }
         else
