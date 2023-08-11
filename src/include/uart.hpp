@@ -174,18 +174,79 @@ public:
   }
 
   /**
-   * @brief 智能车速度pid设置
-   *
+   * @brief 智能车速度环+电流环pid设置
    * @param 略
    */
-  void PID_init(float Kp, float Ki, float Kd , float Kv)
+  void PID_init(float speed_loop_kp, float speed_loop_ki, float speed_loop_kd , float current_loop_kp, float current_loop_ki, float current_loop_kd)
+  {
+    if(isOpen)
+    {
+      // 定义4字节的联合体
+      Bint32_Union byte4_Union;
+
+      std::vector<unsigned char> sendBuff(32);
+      unsigned char check = 0;
+
+      sendBuff[0] = 0x42;
+      sendBuff[1] = 0x10;
+      sendBuff[2] = 32;
+
+      // speed_loop_pid-kp
+      byte4_Union.Float = speed_loop_kp;
+      for(int i = 0;i < 4;i++)
+        sendBuff[3+i] = byte4_Union.U8_Buff[i];
+
+      // speed_loop_pid-ki
+      byte4_Union.Float = speed_loop_ki;
+      for(int i = 0;i < 4;i++)
+        sendBuff[7+i] = byte4_Union.U8_Buff[i];
+
+      // speed_loop_pid-kd
+      byte4_Union.Float = speed_loop_ki;
+      for(int i = 0;i < 4;i++)
+        sendBuff[11+i] = byte4_Union.U8_Buff[i];
+
+      // current_loop_pid-kp
+      byte4_Union.Float = current_loop_kp;
+      for(int i = 0;i < 4;i++)
+        sendBuff[15+i] = byte4_Union.U8_Buff[i];
+
+      // current_loop_pid-ki
+      byte4_Union.Float = current_loop_ki;
+      for(int i = 0;i < 4;i++)
+        sendBuff[19+i] = byte4_Union.U8_Buff[i];
+
+      // current_loop_pid-kd
+      byte4_Union.Float = current_loop_kd;
+      for(int i = 0;i < 4;i++)
+        sendBuff[23+i] = byte4_Union.U8_Buff[i];
+
+      for (int i = 0; i < 31; i++)
+      {
+        check += sendBuff[i];
+      }
+      sendBuff[31] = check;
+
+      send(sendBuff);        
+    }
+    else
+    {
+      std::cout << "Error: Uart Open failed!!!!" << std::endl;
+    }
+  }
+
+  /**
+   * @brief 智能车电流环pid设置
+   * @param 略
+   */
+  void current_PID_init(float Kp, float Ki, float Kd)
   {
     if(isOpen)
     {
       Bint32_Union Kp_Union;
       Bint32_Union Ki_Union;
       Bint32_Union Kd_Union;
-      std::vector<unsigned char> sendBuff(20);
+      std::vector<unsigned char> sendBuff(16);
       unsigned char check = 0;
 
       Kp_Union.Float = Kp;
@@ -193,8 +254,8 @@ public:
       Kd_Union.Float = Kd;
 
       sendBuff[0] = 0x42;
-      sendBuff[1] = 0x10;
-      sendBuff[2] = 20;
+      sendBuff[1] = 0x12;
+      sendBuff[2] = 16;
 
       sendBuff[3] = Kp_Union.U8_Buff[0];
       sendBuff[4] = Kp_Union.U8_Buff[1];
@@ -211,31 +272,19 @@ public:
       sendBuff[13] = Kd_Union.U8_Buff[2];
       sendBuff[14] = Kd_Union.U8_Buff[3];
 
-      Kd_Union.Float = Kv;
-      for(int i = 0;i < 4;i++)
-        sendBuff[15+i] = Kd_Union.U8_Buff[i];
-
-      for (int i = 0; i < 19; i++)
+      for (int i = 0; i < 15; i++)
       {
         check += sendBuff[i];
       }
-      sendBuff[19] = check;
+      sendBuff[15] = check;
 
-      send(sendBuff);
-      // // 循环发送数据
-      // for (int i = 0; i < 20; i++)
-      // {
-      //   send(sendBuff[i]);
-      // }
-        
+      send(sendBuff);        
     }
     else
     {
       std::cout << "Error: Uart Open failed!!!!" << std::endl;
     }
   }
-
-
 
   /**
    * @brief 智能车速度与方向控制

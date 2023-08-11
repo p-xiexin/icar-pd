@@ -123,7 +123,7 @@ public:
 				counterExit = 0;
 			}
 
-			if(counterSession > 1 || counterExit > 3)
+			if(counterSession > 1 || counterExit > 4)
 			{
 				counterRec = 0;
 				counterSession = 0;
@@ -295,6 +295,7 @@ public:
 
 				if (indexMin != indexMax) // 开始补线
 				{
+					_pointNearCone = conesLeft[indexMin];
 					double k = 0, b = 0;
 					k = (float)(conesLeft[indexMax].y - conesLeft[indexMin].y) /
 						(float)(conesLeft[indexMax].x - conesLeft[indexMin].x);
@@ -344,10 +345,10 @@ public:
 			}
 
 			// 出口检测 1号出口
-			POINT coneRightDown = searchRightDownCone(pointEdgeDet); // 右下方锥桶
-			_pointNearCone = coneRightDown;
 			if (granaryType == GranaryType::ExitOne) 
 			{
+				POINT coneRightDown = searchRightDownCone(pointEdgeDet); // 右下方锥桶
+				_pointNearCone = coneRightDown;
 				counterSession++;
 				
 				if ((coneRightDown.x > params.ServoExitOne && coneRightDown.x < params.ServoExitOne + ROWSIMAGE / 6
@@ -357,6 +358,21 @@ public:
 					counterRec = 0;
 					counterSession = 0;
 				}
+			}
+			else if(granaryType == GranaryType::ExitTwo)
+			{
+				POINT coneRightUp = searchTopUpCone(pointEdgeDet); // 右上方锥桶
+				_pointNearCone = coneRightUp;
+				counterSession++;
+				
+				if ((_pointNearCone.x > params.ServoExitTwo && _pointNearCone.x < params.ServoExitTwo + ROWSIMAGE / 6
+					&& counterSession > params.DelayCnt)) // 右下方锥桶检测完毕
+				{
+					granaryStep = GranaryStep::Exit; // 出站使能
+					counterRec = 0;
+					counterSession = 0;
+				}
+
 			}
             
             break;
@@ -673,7 +689,7 @@ private:
 
 		for (int i = 0; i < pointsCone.size(); i++)
 		{
-			if (pointsCone[i].y < COLSIMAGE / 2)
+			if (pointsCone[i].y < COLSIMAGE / 2 - 45)
 			{
 				points.push_back(pointsCone[i]);
 			}
@@ -698,6 +714,31 @@ private:
 		for (int i = 0; i < pointsCone.size(); i++)
 		{
 			if (pointsCone[i].y > point.y && pointsCone[i].x < ROWSIMAGE * 0.8)
+			{
+				point = pointsCone[i];
+			}
+		}
+
+		return point;
+	}
+	/**
+	 * @brief 搜索左右方的锥桶坐标
+	 *
+	 * @param pointsCone
+	 * @return vector<POINT>
+	 */
+	POINT searchTopUpCone(vector<POINT> pointsCone)
+	{
+		POINT point(0, 0);
+
+		if (pointsCone.size() <= 0)
+			return point;
+		else
+			point = pointsCone[0];
+
+		for (int i = 0; i < pointsCone.size(); i++)
+		{
+			if (pointsCone[i].x < point.x && pointsCone[i].x < ROWSIMAGE * 0.8)
 			{
 				point = pointsCone[i];
 			}
@@ -784,10 +825,12 @@ private:
         uint16_t ServoEnter = 50;
         uint16_t ServoCruise = 150;
 		uint16_t ServoExitOne = 70;
+		uint16_t ServoExitTwo = 70;
 		float ReverseScale = 0.5;
         uint16_t DelayCnt = 20;
 		uint16_t ConeWidth = 180;
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Params, GranaryCheck, GranarySpeed, ServoEnter, ServoCruise, ServoExitOne, ReverseScale, DelayCnt, ConeWidth); // 添加构造函数
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Params, GranaryCheck, GranarySpeed, ServoEnter, ServoCruise, ServoExitOne, ServoExitTwo,
+										ReverseScale, DelayCnt, ConeWidth); // 添加构造函数
     };
     Params params;
 };

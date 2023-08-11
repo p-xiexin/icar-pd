@@ -185,7 +185,7 @@ public:
             int indexWidestBlock = 0;                      // 最宽色块的序号
             if (flagStartBlock)                            // 起始行做特殊处理
             {
-                if (row < ROWSIMAGE / 2)
+                if (row < COLSIMAGE / 2)
                     return;
                 if (counterBlock == 0)
                 {

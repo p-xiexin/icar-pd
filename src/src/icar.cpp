@@ -85,14 +85,18 @@ int main(int argc, char *argv[])
     if (motionController.params.CloseLoop)
     {
         cout << "-------- 速度闭环控制 -------" << endl;
-        serialInterface.set_PID(motionController.params.Kp, motionController.params.Ki, motionController.params.Kd, motionController.params.Kv);
-        cout << "Kp = " << motionController.params.Kp << endl;
-        cout << "Ki = " << motionController.params.Ki << endl;
-        cout << "Kd = " << motionController.params.Kd << endl;
+        serialInterface.set_PID(motionController.params.Kp_speed, motionController.params.Ki_speed, motionController.params.Kd_speed, 
+                                motionController.params.Kp_current, motionController.params.Ki_current, motionController.params.Kd_current);
+        cout << "Kp_speed = " << motionController.params.Kp_speed << endl;
+        cout << "Ki_speed = " << motionController.params.Ki_speed << endl;
+        cout << "Kd_speed = " << motionController.params.Kd_speed << endl;
+        cout << "Kp_current = " << motionController.params.Kp_current << endl;
+        cout << "Ki_current = " << motionController.params.Ki_current << endl;
+        cout << "Kd_current = " << motionController.params.Kd_current << endl;
     }
     else
     {
-        serialInterface.set_PID(0, 0, 0, 0);
+        serialInterface.set_PID(0, 0, 0, 0, 0, 0);
         cout << "-------- 速度开环控制 -------" << endl;
     }
     serialInterface.Start();

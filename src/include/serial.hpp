@@ -37,9 +37,14 @@ public:
         }
     }
 
-    void set_PID(float Kp, float Ki, float Kd, float Kv)
+    void set_PID(float speed_loop_kp, float speed_loop_ki, float speed_loop_kd , float current_loop_kp, float current_loop_ki, float current_loop_kd)
     {
-        _driver->PID_init(Kp, Ki, Kd, Kv);
+        _driver->PID_init(speed_loop_kp, speed_loop_ki, speed_loop_kd, current_loop_kp, current_loop_ki, current_loop_kd);
+    }
+
+    void set_current_PID(float Kp, float Ki, float Kd)
+    {
+        _driver->current_PID_init(Kp, Ki, Kd);
     }
 
     float get_speed()

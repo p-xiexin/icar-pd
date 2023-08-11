@@ -162,9 +162,9 @@ public:
             line_extend(track.pointsEdgeLeft);
             line_extend(track.pointsEdgeRight);
             uint16_t size = MIN(track.pointsEdgeLeft.size(), track.pointsEdgeRight.size());
-            if(size > 160)
+            if(size > 80)
             {
-                size = 160;
+                size = 80;
                 track.pointsEdgeRight.resize(size);
                 track.pointsEdgeLeft.resize(size);
             }
@@ -568,9 +568,9 @@ public:
         {
         case FarmlandStep::Enable:
         {
-            // motionSpeed -= 0.05f;
-            // if(motionSpeed < params.Speed)
-                motionSpeed = params.Speed; 
+            motionSpeed -= 0.1f;
+            if(motionSpeed < params.Speed * 0.6f)
+                motionSpeed = params.Speed * 0.6f; 
             break;
         }
         case FarmlandStep::Cruise:
