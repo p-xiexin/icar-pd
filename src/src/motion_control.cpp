@@ -40,7 +40,7 @@ public:
         float speedLow = 1.0;       // 智能车最低速
         float speedHigh = 1.0;      // 智能车最高速
         float speedAI = 1.0;        // ai识别速度
-        float speedCorners = 1.0;   // 贴弯速度
+        float speedRing = 1.0;      // 环岛速度
         float speedcoiled = 1.0;    // 连续弯道速度
 
         float speed_and_angle_k1 = 0.0;     // 速度方向耦合方程一次项
@@ -103,7 +103,7 @@ public:
         bool GranaryEnable = false;
         string pathModel = "res/model/yolov3_mobilenet_v1";
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-            Params, speedLow, speedHigh, speedAI, speedCorners, speedcoiled, speed_and_angle_k1, speed_and_angle_k2, 
+            Params, speedLow, speedHigh, speedAI, speedRing, speedcoiled, speed_and_angle_k1, speed_and_angle_k2, 
             runP1, runP2, runP3, turnP, turnD,Control_Mid, Control_Down_set, Control_Up_set, ki_down_out_max, Kp_dowm, 
             Ki_down, Line_compensation_coefficient, Angle_Kp, Angle_Ki, dynamic_Mid_low, dynamic_Mid_high, Angle_target, 
             rowCutUp, rowCutBottom,  Debug, Button, SaveImage, CloseLoop, GarageEnable, RingEnable, CrossEnable, StopEnable, 
@@ -297,17 +297,22 @@ public:
             y_offset = 60;
 
         // speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(abs(CenterLine_k)) - y_offset / 100 - x_offset / 200;
-        
-        speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(abs(CenterLine_k)) - params.speedHigh * 0.1 * atan(min(abs(Slope_previewPoint), 4.0)) - x_offset / 200;
-        // speed = params.speedHigh - params.speedHigh * 0.1 * atan(abs(CenterLine_k)) - (params.speedHigh - params.speedLow) * atan(min(abs(Slope_previewPoint), 4.0)) - x_offset / 200;
+
+        if(CenterLine_k > 1.7 && Slope_previewPoint > 2.8)
+            speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(abs(CenterLine_k)) - x_offset / 200;
+        else
+            speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(abs(CenterLine_k)) - params.speedHigh * 0.1 * atan(min(abs(Slope_previewPoint), 4.0)) - x_offset / 200;
+
+        if(control.sigmaCenter > 100)
+            speed -= control.sigmaCenter / 1000;
         // 最低速限制
         if(speed < 0.8)
             speed = 0.8;
 
-        //加速限幅
-        if(abs(speed - motorSpeed) > 0.05f)
-            motorSpeed = speed > motorSpeed ? motorSpeed + 0.05f : motorSpeed - 0.05f;
-            // motorSpeed += 0.05f;
+        if(speed - motorSpeed > 0.05f)
+            motorSpeed += 0.05f;
+        else if(speed - motorSpeed < -0.1f)
+            motorSpeed -= 0.1f;
         else 
             motorSpeed = speed;
     }
@@ -607,7 +612,18 @@ public:
             pwmDiff = control_curve_fitting(point_control_for_fitting_function, error) + (error - errorLast) * params.turnD;
             errorLast = error;
         }
-        else if(enum_RoadType == 5 || enum_RoadType == 9)// 粮仓区域微分项限幅
+        else if(enum_RoadType == 5)// 粮仓区域微分项限幅
+        {
+            if (abs(error - errorLast) > COLSIMAGE / 10) 
+            {
+                error = error > errorLast ? errorLast + COLSIMAGE / 10
+                                            : errorLast - COLSIMAGE / 10;
+            }
+
+            pwmDiff = control_curve_fitting(point_control_for_fitting_function, error) + (error - errorLast) * params.turnD;
+            errorLast = error;
+        }
+        else if( enum_RoadType == 9)
         {
             if (abs(error - errorLast) > COLSIMAGE / 10) 
             {

@@ -291,16 +291,16 @@ public:
 
 
             {// 异常状况处理,针对于锥桶间出现了缺口
-                // _gap = 0;
-                // if(track.pointsEdgeLeft.size() > COLSIMAGE / 2 || track.pointsEdgeRight.size() > COLSIMAGE / 2 && counterSession > 0)
+                // 根据锥桶有效个数优化
+                _gap = 0;
+                uint16_t validrow = abs(pointTop.x - track.pointsEdgeLeft[0].x - 1);
+
+                // if(abs(track.pointsEdgeLeft[validrow].y - pointTop.y) > COLSIMAGE / 3 || abs(track.pointsEdgeRight[validrow].y - pointTop.y) > COLSIMAGE / 3
+                //     && validrow < COLSIMAGE / 2)
                 // {
-                //     if((int)track.pointsEdgeLeft.size() - (int)pointsEdgeLeftLast.size() > ROWSIMAGE / 4 &&
-                //         (int)track.pointsEdgeRight.size() - (int)pointsEdgeRightLast.size() > ROWSIMAGE / 4)
-                //     {
-                //         _gap = 1;
-                //         track.pointsEdgeLeft = pointsEdgeLeftLast;
-                //         track.pointsEdgeRight = pointsEdgeRightLast;
-                //     }
+                //     _gap = 1;
+                //     track.pointsEdgeLeft = pointsEdgeLeftLast;
+                //     track.pointsEdgeRight = pointsEdgeRightLast;
                 // }
                 // else
                 // {
@@ -312,16 +312,10 @@ public:
                 //     pointsEdgeRightLast = track.pointsEdgeRight;
                 // }
 
-
-                // 根据锥桶有效个数优化
-                if(pointTop.y && pointTop.x < ROWSIMAGE / 2)
+                if(pointTop.y && pointTop.x < ROWSIMAGE / 2 && validrow < track.pointsEdgeLeft.size())
                 {
-                    uint16_t validrow = abs(pointTop.x - track.pointsEdgeLeft[0].x - 1);
-                    if(validrow < track.pointsEdgeLeft.size())
-                    {
-                        track.pointsEdgeLeft.resize(validrow);
-                        track.pointsEdgeRight.resize(validrow);
-                    }
+                    track.pointsEdgeLeft.resize(validrow);
+                    track.pointsEdgeRight.resize(validrow);
                 }
 
                 // 根据左右边线的丢线情况优化

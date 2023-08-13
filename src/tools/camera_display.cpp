@@ -55,7 +55,8 @@ int main(int argc, char *argv[])
     capture.set(cv::CAP_PROP_FRAME_WIDTH, COLSIMAGE);
     capture.set(cv::CAP_PROP_FRAME_HEIGHT, ROWSIMAGE);
     capture.set(cv::CAP_PROP_ZOOM, 12);
-    capture.set(cv::CAP_PROP_AUTO_EXPOSURE, 0.15);  //自动曝光开关
+    // capture.set(cv::CAP_PROP_AUTO_EXPOSURE, 0.15);  //自动曝光开关
+	capture.set(cv::CAP_PROP_EXPOSURE, 0.002);
     {
         // capture.set(cv::CAP_PROP_BRIGHTNESS, 1);    //亮度
         // capture.set(cv::CAP_PROP_CONTRAST, 1);      //对比度
@@ -70,8 +71,9 @@ int main(int argc, char *argv[])
     double rate = capture.get(CAP_PROP_FPS);
     double width = capture.get(CAP_PROP_FRAME_WIDTH);
     double height = capture.get(CAP_PROP_FRAME_HEIGHT);
-    std::cout << "Camera Param: frame rate = " << rate << " width = " << width
-              << " height = " << height << std::endl;
+	double exposure = capture.get(CAP_PROP_EXPOSURE);
+	std::cout << "Camera Param: frame rate = " << rate << " width = " << width
+			<< " height = " << height << " exposure = " << exposure << " ms" << std::endl;
 
     while (1)
     {

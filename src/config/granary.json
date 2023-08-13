@@ -3,11 +3,11 @@
     "GranarySpeed": 1.0,
     "ServoEnter": 70,
     "ServoCruise": 160,
-    "ServoExitOne": 85,
-    "ServoExitTwo": 100,
+    "ServoExitOne": 83,
+    "ServoExitTwo": 85,
     "ReverseScale": 0,
-    "DelayCnt": 20,
-    "ConeWidth": 170,
+    "DelayCnt": 15,
+    "ConeWidth": 178,
     "record": [
         {
             "#GranaryCheck": "农田区域确认帧数",

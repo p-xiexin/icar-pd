@@ -547,7 +547,7 @@ private:
         vector<POINT> granarys;
         for (int i = 0; i < predict.size(); i++)
         {
-            if (predict[i].label == LABEL_GRANARY)
+            if (predict[i].label == LABEL_GRANARY && predict[i].y + predict[i].height / 2 > 40)
             {
                 granarys.push_back(POINT(predict[i].y + predict[i].height / 2, predict[i].x + predict[i].width / 2));
             }

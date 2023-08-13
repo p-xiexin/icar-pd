@@ -504,7 +504,8 @@ int main(int argc, char *argv[])
             }
             // case RoadType::RingHandle:
             // {
-            // 	motionController.motorSpeed = motionController.params.speedLow;
+            //     motionController.speedControl(controlCenterCal);
+            // 	motionController.motorSpeed = ringRecognition.get_speed(motionController.motorSpeed);
             // 	break;
             // }
             default:
@@ -535,32 +536,6 @@ int main(int argc, char *argv[])
             counterRunBegin++;
         }
 
-        /**********图像显示************/
-        if (motionController.params.Debug)
-        {
-            Mat imageAI = frame.clone();
-            if (AI_enable)
-            {
-                detection.drawbox(imageAI, ai_results->predictor_results);
-            }
-            controlCenterCal.drawImage(trackRecognition, imageTrack); // 绘制中线
-            trackRecognition.drawImage(imageTrack);                   // 图像显示赛道线识别结果
-            imshow("imageTrack", imageTrack);
-            imshow("imageAI", imageAI);
-
-            {
-                char key = waitKey(1);
-                if (key == 32) // 空格
-                {
-                    serialInterface.set_control(0, motionController.servoPwm);
-                    key = waitKey(0);
-                }
-                if (key == 13) // 回车
-                {
-                    callbackSignal(0);
-                }
-            }
-        }
         // 存图使能
         if (motionController.params.SaveImage)
         {
@@ -617,6 +592,7 @@ int main(int argc, char *argv[])
             putText(imageTrack, controlCenterCal.style, Point(COLSIMAGE / 2 + 20, 40), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1); // 赛道类型
             putText(imageTrack, "CERROR: " + formatDoble2String(motionController.compensation_error, 2), Point(COLSIMAGE / 2 + 20, 60), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1);
             putText(imageTrack, "PreSlope: " + formatDoble2String(motionController.Slope_previewPoint, 2), Point(COLSIMAGE / 2 + 20, 80), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1);
+            putText(imageTrack, "Sigma: " + formatDoble2String(controlCenterCal.sigmaCenter, 2), Point(COLSIMAGE / 2 + 20, 100), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1);
 
             line(imageTrack, Point(motionController.Mid_line, 0), Point(motionController.Mid_line, ROWSIMAGE - 1), Scalar(200, 200, 200), 1);
             line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_Up_set), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_Up_set), Scalar(200, 200, 200), 1);
@@ -624,6 +600,25 @@ int main(int argc, char *argv[])
             line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_foreword_up), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_foreword_up), Scalar(255, 0, 0), 1);
             savePicture(imageTrack, roadType, AI_enable);
         }
+
+        /**********图像显示************/
+        if (motionController.params.Debug)
+        {
+            imshow("imageTrack", imageTrack);
+            {
+                char key = waitKey(1);
+                if (key == 32) // 空格
+                {
+                    serialInterface.set_control(0, motionController.servoPwm);
+                    key = waitKey(0);
+                }
+                if (key == 13) // 回车
+                {
+                    callbackSignal(0);
+                }
+            }
+        }
+
     }
 
     serialInterface.set_control(0, PWMSERVOMID); // 智能车停止运动
@@ -664,10 +659,10 @@ void displayWindowInit(void)
     cv::moveWindow(windowName, 1000, 50);               // 布局位置
 
     //[2] AI图像/矫正后：RGB
-    windowName = "imageAI";
-    cv::namedWindow(windowName, WINDOW_NORMAL);         // 图像名称
-    cv::resizeWindow(windowName, COLSIMAGE, ROWSIMAGE); // 分辨率
-    cv::moveWindow(windowName, 1340, 50);               // 布局位置
+    // windowName = "imageAI";
+    // cv::namedWindow(windowName, WINDOW_NORMAL);         // 图像名称
+    // cv::resizeWindow(windowName, COLSIMAGE, ROWSIMAGE); // 分辨率
+    // cv::moveWindow(windowName, 1340, 50);               // 布局位置
 
     //[3] 二值化图像
     windowName = "imageRecognition";

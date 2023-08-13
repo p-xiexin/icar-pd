@@ -2,7 +2,7 @@
     "speedLow": 1.6,
     "speedHigh": 2.0,
     "speedAI": 1.2,
-    "speedCorners": 1.5,
+    "speedRing": 1.7,
     "speedcoiled": 1.4,
 
     "speed_and_angle_k1": 0.04,
@@ -35,7 +35,7 @@
     "Angle_target": 0.45,
 
     "K_K_limit": 0.2,
-    "K_foreword": 0.5,
+    "K_foreword": 0.0,
 
     "Control_Mid": 160,
     "Control_Down_set": 15,
@@ -60,7 +60,7 @@
     "StopEnable": false,
     "BridgeEnable": true,
     "SlowzoneEnable": true,
-    "DepotEnable": false,
+    "DepotEnable": true,
     "FarmlandEnable": true,
     "GranaryEnable": true,
     "pathModel": "../res/model/yolov3_mobilenet_v1_0714",
@@ -69,7 +69,7 @@
             "#speedLow": "智能车最低速",
             "#speedHigh": "智能车最高速",
             "#speedAI": "AI识别速度",
-            "#speedCorners":"贴弯速度",
+            "#speedRing":"环岛速度",
             "#speedcoiled": "连续弯道速度",
 
             "#speed_and_angle_k1": "速度方向耦合方程一次项",
