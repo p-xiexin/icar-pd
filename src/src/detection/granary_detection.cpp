@@ -434,29 +434,35 @@ public:
 	 */
 	float get_speed(float motionSpeed)
 	{
+		float speed_temp;
+		if(granaryType == GranaryType::ExitOne)
+			speed_temp = params.SpeedExitOne;
+		else if(granaryType == GranaryType::ExitTwo)
+			speed_temp = params.SpeedExitTwo;
+
 		switch(granaryStep)
 		{
 		case GranaryStep::Enable:
 		{
 			motionSpeed -= 0.05f;
-			if(motionSpeed < params.GranarySpeed)
-				motionSpeed = params.GranarySpeed;
+			if(motionSpeed < speed_temp)
+				motionSpeed = speed_temp;
 			
 			break;
 		}
 		case GranaryStep::Enter:
 		{
-			motionSpeed = params.GranarySpeed;
+			motionSpeed = speed_temp;
 			break;
 		}
 		case GranaryStep::Cruise:
 		{
-			motionSpeed = params.GranarySpeed;
+			motionSpeed = speed_temp;
 			break;
 		}
 		case GranaryStep::Exit:
 		{
-			motionSpeed = params.GranarySpeed;
+			motionSpeed = speed_temp;
 			break;
 		}
 		}
@@ -821,7 +827,8 @@ private:
     struct Params
     {
         uint16_t GranaryCheck = 3;
-		float GranarySpeed = 0.8;
+		float SpeedExitOne = 0.8;
+		float SpeedExitTwo = 0.8;
         uint16_t ServoEnter = 50;
         uint16_t ServoCruise = 150;
 		uint16_t ServoExitOne = 70;
@@ -829,7 +836,7 @@ private:
 		float ReverseScale = 0.5;
         uint16_t DelayCnt = 20;
 		uint16_t ConeWidth = 180;
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Params, GranaryCheck, GranarySpeed, ServoEnter, ServoCruise, ServoExitOne, ServoExitTwo,
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Params, GranaryCheck, SpeedExitOne, SpeedExitTwo, ServoEnter, ServoCruise, ServoExitOne, ServoExitTwo,
 										ReverseScale, DelayCnt, ConeWidth); // 添加构造函数
     };
     Params params;

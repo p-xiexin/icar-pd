@@ -1,17 +1,19 @@
 {
     "GranaryCheck": 2,
-    "GranarySpeed": 1.0,
+    "SpeedExitOne": 1.2,
+    "SpeedExitTwo": 1.0,
     "ServoEnter": 70,
     "ServoCruise": 160,
     "ServoExitOne": 83,
-    "ServoExitTwo": 85,
+    "ServoExitTwo": 80,
     "ReverseScale": 0,
     "DelayCnt": 15,
-    "ConeWidth": 178,
+    "ConeWidth": 180,
     "record": [
         {
             "#GranaryCheck": "农田区域确认帧数",
-            "#GranarySpeed": "农田区域速度",
+            "#SpeedExitOne": "农田区域1号出口速度",
+            "#SpeedExitTwo": "农田区域2号出口速度",
             "#ServoEnter": "入粮仓区域打角行，越小打角越早",
             "#ServoCruise": "完全进入粮仓后，角度开始回正的-锥桶行数判断",
             "#ServoExitOne": "一号出口打角行",
