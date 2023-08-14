@@ -9,7 +9,7 @@
 using namespace std;
 using namespace cv;
 
-std::vector<cv::Rect> searchCones(cv::Mat img_rgb);
+std::vector<cv::Rect> searchCones(cv::Mat img_rgb, cv::Mat &mask);
 void onTrackbar(int, void*);
 
 int lowB = 0, lowG = 100, lowR = 100;
@@ -19,8 +19,8 @@ int kernel_size = 3;
 // 设置锥桶颜色的RGB范围（黄色）
 // cv::Scalar lowerThreshold(0, 100, 100);
 // cv::Scalar upperThreshold(100, 255, 255);
-cv::Scalar lowerThreshold(0, 0, 100);
-cv::Scalar upperThreshold(100, 100, 255);
+cv::Scalar lowerThreshold(lowB, lowG, lowR);
+cv::Scalar upperThreshold(highB, highG, highR);
 
 bool colorThresholdSelected = true;
 
@@ -68,10 +68,11 @@ int main(int argc, char const *argv[])
 			continue;
 		}
 		Mat image_cone = frame.clone();
+		Mat mask;
 
 		if(colorThresholdSelected)
 		{
-			std::vector<cv::Rect> coneRects = searchCones(image_cone);
+			std::vector<cv::Rect> coneRects = searchCones(image_cone, mask);
 			for(const auto& rect : coneRects)
 			{
 				cv::rectangle(image_cone, rect, cv::Scalar(0, 255, 0), 2);
@@ -85,6 +86,7 @@ int main(int argc, char const *argv[])
 				preTime = startTime;
 			}
 			cv::imshow("Result", image_cone);
+			cv::imshow("Mask", mask);
         	cv::imshow("Threshold Settings", thresholdSettings);
 			if(waitKey(5) == 13) break;
 			// 更新滑块显示的当前值
@@ -129,12 +131,11 @@ int main(int argc, char const *argv[])
 	return 0;
 }
 
-std::vector<cv::Rect> searchCones(cv::Mat img_rgb)
+std::vector<cv::Rect> searchCones(cv::Mat img_rgb, cv::Mat &mask)
 {
 	std::vector<cv::Rect> coneRects;
 
 	// 在RGB图像中根据颜色范围提取锥桶区域
-	cv::Mat mask;
 	cv::inRange(img_rgb, lowerThreshold, upperThreshold, mask);
 
 	// 进行形态学操作，去除噪声并提取锥桶区域的轮廓

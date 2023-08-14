@@ -32,6 +32,8 @@ private:
   int counterShift = 0; // 变速计数器
 
 public:
+    uint8_t speed_plan = 0;
+
     /**
      * @brief 控制器核心参数
      */
@@ -296,12 +298,25 @@ public:
         if(y_offset > 60)
             y_offset = 60;
 
-        // speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(abs(CenterLine_k)) - y_offset / 100 - x_offset / 200;
+        if(abs(CenterLine_k) > 1.4 && abs(Slope_previewPoint) > 2.5)
+            speed_plan = 1;
+        else if(abs(CenterLine_k) < 1.2 && abs(Slope_previewPoint) < 1.5)
+            speed_plan = 0;
 
-        if(CenterLine_k > 1.7 && Slope_previewPoint > 2.8)
-            speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(abs(CenterLine_k)) - x_offset / 200;
-        else
-            speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(abs(CenterLine_k)) - params.speedHigh * 0.1 * atan(min(abs(Slope_previewPoint), 4.0)) - x_offset / 200;
+        switch(speed_plan)
+        {
+        case 0:
+            speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(min(abs(CenterLine_k), 2.0)) - params.speedHigh * 0.15 * atan(min(abs(Slope_previewPoint), 4.0)) - x_offset / 200;
+            break;
+        case 1:
+            speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(min(abs(CenterLine_k), 2.0)) - x_offset / 200;
+            break;
+        }
+
+        // if(abs(CenterLine_k) > 1.5 && abs(Slope_previewPoint) > 2.6)
+        //     speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(min(abs(CenterLine_k), 2.0)) - x_offset / 200;
+        // else
+        //     speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(min(abs(CenterLine_k), 2.0)) - params.speedHigh * 0.15 * atan(min(abs(Slope_previewPoint), 4.0)) - x_offset / 200;
 
         if(control.sigmaCenter > 100)
             speed -= control.sigmaCenter / 1000;

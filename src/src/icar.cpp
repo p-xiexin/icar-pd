@@ -593,6 +593,7 @@ int main(int argc, char *argv[])
             putText(imageTrack, "CERROR: " + formatDoble2String(motionController.compensation_error, 2), Point(COLSIMAGE / 2 + 20, 60), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1);
             putText(imageTrack, "PreSlope: " + formatDoble2String(motionController.Slope_previewPoint, 2), Point(COLSIMAGE / 2 + 20, 80), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1);
             putText(imageTrack, "Sigma: " + formatDoble2String(controlCenterCal.sigmaCenter, 2), Point(COLSIMAGE / 2 + 20, 100), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1);
+            putText(imageTrack, "Plan: " + to_string(motionController.speed_plan), Point(COLSIMAGE / 2 + 20, 120), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1);
 
             line(imageTrack, Point(motionController.Mid_line, 0), Point(motionController.Mid_line, ROWSIMAGE - 1), Scalar(200, 200, 200), 1);
             line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_Up_set), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_Up_set), Scalar(200, 200, 200), 1);
