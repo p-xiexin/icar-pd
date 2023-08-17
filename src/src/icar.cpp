@@ -528,7 +528,7 @@ int main(int argc, char *argv[])
             }
 
             // 串口通信，姿态与速度控制
-            // motionController.motorSpeed = 0.8f;
+            // motionController.motorSpeed = 1.2f;
             serialInterface.set_control(-motionController.motorSpeed, motionController.servoPwm);
         }
         else
@@ -596,9 +596,9 @@ int main(int argc, char *argv[])
             putText(imageTrack, "Plan: " + to_string(motionController.speed_plan), Point(COLSIMAGE / 2 + 20, 120), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 255), 1);
 
             line(imageTrack, Point(motionController.Mid_line, 0), Point(motionController.Mid_line, ROWSIMAGE - 1), Scalar(200, 200, 200), 1);
-            line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_Up_set), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_Up_set), Scalar(200, 200, 200), 1);
-            line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_foreword_down), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_foreword_down), Scalar(255, 0, 0), 1);
-            line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_foreword_up), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_foreword_up), Scalar(255, 0, 0), 1);
+            // line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_Up_set), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_Up_set), Scalar(200, 200, 200), 1);
+            // line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_foreword_down), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_foreword_down), Scalar(255, 0, 0), 1);
+            // line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_foreword_up), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_foreword_up), Scalar(255, 0, 0), 1);
             savePicture(imageTrack, roadType, AI_enable);
         }
 

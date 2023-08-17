@@ -4,7 +4,7 @@
     "SpeedExitTwo": 1.0,
     "ServoEnter": 70,
     "ServoCruise": 160,
-    "ServoExitOne": 83,
+    "ServoExitOne": 80,
     "ServoExitTwo": 80,
     "ReverseScale": 0,
     "DelayCnt": 15,

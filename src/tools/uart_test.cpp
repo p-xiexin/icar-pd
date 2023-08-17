@@ -38,8 +38,8 @@ int main()
         float speed = 0.0f;
         uint16_t servo = 1500;
         // cin >> speed;
-        // cin >> speed >> servo;
-        cin >> speed;
+        cout << "speed\tservo" << endl;
+        cin >> speed >> servo;
         stopWatch.tic();
 		serialInterface.set_control(speed, servo);
         // cout << stopWatch.toc << endl;

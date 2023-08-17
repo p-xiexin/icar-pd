@@ -306,7 +306,7 @@ public:
         switch(speed_plan)
         {
         case 0:
-            speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(min(abs(CenterLine_k), 2.0)) - params.speedHigh * 0.15 * atan(min(abs(Slope_previewPoint), 4.0)) - x_offset / 200;
+            speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(min(abs(CenterLine_k), 2.0)) - params.speedHigh * 0.125 * atan(min(abs(Slope_previewPoint), 4.0)) - x_offset / 200;
             break;
         case 1:
             speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(min(abs(CenterLine_k), 2.0)) - x_offset / 200;
