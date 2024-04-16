@@ -12,18 +12,13 @@
 #include "./recognize/track_recognition.cpp"  //基础巡线
 #include "./recognize/cross_recognition.cpp"  //十字赛道
 #include "./recognize/ring_recognize.cpp"     //环岛赛道
-#include "./recognize/garage_recognize.cpp"   //车库及斑马线识别类
-#include "./detection/farmland_avoidance.cpp" //农田区
 
 #include "image_preprocess.cpp" //图像预处理
 #include "controlcenter_cal.cpp"
 #include "motion_control.cpp"
 
-#include "./detection/depot_detection.cpp"
-
 #include "../include/capture.hpp"
 #include "../include/serial.hpp"
-#include "../include/detection.hpp"
 
 using namespace cv;
 using namespace std;
@@ -49,7 +44,6 @@ void ClearFolder(const std::string &folderPath);
 
 CaptureInterface captureInterface("/dev/video0");
 SerialInterface serialInterface("/dev/ttyUSB0", LibSerial::BaudRate::BAUD_460800);
-Detection detection;
 
 int main(int argc, char *argv[])
 {
@@ -60,7 +54,7 @@ int main(int argc, char *argv[])
     TrackRecognition trackRecognition;         // 赛道识别
     RingRecognition ringRecognition;           // 环岛识别
     CrossroadRecognition crossroadRecognition; // 十字道路处理
-    GarageRecognition garageRecognition;       // 车库检测
+    // GarageRecognition garageRecognition;       // 车库检测
     uint16_t counterRunBegin = 1;              // 智能车启动计数器：等待摄像头图像帧稳定
     uint16_t counterOutTrackA = 0;             // 车辆冲出赛道计数器A
     uint16_t counterOutTrackB = 0;             // 车辆冲出赛道计数器B
@@ -70,10 +64,6 @@ int main(int argc, char *argv[])
         std::string folderPath = "../res/train/"; // 替换为你要清空的文件夹路径
         ClearFolder(folderPath);
     }
-
-    // PPNC初始化
-    if (!detection.init(motionController.params.pathModel)) // AI推理初始化
-        return 1;
 
     ipm.init(Size(COLSIMAGE, ROWSIMAGE),
              Size(COLSIMAGEIPM, ROWSIMAGEIPM)); // IPM逆透视变换初始化
@@ -107,14 +97,7 @@ int main(int argc, char *argv[])
     imagePreprocess.imageCorrecteInit(); // 图像矫正参数初始化
     trackRecognition.rowCutUp = motionController.params.rowCutUp;
     trackRecognition.rowCutBottom = motionController.params.rowCutBottom;
-    // garageRecognition.disGarageEntry = motionController.params.disGarageEntry;
 
-    /*****出入库使能******/
-    if (motionController.params.GarageEnable)
-    {
-        roadType = RoadType::GarageHandle; // 初始赛道元素为出库
-        garageRecognition.garage_reset();  // 出入库状态机，初始为出库准备cd
-    }
 
     /*****调试模式初始化图像窗口*****/
     if (motionController.params.Debug)
@@ -151,7 +134,6 @@ int main(int argc, char *argv[])
         serialInterface.set_control(0, PWMSERVOMID); // 智能车停止运动|建立下位机通信
         waitKey(1000);
     }
-    detection.Start();
     cout << "--------- System start!!! -------" << endl;
 
     while (1)
@@ -173,231 +155,18 @@ int main(int argc, char *argv[])
 
         Mat frame;
         frame = captureInterface.get_frame();
-        detection.setFrame(frame);
 
         /*1.AI推理*/
-        bool AI_enable = detection.AI_Enable();
-        std::shared_ptr<DetectionResult> ai_results = nullptr;
-        // if (controlCenterCal.style != "STRIGHT")
-        //     AI_enable = false;
-        // if (/*roadType == 6 || */ roadType == 9)
-        //     AI_enable = true;
-        // else if (roadType == 1)
-        //     AI_enable = false;
-        if((roadType == RoadType::GranaryHandle && granaryDetection.granaryType == 0)
-            || (roadType == RoadType::DepotHandle && depotDetection.depotType == 0))
-            detection.Startdetect = true;
-        else if (roadType && roadType != RoadType::CrossHandle)
-            detection.Startdetect = false;
-        else
-            detection.Startdetect = true;
-
-        // AI_enable = false;
-        // if (AI_enable)
-        // {
-        //     ai_results = detection.getLastFrame();
-        //     frame = ai_results->rgb_frame;
-        // }
-        // else
-        {
-            ai_results = std::make_shared<DetectionResult>();
-        }
 
         /*2.图像预处理*/
         // Mat imgaeCorrect = imagePreprocess.imageCorrection(frame);         // RGB
         Mat imgaeCorrect = frame.clone(); // RGB
         Mat imageBinary;
-        if (AI_enable || roadType == RoadType::DepotHandle || roadType == RoadType::FarmlandHandle)
-            imageBinary = imagePreprocess.imageBinaryzation(imgaeCorrect, false); // Gray
-        else
-            imageBinary = imagePreprocess.imageBinaryzation(imgaeCorrect); // Gray
+        imageBinary = imagePreprocess.imageBinaryzation(imgaeCorrect); // Gray
 
         /*3.基础赛道识别*/
         trackRecognition.trackRecognition(imageBinary, 0); // 赛道线识别
         Mat imageTrack = imgaeCorrect.clone();             // RGB
-
-        /*******4.出库和入库识别与路径规划*********/
-        if (motionController.params.GarageEnable) // 出库元素是否使能开启，根据配置文件得到
-        {
-            // 道路类型在车库或者基础赛道，进行相关处理
-            if (roadType == RoadType::GarageHandle || roadType == RoadType::BaseHandle)
-            {
-                // 进行斑马线检测，检测到斑马线，清空其他状态机
-                if (garageRecognition.garage_contral(trackRecognition))
-                {
-                    if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
-                    {
-                        serialInterface.buzzerSound(1); // OK
-
-                        // bridgeDetection.reset(); // 桥梁
-                        // depotDetection.reset();	 // 维修
-                        // farmlandAvoidance.reset();	// 农田区域
-                        // slowZoneDetection.reset();	  // 慢行区
-                        crossroadRecognition.reset(); // 十字道路
-                        ringRecognition.reset();      // 环岛
-                    }
-
-                    roadType = RoadType::GarageHandle;
-                }
-                else
-                    roadType = RoadType::BaseHandle;
-
-                if (garageRecognition.get_now_value())
-                {
-                    // 蜂鸣器提示，已经入库
-                    serialInterface.buzzerSound(1);
-                    cout << ">>>>>>>   入库结束 !!!!!" << endl;
-                    callbackSignal(0);
-                }
-
-                // 在调试模式下，如果有检测到斑马线，显示图像
-                if (roadType == RoadType::GarageHandle && motionController.params.Debug)
-                {
-                    Mat imageGarage = Mat::zeros(Size(COLSIMAGE, ROWSIMAGE), CV_8UC3); // 初始化图像
-                    garageRecognition.drawImage(trackRecognition, imageGarage);
-                    imshow("imageRecognition", imageGarage); // 添加需要显示的图像
-                    imshowRec = true;
-                }
-            }
-        }
-
-        /*农田区域检测*/
-        if (motionController.params.FarmlandEnable) // 赛道元素是否使能
-        {
-            if (roadType == RoadType::FarmlandHandle || roadType == RoadType::BaseHandle)
-            {
-                // if (farmlandAvoidance.farmlandAvoid(trackRecognition, ai_results->predictor_results, imgaeCorrect))
-                if (farmlandAvoidance.farmlandAvoid(trackRecognition, imgaeCorrect))
-                {
-                    if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
-                        serialInterface.buzzerSound(1);   // OK
-
-                    roadType = RoadType::FarmlandHandle;
-                    if (motionController.params.Debug)
-                    {
-                        Mat imageFarmland = Mat::zeros(Size(COLSIMAGE, ROWSIMAGE), CV_8UC3); // 初始化图像
-                        farmlandAvoidance.drawImage(trackRecognition, imageFarmland);
-                        imshow("imageRecognition", imageFarmland); // 添加需要显示的图像
-                        imshowRec = true;
-                    }
-                }
-                else
-                {
-                    if(roadType != RoadType::BaseHandle)
-                    {
-                        roadType = RoadType::BaseHandle;
-                        AI_enable = false;
-                    }
-                }
-            }
-        }
-
-        /*维修厂检测*/
-        if (motionController.params.DepotEnable) // 赛道元素是否使能
-        {
-            if (roadType == RoadType::DepotHandle || roadType == RoadType::BaseHandle)
-            {
-                if (depotDetection.depotDetection(trackRecognition, imgaeCorrect))
-                {
-                    if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
-                        serialInterface.buzzerSound(1);   // OK
-
-                    roadType = RoadType::DepotHandle;
-                    if (motionController.params.Debug)
-                    {
-                        Mat imageDepot = Mat::zeros(Size(COLSIMAGE, ROWSIMAGE), CV_8UC3); // 初始化图像
-                        depotDetection.drawImage(trackRecognition, imageDepot);
-                        imshow("imageRecognition", imageDepot); // 添加需要显示的图像
-                        imshowRec = true;
-                    }
-                }
-                else
-                {
-                    if(roadType != RoadType::BaseHandle)
-                    {
-                        roadType = RoadType::BaseHandle;
-                        AI_enable = false;
-                    }
-                }
-            }
-        }
-
-        /*粮仓检测*/
-        if (motionController.params.GranaryEnable) // 赛道元素是否使能
-        {
-            if (roadType == RoadType::GranaryHandle || roadType == RoadType::BaseHandle)
-            {
-                if (granaryDetection.granaryDetection(trackRecognition, imgaeCorrect))
-                {
-                    if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
-                        serialInterface.buzzerSound(1);   // OK
-
-                    roadType = RoadType::GranaryHandle;
-                    if (motionController.params.Debug)
-                    {
-                        Mat imageGranary = Mat::zeros(Size(COLSIMAGE, ROWSIMAGE), CV_8UC3); // 初始化图像
-                        granaryDetection.drawImage(trackRecognition, imageGranary);
-                        imshow("imageRecognition", imageGranary); // 添加需要显示的图像
-                        imshowRec = true;
-                    }
-                }
-                else
-                {
-                    if(roadType != RoadType::BaseHandle)
-                    {
-                        roadType = RoadType::BaseHandle;
-                        AI_enable = false;
-                    }
-                }
-            }
-        }
-
-        /*坡道（桥）检测与路径规划*/
-        if (motionController.params.BridgeEnable) // 赛道元素是否使能
-        {
-            if (roadType == RoadType::BridgeHandle || roadType == RoadType::BaseHandle)
-            {
-                if (bridgeDetection.bridgeDetection(trackRecognition))
-                {
-                    if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
-                        serialInterface.buzzerSound(1);   // OK
-
-                    roadType = RoadType::BridgeHandle;
-                    if (motionController.params.Debug)
-                    {
-                        Mat imageBridge = Mat::zeros(Size(COLSIMAGE, ROWSIMAGE), CV_8UC3); // 初始化图像
-                        bridgeDetection.drawImage(trackRecognition, imageBridge);
-                        imshow("imageRecognition", imageBridge);
-                    }
-                }
-                else
-                    roadType = RoadType::BaseHandle;
-            }
-        }
-
-        /*动物出没，慢行区检测*/
-        if (motionController.params.SlowzoneEnable) // 赛道元素是否使能
-        {
-            if (roadType == RoadType::SlowzoneHandle || roadType == RoadType::BaseHandle)
-            {
-                if (slowZoneDetection.slowZoneDetection(trackRecognition))
-                {
-                    if (roadType == RoadType::BaseHandle) // 初次识别-蜂鸣器提醒
-                        serialInterface.buzzerSound(1);   // OK
-
-                    roadType = RoadType::SlowzoneHandle;
-                    if (motionController.params.Debug)
-                    {
-                        Mat imageSlow = Mat::zeros(Size(COLSIMAGE, ROWSIMAGE), CV_8UC3); // 初始化图像
-                        slowZoneDetection.drawImage(trackRecognition, imageSlow);
-                        imshow("imageRecognition", imageSlow);
-                        imshowRec = true;
-                    }
-                }
-                else
-                    roadType = RoadType::BaseHandle;
-            }
-        }
 
         /*环岛识别与处理*/
         if (motionController.params.RingEnable) // 赛道元素是否使能
@@ -476,57 +245,8 @@ int main(int argc, char *argv[])
             motionController.Angle_Controller(controlCenterCal, trackRecognition, roadType);
 
             // 智能车速度控制
-            switch (roadType)
-            {
-            case RoadType::DepotHandle:
-            {
-                motionController.motorSpeed = depotDetection.get_speed();
-                break;
-            }
-            case RoadType::BridgeHandle:
-            {
-                motionController.motorSpeed = bridgeDetection.get_speed();
-                break;
-            }
-            case RoadType::GarageHandle:
-            {
-                motionController.motorSpeed = garageRecognition.get_speed();
-                break;
-            }
-            case RoadType::FarmlandHandle:
-            {
-                motionController.motorSpeed = farmlandAvoidance.get_speed(motionController.motorSpeed);
-                break;
-            }
-            case RoadType::GranaryHandle:
-            {
-                motionController.motorSpeed = granaryDetection.get_speed(motionController.motorSpeed);
-                break;
-            }
-            // case RoadType::RingHandle:
-            // {
-            //     motionController.speedControl(controlCenterCal);
-            // 	motionController.motorSpeed = ringRecognition.get_speed(motionController.motorSpeed);
-            // 	break;
-            // }
-            default:
-            {
-                // 智能车变速度控制
-                if (AI_enable)
-                {
-                    motionController.motorSpeed -= 0.1f;
-                    if (motionController.motorSpeed < motionController.params.speedAI)
-                        motionController.motorSpeed = motionController.params.speedAI;
-                }
-                else
-                {
-                    // motionController.speedController(controlCenterCal, motionController.k);
-                    motionController.speedControl(controlCenterCal);
-                    // motionController.motorSpeed = motionController.params.speedLow;
-                }
-                break;
-            }
-            }
+            motionController.speedControl(controlCenterCal);
+
 
             // 串口通信，姿态与速度控制
             // motionController.motorSpeed = 1.2f;
@@ -545,34 +265,12 @@ int main(int argc, char *argv[])
             {
             case RoadType::BaseHandle:
                 trackRecognition.drawImage(imageTrack); // 图像显示赛道线识别结果
-                if (AI_enable)
-                {
-                    detection.drawbox(imageTrack, ai_results->predictor_results);
-                }
                 break;
             case RoadType::RingHandle:
                 ringRecognition.drawImage(trackRecognition, imageTrack);
                 break;
             case RoadType::CrossHandle:
                 crossroadRecognition.drawImage(trackRecognition, imageTrack);
-                break;
-            case RoadType::BridgeHandle:
-                bridgeDetection.drawImage(trackRecognition, imageTrack);
-                break;
-            case RoadType::DepotHandle:
-                depotDetection.drawImage(trackRecognition, imageTrack);
-                break;
-            case RoadType::FarmlandHandle:
-                farmlandAvoidance.drawImage(trackRecognition, imageTrack);
-                break;
-            case RoadType::GarageHandle:
-                garageRecognition.drawImage(trackRecognition, imageTrack);
-                break;
-            case RoadType::SlowzoneHandle:
-                slowZoneDetection.drawImage(trackRecognition, imageTrack);
-                break;
-            case RoadType::GranaryHandle:
-                granaryDetection.drawImage(trackRecognition, imageTrack);
                 break;
             }
             // 绘制中心点集
@@ -600,7 +298,7 @@ int main(int argc, char *argv[])
             // line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_Up_set), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_Up_set), Scalar(200, 200, 200), 1);
             // line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_foreword_down), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_foreword_down), Scalar(255, 0, 0), 1);
             // line(imageTrack, Point(0, ROWSIMAGE - motionController.params.Control_foreword_up), Point(COLSIMAGE - 1, ROWSIMAGE - motionController.params.Control_foreword_up), Scalar(255, 0, 0), 1);
-            savePicture(imageTrack, roadType, AI_enable);
+            savePicture(imageTrack, roadType, false);
         }
 
         /**********图像显示************/
@@ -624,7 +322,6 @@ int main(int argc, char *argv[])
     }
 
     serialInterface.set_control(0, PWMSERVOMID); // 智能车停止运动
-    detection.Stop();
     captureInterface.Stop();
     serialInterface.Stop();
     destroyAllWindows();
@@ -641,7 +338,6 @@ void callbackSignal(int signum)
     serialInterface.set_control(0, PWMSERVOMID);                // 智能车停止运动
     std::this_thread::sleep_for(std::chrono::milliseconds(20)); // 延时20ms确保停止信号发出
 
-    detection.Stop();
     captureInterface.Stop();
     serialInterface.Stop();
 

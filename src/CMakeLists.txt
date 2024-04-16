@@ -36,15 +36,6 @@ pkg_search_module(SERIAL REQUIRED libserial)
 include_directories(${SERIAL_INCLUDE_DIRS})
 link_directories(${SERIAL_LIBRARY_DIRS})
 
-# find ppnc
-pkg_search_module(PPNC REQUIRED ppnc)
-include_directories(${PPNC_INCLUDE_DIRS})
-link_directories(${PPNC_LIBRARY_DIRS})
-
-# find onnx
-pkg_search_module(ONNX REQUIRED onnx)
-include_directories(${ONNX_INCLUDE_DIRS})
-link_directories(${ONNX_LIBRARY_DIRS})
 #---------------------------------------------------------------------
 #               [ bin ] ==> [ tool ]
 #---------------------------------------------------------------------
@@ -78,21 +69,10 @@ target_link_libraries(${CALIBRATION_PROJECT_NAME}  pthread)
 target_link_libraries(${CALIBRATION_PROJECT_NAME}  ${OpenCV_LIBS})
 target_link_libraries(${CALIBRATION_PROJECT_NAME}  ${SERIAL_LIBRARIES})
 
-# Ai测试
-set(ICAR_PROJECT_NAME "paddle_detection")
-set(ICAR_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tools/paddle_detection.cpp)
-add_executable(${ICAR_PROJECT_NAME} ${ICAR_PROJECT_SOURCES})
-target_link_libraries(${ICAR_PROJECT_NAME}  ${PPNC_LIBRARIES})
-target_link_libraries(${ICAR_PROJECT_NAME}  ${ONNX_LIBRARIES})
-target_link_libraries(${ICAR_PROJECT_NAME}  ${OpenCV_LIBS})
-target_link_libraries(${ICAR_PROJECT_NAME}  pthread )
-
 # 多线程测试
 set(ICAR_PROJECT_NAME "perspective_test")
 set(ICAR_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/tools/perspective_test.cpp)
 add_executable(${ICAR_PROJECT_NAME} ${ICAR_PROJECT_SOURCES})
-target_link_libraries(${ICAR_PROJECT_NAME}  ${PPNC_LIBRARIES})
-target_link_libraries(${ICAR_PROJECT_NAME}  ${ONNX_LIBRARIES})
 target_link_libraries(${ICAR_PROJECT_NAME}  ${OpenCV_LIBS})
 target_link_libraries(${ICAR_PROJECT_NAME}  pthread )
 
@@ -127,8 +107,6 @@ target_link_libraries(${BLOCKS_PROJECT_NAME}  ${OpenCV_LIBS})
 set(ICAR_PROJECT_NAME "icar")
 set(ICAR_PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/src/icar.cpp)
 add_executable(${ICAR_PROJECT_NAME} ${ICAR_PROJECT_SOURCES})
-target_link_libraries(${ICAR_PROJECT_NAME}  ${PPNC_LIBRARIES})
-target_link_libraries(${ICAR_PROJECT_NAME}  ${ONNX_LIBRARIES})
 target_link_libraries(${ICAR_PROJECT_NAME}  ${OpenCV_LIBS})
 target_link_libraries(${ICAR_PROJECT_NAME}  pthread )
 target_link_libraries(${ICAR_PROJECT_NAME}  ${SERIAL_LIBRARIES})
