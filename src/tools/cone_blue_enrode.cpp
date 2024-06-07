@@ -24,7 +24,7 @@ bool compareContoursByCenterY(const std::vector<cv::Point>& contour1, const std:
 int main(int argc, char *argv[])
 {
 	TrackRecognition trackRecognition;
-
+    cout << endl;
     std::string windowName = "frame";
     cv::namedWindow(windowName, WINDOW_NORMAL); // 图像名称
     cv::resizeWindow(windowName, COLSIMAGE, ROWSIMAGE);     // 分辨率
