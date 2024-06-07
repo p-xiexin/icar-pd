@@ -1,79 +1,61 @@
 # ICAR
 
+> 7.14 华南赛区省赛
+
 ### 视觉
 
-![](./doc/轻量级SLAM.png)
-
-1. 逆透视或者使用[轻量级SLAM](https://www.bilibili.com/video/BV1bp42117N1?vd_source=eac89beacf4b5ecfa9a66e7ebc9bd301)
-    事先标定相机与地面的位姿关系得到赛道线在车体坐标系下的坐标
-2. 适应赛道反光[双阈值OTSU](https://blog.csdn.net/weixin_55984718/article/details/125769347?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-3-125769347-blog-19506005.pc_relevant_multi_platform_whitelistv4&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-3-125769347-blog-19506005.pc_relevant_multi_platform_whitelistv4&utm_relevant_index=3)
-3. 出弯立刻进圆环，圆环无法识别
-4. 帧率锁定
-5. 多线程死锁问题，解决意见如下（我的电脑无法编译运行进行测试）：
-```c++
-// 在子线程中使用类似这样的逻辑，while(ruuning)
-{
-    cond_.wait(lock, [] { return !messageQueue.empty() || !running; });
-    // 检查是否收到终止信号，如果是，则退出循环
-    if (!running){
-        std::cout << "back ground thread exit" << std::endl;
-        break;
-    }
-}
-// main函数中注册信号处理函数，用于捕获 Ctrl+C 信号
-std::signal(SIGINT, [](int sig)
-            {
-                running = false;
-                cond_.notify_all(); // 通知后台线程结束等待
-                std::cerr << "received signal " << sig << ", shutting down" << std::endl;
-            });
-```
-6. 通过websocket在局域网传输图像，不占用edgeboard图形化资源，可以参考以下链接：
-[C++实现foxglove-server](https://github.com/p-xiexin/foxglove_websocket_cpp.git)
-[foxglove网页端](https://app.foxglove.dev/)
-
+1. 适应大圆环
+2. 逆透视
+3. 适应赛道反光
+4. 粮仓元素
+5. 断路区优化
+6. 帧率锁定
 
 ### 控制
 
-1. 尝试其他控制方法（例如mpc）
-2. 使用陀螺仪控制车身
-3. 串口延时问题
+1. 尝试其他控制结构
+2. 陀螺仪姿态角解算
+3. 电机控制优化
+4. 串口延时问题
 
 ### 硬件
 
-1. 陀螺仪磁力计(建议购买[成品](https://m.tb.cn/h.gaXLSjIHiuq9kKR?tk=IA7TWqebA6p))
-2. 硬件快拆
-3. 悬架参数调节(以下是省赛实录)
-![](.\doc\侧翻.jpg)
+1. 陀螺仪磁力计
+2. 三路串口（预留一个）
+3. 轮胎（8个处理）
+4. 50C电池（3个）
+5. 无线串口
+6. 摄像头位置（前瞻）
+7. 硬件快拆
+
+### AI
+
+1. 数据集多样化（与车队交涉交换数据集）
+2. 加速
+
+### 车模
+
+1. 车模外壳制作（两个）
+2. 利用多余的eb、摄像头和I车模制作二车
+
+#### 其他
+
+* [ ] 解决10天生产实习进度停滞的问题
+
+#### 硬件采购清单
+
+1. 电池
+2. 轮胎（轮毂）
+3. 无线串口
+4. 摄像头
+5. eb亚克力保护壳
 
 ---
 
-## tools中功能描述
-camera_calibrate: 摄像头标定
-camera_display: 摄像头查看
-cone_blue_enrode: 断路区锥桶形态学处理查看
-cone_detection: 停车区传统视觉识别锥桶查验
-hsv_blocks: HSV色块识别
-image_collection: 图像采集，自行更改存储路径
-paddle_detection: 深度学习模型测试
-perspective_test: 逆透视查验
-uart_test: 串口通信测试、也用于赛前检车车模功能
-
-## 摄像头安装位置
+## 调车记录
 > 摄像头参数：
 > 90帧 全局快门
 > 摄像头距杆顶部6cm
-![](.\doc\摄像头参数.png)
-
-如果使用卷帘相机，容易出现出弯时无法士别标识物的情况
-![运动模糊](.\doc\depot.bmp)
-
-**摄像头视野：**
-![](.\doc\摄像头安装视图.jpg)
-
-![](.\doc\摄像头网格视图.png)
-
-## 调车记录
 
 （所有记录都控制了变量唯一）
 

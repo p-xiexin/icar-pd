@@ -3,7 +3,7 @@
 /**
  * @file farmland_avoidance.cpp
  * @author pxx
- * @brief 农田断路区避障算法
+ * @brief 农田断路区避障算法//boom
  * @version 0.1
  * @date 2023-05-22
  *
@@ -61,7 +61,7 @@ public:
         {
 			for (int i = 0; i < predict.size(); i++)
 			{
-				if (predict[i].label == LABEL_CORN) // 拖拉机标志检测
+				if (predict[i].label == LABEL_BOMB) // 拖拉机标志检测
 				{
 					counterRec++;
 					break;
@@ -251,7 +251,7 @@ public:
                             double distance = cv::norm(currentPoint - otherPoint);
                             double x_dist, y_dist, distThreshold;
                             x_dist = std::max(currentPoint.y, otherPoint.y) * 0.6;
-                            y_dist = std::abs(currentPoint.x - otherPoint.x) * (std::max(std::max(currentPoint.y, otherPoint.y), 100) / ROWSIMAGE);
+                            y_dist = std::abs(currentPoint.x - otherPoint.x) * (std::max(std::max(currentPoint.y, otherPoint.y), 80) / ROWSIMAGE);
                             distThreshold = x_dist + y_dist;
                             if(distThreshold < 50)
                                 distThreshold = 50;

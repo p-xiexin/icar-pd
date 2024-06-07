@@ -1016,8 +1016,9 @@ public:
 
     float get_speed(float motionSpeed)
     {
+        cout << ringStep;
         if(ringStep == RingStep::Entering)
-            return (motionSpeed * 0.8f);
+            return (motionSpeed);
         else
             return motionSpeed;
     }

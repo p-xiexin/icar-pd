@@ -14,7 +14,7 @@
 using namespace std;
 using namespace cv;
 
-CaptureInterface captureInterface("/dev/video0");
+CaptureInterface captureInterface("/dev/video_0");
 
 int main(int argc, char *argv[])
 {

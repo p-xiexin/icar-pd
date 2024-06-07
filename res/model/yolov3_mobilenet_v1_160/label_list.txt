@@ -1,8 +1,0 @@
-cone
-granary
-bridge
-tractor
-corn
-pig
-crosswalk
-bump

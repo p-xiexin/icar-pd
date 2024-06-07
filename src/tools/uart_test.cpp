@@ -6,7 +6,7 @@
 
 using namespace std;
 
-SerialInterface serialInterface("/dev/ttyUSB0", LibSerial::BaudRate::BAUD_460800);
+SerialInterface serialInterface("/dev/ttyUSB_A", LibSerial::BaudRate::BAUD_460800);
 int main()
 {
     MotionController motionController;         // 运动控制
@@ -41,7 +41,7 @@ int main()
         cout << "speed\tservo" << endl;
         cin >> speed >> servo;
         stopWatch.tic();
-		serialInterface.set_control(-speed, servo);
+		serialInterface.set_control(speed, servo);
         // cout << stopWatch.toc << endl;
     }
 }

@@ -1,0 +1,14 @@
+background
+bomb
+bridge
+safety
+cone
+crosswalk
+danger
+evil
+block
+patient
+prop
+spy
+thief
+tumble

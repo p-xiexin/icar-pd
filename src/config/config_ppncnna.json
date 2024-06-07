@@ -1,5 +1,5 @@
 {
     "mode": "professional",
-    "model_dir": "../res/model/yolov3_mobilenet_v1",
+    "model_dir": "../res/model/yolov3-model",
     "model_file": "deploy_paddle"
 }

@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     capture.set(cv::CAP_PROP_FRAME_WIDTH, COLSIMAGE);
     capture.set(cv::CAP_PROP_FRAME_HEIGHT, ROWSIMAGE);
     capture.set(cv::CAP_PROP_ZOOM, 14);
-    capture.set(cv::CAP_PROP_AUTO_EXPOSURE, 0.20);  //自动曝光开关
+    capture.set(cv::CAP_PROP_AUTO_EXPOSURE, 0.10);  //自动曝光开关
 
     double rate = capture.get(CAP_PROP_FPS);
     double width = capture.get(CAP_PROP_FRAME_WIDTH);
@@ -72,8 +72,12 @@ int main(int argc, char *argv[])
 
         POINT pointTop = POINT(ROWSIMAGE - 1, 0);
         cv::Mat img_rgb = frame.clone();
+        cv::Mat grey_frame =frame.clone();
         cv::circle(img_rgb, cv::Point(0, ROWSIMAGE - trackRecognition.rowCutBottom), 5, cv::Scalar(20, 200, 200), -1);
         cv::circle(img_rgb, cv::Point(COLSIMAGE - 1, ROWSIMAGE - trackRecognition.rowCutBottom), 5, cv::Scalar(20, 200, 200), -1);
+
+        cvtColor(grey_frame,grey_frame,COLOR_BGR2GRAY);
+
         // 设置锥桶颜色的RGB范围（黄色），提取掩膜
         cv::Mat mask;
         cv::Scalar lowerYellow(0, 100, 100);
@@ -87,92 +91,24 @@ int main(int argc, char *argv[])
         cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
         // std::sort(contours.begin(), contours.end(), compareContoursByCenterY);
 
-        //分离蓝色通道
-        std::vector<cv::Mat> channels;
-        split(frame, channels);
-        cv::Mat blueChannel = channels[0];
-
+      
         // 创建空白图像作为结果
         cv::Mat resultImage = cv::Mat::zeros(frame.size(), CV_8UC3);
-        // 遍历每个轮廓
-        std::vector<uint16_t> lined_conters; // 用于记录已经“被”连接的轮廓，每个轮廓只能被连接一次，远点为被连接点
-        for (size_t i = 0; i < contours.size(); ++i) 
-        {
-            bool lined = false;
-            // 遍历当前轮廓的点
-            for (size_t j = 0; j < contours[i].size(); ++j) 
-            {
-                // 获取当前轮廓的当前点
-                cv::Point currentPoint = contours[i][j];
-                if(currentPoint.y < trackRecognition.rowCutUp)
-                    continue;
-
-                // 遍历其他轮廓
-                for (size_t k = i; k < contours.size(); ++k)
-                {
-                    // 跳过当前轮廓
-                    if (k == i)
-                        continue;
-
-                    // 遍历其他轮廓的点
-                    for (size_t l = 0; l < contours[k].size(); ++l) 
-                    {
-                        // 获取其他轮廓的当前点
-                        cv::Point otherPoint = contours[k][l];
-                        if(otherPoint.y < 50)
-                            continue;
-
-                        if(abs(currentPoint.y - otherPoint.y) > 100 || abs(currentPoint.x - otherPoint.x) > 100)
-                            continue;
-
-                        // 计算两点之间的距离
-                        double distance = cv::norm(currentPoint - otherPoint);
-                        double x_dist, y_dist, distThreshold;
-                        x_dist = std::max(currentPoint.y, otherPoint.y) * 0.6;
-                        y_dist = std::abs(currentPoint.x - otherPoint.x) * (std::max(std::max(currentPoint.y, otherPoint.y), 80) / ROWSIMAGE);
-                        distThreshold = x_dist + y_dist;
-
-                        if(distThreshold < 50)
-                            distThreshold = 50;
-
-                        uint16_t lined_temp = currentPoint.y < otherPoint.y ? i : k;
-                        auto it = std::find(lined_conters.begin(), lined_conters.end(), lined_temp);
-
-                        // 如果距离小于阈值，使用线段将两点连接起来
-                        if (distance < distThreshold) 
-                        {
-                            if(it == lined_conters.end())
-                            {
-                                lined_conters.push_back(lined_temp);
-                                if(currentPoint.y < pointTop.x)
-                                    pointTop = POINT(currentPoint.y, currentPoint.x);
-                                if(otherPoint.y < pointTop.x)
-                                    pointTop = POINT(otherPoint.y, otherPoint.x);
-                                cv::line(resultImage, currentPoint, otherPoint, cv::Scalar(0, 255, 0), 5);
-                                cv::line(blueChannel, currentPoint, otherPoint, cv::Scalar(60), 5);
-                                lined = true;
-                            }
-                            else
-                            {
-                                cv::line(resultImage, currentPoint, otherPoint, cv::Scalar(0, 0, 255), 5);
-                            }
-                            break;
-                        }
-                    }
-                }
-                if(lined)
-                    break;
-            }
-        }
-
+        
 		cv::Mat imageBinary, imageEnrode;
+        cv::bitwise_not(mask,mask);
 
         cv::Mat kernel_close = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));//创建结构元
 		cv::Mat kernel_enrode = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(40, 40));
-		cv::morphologyEx(blueChannel, blueChannel, cv::MORPH_CLOSE, kernel_close, cv::Point(-1, -1));//闭运算
-		cv::morphologyEx(blueChannel, imageEnrode, cv::MORPH_ERODE, kernel_enrode, cv::Point(-1, -1));//腐蚀运算
-		cv::threshold(imageEnrode, imageBinary, 0, 255, cv::THRESH_OTSU);
+		cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, kernel_close, cv::Point(-1, -1));//闭运算
+		cv::morphologyEx(mask, imageEnrode, cv::MORPH_ERODE, kernel_enrode, cv::Point(-1, -1));//腐蚀运算
+        Mat finall;
+        cout << imageEnrode.size() <<"," << grey_frame.size() << endl;
+        //finall.copyTo(imageEnrode,grey_frame);
+		grey_frame.setTo(Scalar(255, 255, 255), imageEnrode); // OpenCV 4.x及以上版本使用setTo  
 
+		cv::threshold(grey_frame, imageBinary, 0, 255, cv::THRESH_OTSU);
+    
         trackRecognition.trackRecognition(imageBinary, 0);
         movingAverageFilter(trackRecognition.pointsEdgeLeft, 10);
         movingAverageFilter(trackRecognition.pointsEdgeRight, 10);
@@ -185,12 +121,11 @@ int main(int argc, char *argv[])
 
         trackRecognition.drawImage(img_rgb);
         cv::circle(img_rgb, Point(pointTop.y, pointTop.x), 5, Scalar(226, 43, 138), -1);
-        
         cv::imshow("frame", img_rgb);
         cv::imshow("Mask", mask);
         cv::imshow("lineResult", resultImage);
-        cv::imshow("blueChannel", blueChannel);
-        cv::imshow("enrode", imageEnrode);
+        cv::imshow("imageEnrode", imageEnrode);
+        cv::imshow("grey_frame", grey_frame);
         cv::imshow("enrode_binary", imageBinary);
         cv::waitKey(1);
     }

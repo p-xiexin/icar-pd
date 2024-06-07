@@ -1,9 +1,10 @@
 {
-    "speedLow": 1.6,
-    "speedHigh": 2.0,
-    "speedAI": 1.2,
-    "speedRing": 1.7,
-    "speedcoiled": 1.4,
+    "speedLow": 1.3,
+    "speedHigh": 1.8,
+    "speedAI": 1.5,
+    "speedRing": 1.5,
+    
+    "speedcoiled": 1.8,
 
     "speed_and_angle_k1": 0.04,
     "speed_and_angle_k2": 3.8,
@@ -21,9 +22,10 @@
     "point3_x": 120,
     "point3_y": 1901,
 
-    "Kp_speed": 12000,
+    "Kp_speed": 14000,
     "Ki_speed": 250,
-    "Kd_speed": 0.0,
+    "Kd_speed": 15,
+
     "Kp_current": 750,
     "Ki_current": 1500,
     "Kd_current": 0,
@@ -50,20 +52,20 @@
     "rowCutUp": 40,
     "rowCutBottom": 10,
 
-    "Debug": false,
+    "Debug": true,
     "Button": false,
     "SaveImage": true,
     "CloseLoop": true,
-    "GarageEnable": true,
+    "GarageEnable": false,
     "RingEnable": true,
     "CrossEnable": true,
     "StopEnable": false,
     "BridgeEnable": true,
     "SlowzoneEnable": true,
     "DepotEnable": true,
-    "FarmlandEnable": true,
+    "FarmlandEnable": false,
     "GranaryEnable": true,
-    "pathModel": "../res/model/yolov3_mobilenet_v1_0714",
+    "pathModel": "../res/model/yolov3-model",
     "record": [
         {
             "#speedLow": "智能车最低速",

@@ -38,6 +38,21 @@ using namespace cv;
 #define LABEL_CROSSWALK "crosswalk" // AI标签：斑马线
 #define LABEL_BUMP "bump"           // AI标签：减速带
 
+
+#define LABEL_BOMB "bomb"      // AI标签：爆炸物
+#define LABEL_BRIDGE "bridge"    // AI标签：坡道
+#define LABEL_SAFETY "safety"    // AI标签：普通车辆
+//#define LABEL_CONE "cone"      // AI标签：锥桶
+#define LABEL_CROSSWALK "crosswalk" // AI标签：斑马线
+#define LABEL_DANGER "danger"    // AI标签：危险车辆
+#define LABEL_EVIL "evil"      // AI标签：恐怖分子1
+#define LABEL_BLOCK "block"     // AI标签：障碍物
+#define LABEL_PATIENT "patient"   // AI标签：伤员2
+#define LABEL_PROP "prop"      // AI标签：道具车
+#define LABEL_SPY "spy"      // AI标签：嫌疑车辆
+#define LABEL_THIEF "thief"    // AI标签：盗贼1
+#define LABEL_TUMBLE "tumble"   // AI标签：跌倒2
+
 PerspectiveMapping ipm; // 逆透视变换公共类
 
 struct POINT

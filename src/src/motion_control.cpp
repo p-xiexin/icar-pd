@@ -92,7 +92,7 @@ public:
 
         bool Debug = false;
         bool Button = false;
-        bool SaveImage = false;
+        bool SaveImage = true;
         bool CloseLoop = true;
         bool GarageEnable = false;   // 出入库使能
         bool RingEnable = false;     // 环岛使能
@@ -316,13 +316,66 @@ public:
         // if(abs(CenterLine_k) > 1.5 && abs(Slope_previewPoint) > 2.6)
         //     speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(min(abs(CenterLine_k), 2.0)) - x_offset / 200;
         // else
-            speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(min(abs(CenterLine_k), 3.0)) - params.speedHigh * 0.15 * atan(min(abs(Slope_previewPoint), 4.0)) - x_offset / 200;
+        //     speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(min(abs(CenterLine_k), 2.0)) - params.speedHigh * 0.15 * atan(min(abs(Slope_previewPoint), 4.0)) - x_offset / 200;
 
         if(control.sigmaCenter > 100)
             speed -= control.sigmaCenter / 1000;
         // 最低速限制
-        if(speed < 0.8)
-            speed = 0.8;
+        // if(speed < 0.8)
+        //     speed = 0.8;
+
+        if(speed - motorSpeed > 0.05f)
+            motorSpeed += 0.05f;
+        else if(speed - motorSpeed < -0.1f)
+            motorSpeed -= 0.1f;
+        else 
+            motorSpeed = speed;
+    }
+
+
+/**
+     * @brief 基于角偏的变加速控制
+     * @param control 小车控制类
+     */
+    void speedControl_ring(ControlCenterCal control) 
+    {
+        if(control.centerEdge_yh.size() < 1){
+            return;
+        }
+
+        Slope_previewPoint = perspectiveTangentSlope(control.centerEdge_yh, control.centerEdge_yh.size()*0.8, 3);
+
+        double speed = 0.8f;
+        double y_offset = ROWSIMAGE - control.centerEdge_yh[0].x - params.rowCutBottom;
+        double x_offset = abs(control.centerEdge_yh[0].y - Mid_line);
+        if(y_offset > 60)
+            y_offset = 60;
+
+        if(abs(CenterLine_k) > 1.4 && abs(Slope_previewPoint) > 2.5)
+            speed_plan = 1;
+        else if(abs(CenterLine_k) < 1.2 && abs(Slope_previewPoint) < 1.5)
+            speed_plan = 0;
+
+        switch(speed_plan)
+        {
+        case 0:
+            speed = params.speedRing - (params.speedRing - 0.8) * atan(min(abs(CenterLine_k), 2.0)) - params.speedRing * 0.125 * atan(min(abs(Slope_previewPoint), 4.0)) - x_offset / 200;
+            break;
+        case 1:
+            speed = params.speedRing - (params.speedRing - 0.8) * atan(min(abs(CenterLine_k), 2.0)) - x_offset / 200;
+            break;
+        }
+
+        // if(abs(CenterLine_k) > 1.5 && abs(Slope_previewPoint) > 2.6)
+        //     speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(min(abs(CenterLine_k), 2.0)) - x_offset / 200;
+        // else
+        //     speed = params.speedHigh - (params.speedHigh - params.speedLow) * atan(min(abs(CenterLine_k), 2.0)) - params.speedHigh * 0.15 * atan(min(abs(Slope_previewPoint), 4.0)) - x_offset / 200;
+
+        if(control.sigmaCenter > 100)
+            speed -= control.sigmaCenter / 1000;
+        // // 最低速限制
+        // if(speed < 0.8)
+        //     speed = 0.8;
 
         if(speed - motorSpeed > 0.05f)
             motorSpeed += 0.05f;
@@ -593,6 +646,7 @@ public:
         {
             Angle_Iout *= 0.5;
         }
+        //Angle_Iout = 0;
         // 动态中线输出值
         if(controlCenter.centerEdge.size() < params.Control_Up_set - params.Control_Down_set)
         {

@@ -3,7 +3,7 @@
 /**
  * @file depot_detection.cpp
  * @author pxx
- * @brief 维修厂检测
+ * @brief 维修厂检测///thief
  * @version 0.1
  * @date 2023-05-17
  *
@@ -113,7 +113,7 @@ public:
 		{
 			for (int i = 0; i < predict.size(); i++)
 			{
-				if (predict[i].label == LABEL_TRACTOR && predict[i].y + predict[i].height / 2 > 60) // 拖拉机标志检测
+				if ((predict[i].label == LABEL_EVIL || predict[i].label == LABEL_PATIENT || predict[i].label == LABEL_THIEF ||predict[i].label == LABEL_TUMBLE ) && predict[i].y + predict[i].height / 2 > 60) // 拖拉机标志检测
 				{
 					counterRec++;
 					break;
@@ -380,7 +380,7 @@ public:
 			{
 				counterSession++;
 				if (counterRec > params.DepotCheck && counterSession < params.DepotCheck + 3)
-				{
+				{	
 					if(params.DepotDir == 0)
 						depotType = DepotType::DepotLeft;
 					else if(params.DepotDir == 1)
