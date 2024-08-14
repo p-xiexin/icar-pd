@@ -9,7 +9,7 @@
 2. 适应赛道反光[双阈值OTSU](https://blog.csdn.net/weixin_55984718/article/details/125769347?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-3-125769347-blog-19506005.pc_relevant_multi_platform_whitelistv4&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-3-125769347-blog-19506005.pc_relevant_multi_platform_whitelistv4&utm_relevant_index=3)
 3. 出弯立刻进圆环，圆环无法识别
 4. 帧率锁定
-5. 多线程死锁问题，解决意见如下（我的电脑无法编译运行进行测试）：
+5. 多线程死锁问题，解决意见如下：
 ```c++
 // 在子线程中使用类似这样的逻辑，while(ruuning)
 {
@@ -35,16 +35,17 @@ std::signal(SIGINT, [](int sig)
 
 ### 控制
 
-1. 尝试其他控制方法（例如mpc）
-2. 使用陀螺仪控制车身
-3. 串口延时问题
+1. 尝试其他控制方法（例如mpcc）
+   参考论文：[Optimization-Based Autonomous Racing of 1:43 Scale RC Cars](http://arxiv.org/abs/1711.07300)
+3. 使用陀螺仪控制车身
+4. 串口延时问题
 
 ### 硬件
 
 1. 陀螺仪磁力计(建议购买[成品](https://m.tb.cn/h.gaXLSjIHiuq9kKR?tk=IA7TWqebA6p))
 2. 硬件快拆
 3. 悬架参数调节(以下是省赛实录)
-![](.\doc\侧翻.jpg)
+![](./doc/侧翻.jpg)
 
 ---
 
@@ -63,15 +64,15 @@ uart_test: 串口通信测试、也用于赛前检车车模功能
 > 摄像头参数：
 > 90帧 全局快门
 > 摄像头距杆顶部6cm
-![](.\doc\摄像头参数.png)
+![](./doc/摄像头参数.png)
 
 如果使用卷帘相机，容易出现出弯时无法士别标识物的情况
-![运动模糊](.\doc\depot.bmp)
+![运动模糊](./doc/depot.bmp)
 
 **摄像头视野：**
-![](.\doc\摄像头安装视图.jpg)
+![](./doc/摄像头安装视图.jpg)
 
-![](.\doc\摄像头网格视图.png)
+![](./doc/摄像头网格视图.png)
 
 ## 调车记录
 
